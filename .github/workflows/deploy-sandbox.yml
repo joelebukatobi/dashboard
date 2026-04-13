@@ -125,7 +125,6 @@ jobs:
             cd "$DEPLOY_DIR"
             npm install --omit=dev
             mkdir -p tmp
-            cp -f src/server.js app.js
             date > tmp/restart.txt
 
       - name: Verify deployed files on server
