@@ -44,7 +44,6 @@ jobs:
             **/.idea/**
 
       - name: Install production dependencies and restart app
-        if: ${{ env.CPANEL_SSH_HOST != '' && env.CPANEL_SSH_USER != '' && env.CPANEL_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.CPANEL_SSH_HOST }}
