@@ -17,10 +17,11 @@ jobs:
       CPANEL_FTP_HOST: ${{ secrets.CPANEL_FTP_HOST }}
       CPANEL_FTP_USER: ${{ secrets.CPANEL_FTP_USER }}
       CPANEL_FTP_PASSWORD: ${{ secrets.CPANEL_FTP_PASSWORD }}
-      CPANEL_DEPLOY_PATH: ${{ secrets.CPANEL_DEPLOY_PATH }}
-      CPANEL_SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
-      CPANEL_SSH_USER: ${{ secrets.CPANEL_SSH_USER }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      CPANEL_SSH_HOST: ${{ secrets.CPANEL_HOST }}
+      CPANEL_SSH_USER: ${{ secrets.CPANEL_USER }}
       CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+      CPANEL_SSH_PORT: ${{ secrets.CPANEL_PORT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,8 +41,8 @@ jobs:
             echo "::error::Missing secret: CPANEL_FTP_PASSWORD"
             exit 1
           fi
-          if [ -z "$CPANEL_DEPLOY_PATH" ]; then
-            echo "::error::Missing secret: CPANEL_DEPLOY_PATH"
+          if [ -z "$DEPLOY_PATH" ]; then
+            echo "::error::Missing secret: DEPLOY_PATH"
             exit 1
           fi
 
@@ -63,7 +64,7 @@ jobs:
           port: 21
           protocol: ftp
           local-dir: ./
-          server-dir: ${{ env.CPANEL_DEPLOY_PATH }}/
+          server-dir: ${{ env.DEPLOY_PATH }}/
           exclude: |
             **/.git*/**
             **/.git*
@@ -83,9 +84,10 @@ jobs:
           host: ${{ env.CPANEL_SSH_HOST }}
           username: ${{ env.CPANEL_SSH_USER }}
           key: ${{ env.CPANEL_SSH_KEY }}
+          port: ${{ env.CPANEL_SSH_PORT }}
           script: |
             set -e
-            cd "${{ env.CPANEL_DEPLOY_PATH }}"
+            cd "${{ env.DEPLOY_PATH }}"
             npm install --omit=dev
             mkdir -p tmp
             date > tmp/restart.txt
