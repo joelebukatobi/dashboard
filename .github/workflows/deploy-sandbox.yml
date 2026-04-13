@@ -22,6 +22,7 @@ jobs:
       CPANEL_SSH_USER: ${{ secrets.CPANEL_USER }}
       CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
       CPANEL_SSH_PORT: ${{ secrets.CPANEL_PORT }}
+      CPANEL_NODE_BIN: ${{ secrets.CPANEL_NODE_BIN }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout
@@ -100,6 +101,14 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Validate SSH migration runtime
+        if: steps.ssh_check.outputs.enabled == 'true'
+        run: |
+          if [ -z "$CPANEL_NODE_BIN" ]; then
+            echo "::error::Missing secret: CPANEL_NODE_BIN"
+            exit 1
+          fi
+
       - name: Upload files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -144,26 +153,19 @@ jobs:
               exit 1
             fi
 
-            NODE_BIN=""
-            for CANDIDATE in /opt/cpanel/ea-nodejs24/bin/node /opt/cpanel/ea-nodejs22/bin/node /opt/cpanel/ea-nodejs20/bin/node /opt/cpanel/ea-nodejs18/bin/node; do
-              if [ -x "$CANDIDATE" ]; then
-                NODE_BIN="$CANDIDATE"
-                break
-              fi
-            done
-
-            if [ -z "$NODE_BIN" ]; then
-              NODE_BIN="$(command -v node || true)"
-            fi
-
-            if [ -z "$NODE_BIN" ]; then
-              echo "No Node.js binary found for migration"
+            if [ -z "$CPANEL_NODE_BIN" ]; then
+              echo "CPANEL_NODE_BIN secret is required"
               exit 1
             fi
 
-            echo "Using Node binary for migration: $NODE_BIN"
-            "$NODE_BIN" --version
-            "$NODE_BIN" ./node_modules/drizzle-kit/bin.cjs push
+            if [ ! -x "$CPANEL_NODE_BIN" ]; then
+              echo "Configured CPANEL_NODE_BIN is not executable: $CPANEL_NODE_BIN"
+              exit 1
+            fi
+
+            echo "Using Node binary for migration: $CPANEL_NODE_BIN"
+            "$CPANEL_NODE_BIN" --version
+            "$CPANEL_NODE_BIN" ./node_modules/drizzle-kit/bin.cjs push
 
             npm prune --omit=dev
             mkdir -p tmp
