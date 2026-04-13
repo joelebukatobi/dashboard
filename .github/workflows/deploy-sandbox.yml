@@ -33,7 +33,7 @@ jobs:
 
       - name: Build frontend assets
         run: |
-          npm ci
+          npm install
           npm run build:css
 
       - name: Validate required deploy secrets
