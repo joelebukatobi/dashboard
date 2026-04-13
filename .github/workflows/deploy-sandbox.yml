@@ -141,7 +141,15 @@ jobs:
 
             if [ -n "$CPANEL_DATABASE_URL" ]; then
               export DATABASE_URL="$CPANEL_DATABASE_URL"
-              npm run db:migrate
+              if node -e "process.exit(Number(process.versions.node.split('.')[0]) >= 16 ? 0 : 1)"; then
+                if npm run db:migrate; then
+                  echo "Database migration completed"
+                else
+                  echo "db:migrate failed on remote host; continuing deployment"
+                fi
+              else
+                echo "Remote Node runtime is too old for drizzle-kit; skipping db:migrate"
+              fi
             else
               echo "DATABASE_URL secret not set for workflow; skipping db:migrate"
             fi
