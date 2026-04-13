@@ -5,6 +5,7 @@ import { activityService } from './activity.service.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import crypto from 'crypto';
 
 /**
  * Users Service
@@ -51,7 +52,7 @@ class UsersService {
     if (search) {
       const searchTerm = `%${search}%`;
       whereConditions.push(
-        sql`(${users.firstName} ILIKE ${searchTerm} OR ${users.lastName} ILIKE ${searchTerm} OR ${users.email} ILIKE ${searchTerm})`
+        sql`(${users.firstName} LIKE ${searchTerm} OR ${users.lastName} LIKE ${searchTerm} OR ${users.email} LIKE ${searchTerm})`
       );
     }
 
@@ -184,20 +185,31 @@ class UsersService {
     };
 
     if (password) {
-      const bcrypt = await import('bcrypt');
+      const { default: bcrypt } = await import('bcryptjs');
       userData.password = await bcrypt.hash(password, 10);
     }
 
-    const [newUser] = await db.insert(users).values(userData).returning({
-      id: users.id,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      email: users.email,
-      role: users.role,
-      status: users.status,
-      avatarUrl: users.avatarUrl,
-      createdAt: users.createdAt,
+    const userId = crypto.randomUUID();
+
+    await db.insert(users).values({
+      id: userId,
+      ...userData,
     });
+
+    const [newUser] = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        status: users.status,
+        avatarUrl: users.avatarUrl,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
 
     // Log activity
     await activityService.createActivity({
@@ -231,11 +243,13 @@ class UsersService {
       updatedAt: new Date(),
     };
 
-    const [updatedUser] = await db
+    await db
       .update(users)
       .set(updateData)
-      .where(eq(users.id, id))
-      .returning({
+      .where(eq(users.id, id));
+
+    const [updatedUser] = await db
+      .select({
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
@@ -244,7 +258,10 @@ class UsersService {
         status: users.status,
         avatarUrl: users.avatarUrl,
         updatedAt: users.updatedAt,
-      });
+      })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     // Log activity
     await activityService.createActivity({
@@ -294,21 +311,26 @@ class UsersService {
    * @returns {Promise<Object>} - Updated user
    */
   async suspendUser(id, currentUserId) {
-    const [updatedUser] = await db
+    await db
       .update(users)
       .set({
         status: 'SUSPENDED',
         updatedAt: new Date(),
       })
-      .where(eq(users.id, id))
-      .returning({
+      .where(eq(users.id, id));
+
+    const [updatedUser] = await db
+      .select({
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
         role: users.role,
         status: users.status,
-      });
+      })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     // Log activity
     await activityService.createActivity({
@@ -329,21 +351,26 @@ class UsersService {
    * @returns {Promise<Object>} - Updated user
    */
   async activateUser(id, currentUserId) {
-    const [updatedUser] = await db
+    await db
       .update(users)
       .set({
         status: 'ACTIVE',
         updatedAt: new Date(),
       })
-      .where(eq(users.id, id))
-      .returning({
+      .where(eq(users.id, id));
+
+    const [updatedUser] = await db
+      .select({
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
         role: users.role,
         status: users.status,
-      });
+      })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     // Log activity
     await activityService.createActivity({
@@ -364,14 +391,16 @@ class UsersService {
    * @returns {Promise<Object>} - Updated user
    */
   async resendInvite(id, currentUserId) {
-    const [updatedUser] = await db
+    await db
       .update(users)
       .set({
         invitedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(users.id, id))
-      .returning({
+      .where(eq(users.id, id));
+
+    const [updatedUser] = await db
+      .select({
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
@@ -379,7 +408,10 @@ class UsersService {
         role: users.role,
         status: users.status,
         invitedAt: users.invitedAt,
-      });
+      })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     // Log activity
     await activityService.createActivity({
@@ -494,19 +526,24 @@ class UsersService {
    * @returns {Promise<Object>} - Updated user
    */
   async updateAvatar(userId, avatarUrl) {
-    const [updatedUser] = await db
+    await db
       .update(users)
       .set({
         avatarUrl,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, userId))
-      .returning({
+      .where(eq(users.id, userId));
+
+    const [updatedUser] = await db
+      .select({
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
         avatarUrl: users.avatarUrl,
-      });
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
 
     return updatedUser;
   }

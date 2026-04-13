@@ -6,6 +6,7 @@ import { eq, like, desc, sql } from 'drizzle-orm';
 import { promises as fs } from 'fs';
 import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
+import crypto from 'crypto';
 
 /**
  * Videos Service
@@ -197,10 +198,13 @@ class VideosService {
       throw new Error(`Failed to process video: ${err.message}`);
     }
 
+    const mediaId = crypto.randomUUID();
+
     // Create database record
-    const [videoRecord] = await db
+    await db
       .insert(mediaItems)
       .values({
+        id: mediaId,
         type: 'VIDEO',
         filename,
         originalName: file.filename,
@@ -216,8 +220,13 @@ class VideosService {
         path: `/public/uploads/videos/${filename}`,
         thumbnailPath: `/public/uploads/videos/thumbs/${thumbFilename}`,
         uploadedBy: userId,
-      })
-      .returning();
+      });
+
+    const [videoRecord] = await db
+      .select()
+      .from(mediaItems)
+      .where(eq(mediaItems.id, mediaId))
+      .limit(1);
 
     return videoRecord;
   }
@@ -234,15 +243,20 @@ class VideosService {
       throw new Error('Video not found');
     }
 
-    const [video] = await db
+    await db
       .update(mediaItems)
       .set({
         title: data.title,
         altText: data.altText,
         updatedAt: new Date(),
       })
+      .where(eq(mediaItems.id, id));
+
+    const [video] = await db
+      .select()
+      .from(mediaItems)
       .where(eq(mediaItems.id, id))
-      .returning();
+      .limit(1);
 
     return video;
   }

@@ -13,7 +13,7 @@ async function recalculatePostCounts() {
   for (const category of allCategories) {
     // Count published posts in this category
     const [{ count }] = await db
-      .select({ count: sql`count(*)::integer` })
+      .select({ count: sql`count(*)` })
       .from(posts)
       .where(eq(posts.categoryId, category.id))
       .where(eq(posts.status, 'PUBLISHED'));

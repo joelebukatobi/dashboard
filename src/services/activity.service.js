@@ -2,7 +2,8 @@
 // Activity logging service for tracking user actions
 
 import { db, activities, users } from '../db/index.js';
-import { desc, eq, and, gte, lte } from 'drizzle-orm';
+import { desc, eq, and, gte, lte, sql } from 'drizzle-orm';
+import crypto from 'crypto';
 
 /**
  * Activity Service
@@ -10,6 +11,10 @@ import { desc, eq, and, gte, lte } from 'drizzle-orm';
  * Following Single Responsibility Principle
  */
 class ActivityService {
+  async createActivity(data) {
+    return this.log(data);
+  }
+
   /**
    * Log a new activity
    * @param {Object} data - Activity data
@@ -23,15 +28,23 @@ class ActivityService {
    */
   async log(data) {
     const { userId, type, description, entityType, entityId, metadata } = data;
+    const activityId = crypto.randomUUID();
 
-    const [activity] = await db.insert(activities).values({
+    await db.insert(activities).values({
+      id: activityId,
       userId,
       type,
       description,
       entityType,
       entityId,
       metadata: metadata ? JSON.stringify(metadata) : null,
-    }).returning();
+    });
+
+    const [activity] = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.id, activityId))
+      .limit(1);
 
     return activity;
   }
@@ -103,7 +116,7 @@ class ActivityService {
     const stats = await db
       .select({
         type: activities.type,
-        count: sql`count(*)::integer`,
+        count: sql`count(*)`,
       })
       .from(activities)
       .where(gte(activities.createdAt, since))

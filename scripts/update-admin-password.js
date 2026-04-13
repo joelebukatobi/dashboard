@@ -16,7 +16,7 @@ async function updateAdminPassword() {
     // Dynamic imports after env is loaded
     const { db, users } = await import('../src/db/index.js');
     const { eq } = await import('drizzle-orm');
-    const bcrypt = await import('bcrypt');
+    const { default: bcrypt } = await import('bcryptjs');
     
     // Hash new password
     const newPassword = await bcrypt.hash('Admin@123', 10);
@@ -25,10 +25,15 @@ async function updateAdminPassword() {
     const result = await db
       .update(users)
       .set({ password: newPassword })
+      .where(eq(users.email, 'admin@example.com'));
+
+    const updatedUsers = await db
+      .select({ id: users.id })
+      .from(users)
       .where(eq(users.email, 'admin@example.com'))
-      .returning();
+      .limit(1);
     
-    if (result.length > 0) {
+    if (updatedUsers.length > 0) {
       console.log('✅ Admin password updated successfully!');
       console.log('\nUpdated credentials:');
       console.log('  Email: admin@example.com');

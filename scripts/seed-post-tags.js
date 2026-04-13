@@ -62,7 +62,7 @@ async function seedPostTags() {
   console.log('\nUpdating tag post counts...');
   for (const tag of allTags) {
     const [{ count }] = await db
-      .select({ count: sql`count(*)::integer` })
+      .select({ count: sql`count(*)` })
       .from(postTags)
       .where(eq(postTags.tagId, tag.id));
     

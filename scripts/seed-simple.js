@@ -2,6 +2,7 @@
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,20 +17,25 @@ async function seed() {
     // Dynamic imports after env is loaded
     const { db, users, categories, tags, settings, posts, activities } = await import('../src/db/index.js');
     const { eq } = await import('drizzle-orm');
-    const bcrypt = await import('bcrypt');
+    const { default: bcrypt } = await import('bcryptjs');
     
     // Create admin user
     console.log('Creating admin user...');
     const adminPassword = await bcrypt.hash('Admin@123', 10);
     
-    const [adminUser] = await db.insert(users).values({
+    const adminIdCandidate = crypto.randomUUID();
+
+    await db.insert(users).values({
+      id: adminIdCandidate,
       firstName: 'Admin',
       lastName: 'User',
       email: 'admin@example.com',
       password: adminPassword,
       role: 'ADMIN',
       status: 'ACTIVE',
-    }).onConflictDoNothing().returning();
+    }).onConflictDoNothing();
+
+    const [adminUser] = await db.select().from(users).where(eq(users.email, 'admin@example.com')).limit(1);
     
     let adminId;
     if (adminUser) {

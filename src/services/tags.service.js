@@ -120,16 +120,20 @@ class TagsService {
     }
 
     // Create tag
-    const [tag] = await db
+    await db
       .insert(tags)
       .values({
         name: data.name,
         slug,
         description: data.description || null,
-        colorClass: data.colorClass || 'badge--primary',
         postCount: 0,
-      })
-      .returning();
+      });
+
+    const [tag] = await db
+      .select()
+      .from(tags)
+      .where(eq(tags.slug, slug))
+      .limit(1);
 
     // Log activity
     await activityService.log({
@@ -156,7 +160,6 @@ class TagsService {
 
     if (data.name !== undefined) updateData.name = data.name;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.colorClass !== undefined) updateData.colorClass = data.colorClass;
 
     // Handle slug update separately to check for duplicates
     if (data.slug) {
@@ -167,11 +170,16 @@ class TagsService {
       updateData.slug = data.slug;
     }
 
-    const [tag] = await db
+    await db
       .update(tags)
       .set(updateData)
+      .where(eq(tags.id, id));
+
+    const [tag] = await db
+      .select()
+      .from(tags)
       .where(eq(tags.id, id))
-      .returning();
+      .limit(1);
 
     if (!tag) {
       throw new Error('Tag not found');

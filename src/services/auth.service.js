@@ -2,6 +2,7 @@
 import { db, users, sessions } from '../db/index.js';
 import { eq, and, gt } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateSecureToken, generateSessionId } from '../utils/security.js';
+import crypto from 'crypto';
 
 /**
  * Authentication Service
@@ -117,7 +118,7 @@ class AuthService {
       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
       : new Date(Date.now() + 24 * 60 * 60 * 1000);    // 24 hours
     
-    const [session] = await db
+    await db
       .insert(sessions)
       .values({
         id: sessionId,
@@ -125,8 +126,13 @@ class AuthService {
         token,
         rememberMe,
         expiresAt
-      })
-      .returning();
+      });
+
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .limit(1);
     
     return session;
   }
@@ -305,15 +311,22 @@ class AuthService {
    */
   async createUser(userData) {
     const hashedPassword = await hashPassword(userData.password);
+    const userId = crypto.randomUUID();
     
-    const [user] = await db
+    await db
       .insert(users)
       .values({
+        id: userId,
         ...userData,
         password: hashedPassword,
         email: userData.email.toLowerCase()
-      })
-      .returning();
+      });
+
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
     
     // Remove password from returned object
     const { password: _, ...userWithoutPassword } = user;

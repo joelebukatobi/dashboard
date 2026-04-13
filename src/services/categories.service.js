@@ -122,15 +122,20 @@ class CategoriesService {
       throw new Error(`Category with slug "${slug}" already exists`);
     }
 
-    const [category] = await db
+    await db
       .insert(categories)
       .values({
         title: data.title,
         slug,
         description: data.description,
         postCount: 0,
-      })
-      .returning();
+      });
+
+    const [category] = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.slug, slug))
+      .limit(1);
 
     // Log activity
     await activityService.logPostCreated(userId, {
@@ -171,14 +176,19 @@ class CategoriesService {
       changes.title = { from: existing.title, to: data.title };
     }
 
-    const [category] = await db
+    await db
       .update(categories)
       .set({
         ...data,
         updatedAt: new Date(),
       })
+      .where(eq(categories.id, id));
+
+    const [category] = await db
+      .select()
+      .from(categories)
       .where(eq(categories.id, id))
-      .returning();
+      .limit(1);
 
     // Log activity
     if (Object.keys(changes).length > 0) {
@@ -207,7 +217,7 @@ class CategoriesService {
 
     // Count posts in this category
     const [{ count }] = await db
-      .select({ count: sql`count(*)::integer` })
+      .select({ count: sql`count(*)` })
       .from(posts)
       .where(eq(posts.categoryId, id));
 
@@ -244,7 +254,7 @@ class CategoriesService {
    */
   async getCounts() {
     const [{ count }] = await db
-      .select({ count: sql`count(*)::integer` })
+      .select({ count: sql`count(*)` })
       .from(categories);
 
     return { total: Number(count) };

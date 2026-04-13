@@ -21,7 +21,7 @@ async function updatePostViews() {
 
     // Get current totals
     const currentTotal = await db.select({
-      total: sql`sum(view_count)::integer`
+      total: sql`sum(view_count)`
     }).from(posts);
     
     console.log('Current posts total views:', currentTotal[0].total);
@@ -51,7 +51,7 @@ async function updatePostViews() {
 
     // Verify new total
     const newTotal = await db.select({
-      total: sql`sum(view_count)::integer`
+      total: sql`sum(view_count)`
     }).from(posts);
     
     console.log('\n✅ Post view counts updated!');

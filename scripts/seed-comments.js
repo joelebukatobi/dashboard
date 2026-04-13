@@ -58,6 +58,8 @@ const replyTemplates = [
   'I\'m glad this resonated with you. More content coming soon!',
 ];
 
+import crypto from 'crypto';
+
 async function seedComments() {
   console.log('🌱 Seeding comments...\n');
 
@@ -107,13 +109,19 @@ async function seedComments() {
     }
     
     // Insert comments
-    const inserted = await db.insert(comments).values(postComments).returning();
-    console.log(`  Added ${inserted.length} comments`);
+    const commentsWithIds = postComments.map((comment) => ({
+      id: crypto.randomUUID(),
+      parentId: null,
+      ...comment,
+    }));
+
+    await db.insert(comments).values(commentsWithIds);
+    console.log(`  Added ${commentsWithIds.length} comments`);
     
     // Add 2-3 replies from admin to random comments
-    if (adminUser && inserted.length > 0) {
+    if (adminUser && commentsWithIds.length > 0) {
       const numReplies = Math.floor(Math.random() * 2) + 2; // 2-3 replies
-      const shuffled = [...inserted].sort(() => Math.random() - 0.5);
+      const shuffled = [...commentsWithIds].sort(() => Math.random() - 0.5);
       const commentsToReply = shuffled.slice(0, numReplies);
       
       for (const parentComment of commentsToReply) {
@@ -122,6 +130,7 @@ async function seedComments() {
         replyDate.setHours(replyDate.getHours() + Math.floor(Math.random() * 24) + 1);
         
         await db.insert(comments).values({
+          id: crypto.randomUUID(),
           postId: post.id,
           parentId: parentComment.id,
           authorName: `${adminUser.firstName} ${adminUser.lastName}`,
@@ -135,7 +144,7 @@ async function seedComments() {
       console.log(`  Added ${numReplies} admin replies`);
     }
     
-    totalComments += inserted.length;
+    totalComments += commentsWithIds.length;
     console.log('');
   }
 

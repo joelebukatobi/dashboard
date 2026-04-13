@@ -3,6 +3,7 @@
 
 import { db, settings } from '../db/index.js';
 import { eq, and, inArray } from 'drizzle-orm';
+import crypto from 'crypto';
 
 /**
  * Settings Service
@@ -106,40 +107,53 @@ class SettingsService {
 
     if (existing) {
       // Update
-      const [updated] = await db
+      await db
         .update(settings)
         .set({
           value: String(value),
           type,
           updatedAt: new Date(),
         })
-        .where(eq(settings.key, key))
-        .returning({
+        .where(eq(settings.key, key));
+
+      const [updated] = await db
+        .select({
           id: settings.id,
           key: settings.key,
           value: settings.value,
           group: settings.group,
           type: settings.type,
-        });
+        })
+        .from(settings)
+        .where(eq(settings.key, key))
+        .limit(1);
 
       return updated;
     } else {
       // Create
-      const [created] = await db
+      const settingId = crypto.randomUUID();
+
+      await db
         .insert(settings)
         .values({
+          id: settingId,
           key,
           value: String(value),
           group,
           type,
-        })
-        .returning({
+        });
+
+      const [created] = await db
+        .select({
           id: settings.id,
           key: settings.key,
           value: settings.value,
           group: settings.group,
           type: settings.type,
-        });
+        })
+        .from(settings)
+        .where(eq(settings.id, settingId))
+        .limit(1);
 
       return created;
     }

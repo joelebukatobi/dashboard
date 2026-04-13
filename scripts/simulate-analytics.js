@@ -6,6 +6,7 @@ dotenv.config({ path: '.env.development' });
 
 import { eq, sql } from 'drizzle-orm';
 import config from './simulation.config.js';
+import crypto from 'crypto';
 
 // Dynamically import db after env is loaded
 let db, posts, comments, subscribers, activities, dailyPageViews;
@@ -59,13 +60,15 @@ function categorizePost(title) {
  * Get current simulation day from daily_page_views table
  */
 async function getSimulationDay() {
-  // Count how many days of simulation data we have
-  const result = await db.execute(sql`
-    SELECT COUNT(*) as count FROM daily_page_views
-    WHERE created_at > NOW() - INTERVAL '7 days'
-  `);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const count = parseInt(result.rows[0]?.count || 0);
+  const result = await db
+    .select({ count: sql`count(*)` })
+    .from(dailyPageViews)
+    .where(sql`${dailyPageViews.createdAt} > ${sevenDaysAgo}`);
+
+  const count = Number(result[0]?.count || 0);
   return count + 1; // Day 1 = first run
 }
 
@@ -148,8 +151,12 @@ async function simulateComments(day, allPosts) {
 
     try {
       // Create comment
-      const [comment] = await db.insert(comments).values({
+      const commentId = crypto.randomUUID();
+
+      await db.insert(comments).values({
+        id: commentId,
         postId: post.id,
+        parentId: null,
         authorName: commenterName,
         authorEmail: `${commenterName.toLowerCase().replace(/\s+/g, '.')}@example.com`,
         content: commentText,
@@ -157,7 +164,13 @@ async function simulateComments(day, allPosts) {
         isEdited: false,
         createdAt: new Date(),
         updatedAt: new Date()
-      }).returning();
+      });
+
+      const [comment] = await db
+        .select({ id: comments.id })
+        .from(comments)
+        .where(eq(comments.id, commentId))
+        .limit(1);
 
       commentsAdded.push(comment);
 
@@ -196,13 +209,22 @@ async function simulateSubscribers(day) {
 
     try {
       // Create subscriber
-      const [subscriber] = await db.insert(subscribers).values({
+      const subscriberId = crypto.randomUUID();
+
+      await db.insert(subscribers).values({
+        id: subscriberId,
         email,
         name,
         status: 'ACTIVE',
         createdAt: new Date(),
         updatedAt: new Date()
-      }).returning();
+      });
+
+      const [subscriber] = await db
+        .select({ id: subscribers.id })
+        .from(subscribers)
+        .where(eq(subscribers.id, subscriberId))
+        .limit(1);
 
       newSubscribers.push(subscriber);
 

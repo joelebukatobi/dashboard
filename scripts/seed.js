@@ -42,13 +42,43 @@ async function seed() {
   // Dynamic imports after env is loaded
   const { db, users, categories, tags, settings, posts, postTags, comments, mediaItems, subscribers, activities } = await import('../src/db/index.js');
   const { eq, sql } = await import('drizzle-orm');
-  const bcrypt = await import('bcrypt');
+  const { default: bcrypt } = await import('bcryptjs');
+
+  const dialect = process.env.DATABASE_URL?.startsWith('mysql') ? 'mysql' : 'postgres';
+
+  const insertWithIgnore = (table, values) => {
+    if (dialect === 'mysql') {
+      return db.insert(table).values(values);
+    }
+
+    return db.insert(table).values(values).onConflictDoNothing();
+  };
 
   try {
     // Fresh start - clear all data
     if (isFresh) {
       console.log('🗑️  Clearing existing data...');
-      await db.execute(sql`TRUNCATE TABLE activities, analytics_events, comments, daily_page_views, media_items, post_tags, posts, settings, subscribers, tags, categories, sessions, password_resets, oauth_accounts, users CASCADE`);
+      if (dialect === 'mysql') {
+        await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
+        await db.execute(sql`TRUNCATE TABLE activities`);
+        await db.execute(sql`TRUNCATE TABLE analytics_events`);
+        await db.execute(sql`TRUNCATE TABLE comments`);
+        await db.execute(sql`TRUNCATE TABLE daily_page_views`);
+        await db.execute(sql`TRUNCATE TABLE media_items`);
+        await db.execute(sql`TRUNCATE TABLE post_tags`);
+        await db.execute(sql`TRUNCATE TABLE posts`);
+        await db.execute(sql`TRUNCATE TABLE settings`);
+        await db.execute(sql`TRUNCATE TABLE subscribers`);
+        await db.execute(sql`TRUNCATE TABLE tags`);
+        await db.execute(sql`TRUNCATE TABLE categories`);
+        await db.execute(sql`TRUNCATE TABLE sessions`);
+        await db.execute(sql`TRUNCATE TABLE password_resets`);
+        await db.execute(sql`TRUNCATE TABLE oauth_accounts`);
+        await db.execute(sql`TRUNCATE TABLE users`);
+        await db.execute(sql`SET FOREIGN_KEY_CHECKS = 1`);
+      } else {
+        await db.execute(sql`TRUNCATE TABLE activities, analytics_events, comments, daily_page_views, media_items, post_tags, posts, settings, subscribers, tags, categories, sessions, password_resets, oauth_accounts, users CASCADE`);
+      }
       console.log('✅ Data cleared\n');
     }
 
@@ -57,16 +87,16 @@ async function seed() {
     // ============================================
     console.log('👤 Creating users...');
     const adminPassword = await bcrypt.hash('Admin@123', 10);
-    const [adminUser] = await db.insert(users).values({
+    await insertWithIgnore(users, {
       firstName: 'Admin',
       lastName: 'User',
       email: 'admin@example.com',
       password: adminPassword,
       role: 'ADMIN',
       status: 'ACTIVE',
-    }).onConflictDoNothing().returning();
+    });
 
-    const adminId = adminUser?.id || (await db.select().from(users).where(eq(users.email, 'admin@example.com')).limit(1))[0]?.id;
+    const adminId = (await db.select().from(users).where(eq(users.email, 'admin@example.com')).limit(1))[0]?.id;
     stats.users = 1;
     console.log('✅ Admin user created: admin@example.com / Admin@123\n');
 
@@ -82,7 +112,7 @@ async function seed() {
       { title: 'Tutorials', slug: 'tutorials', description: 'Step-by-step guides' },
       { title: 'News', slug: 'news', description: 'Latest updates and announcements' },
     ];
-    await db.insert(categories).values(categoryData).onConflictDoNothing();
+    await insertWithIgnore(categories, categoryData);
     stats.categories = categoryData.length;
     console.log(`✅ ${categoryData.length} categories created\n`);
 
@@ -104,7 +134,7 @@ async function seed() {
       { name: 'Security', slug: 'security', description: 'Security topics' },
       { name: 'Tools', slug: 'tools', description: 'Development tools' },
     ];
-    await db.insert(tags).values(tagData).onConflictDoNothing();
+    await insertWithIgnore(tags, tagData);
     stats.tags = tagData.length;
     console.log(`✅ ${tagData.length} tags created\n`);
 
@@ -130,84 +160,12 @@ async function seed() {
       { key: 'passwordMinLength', value: '8', group: 'SECURITY', type: 'NUMBER' },
       { key: 'sessionTimeout', value: '60', group: 'SECURITY', type: 'NUMBER' },
     ];
-    await db.insert(settings).values(settingsData).onConflictDoNothing();
+    await insertWithIgnore(settings, settingsData);
     stats.settings = settingsData.length;
     console.log(`✅ ${settingsData.length} settings created\n`);
 
     // ============================================
-    // 5. POSTS
-    // ============================================
-    console.log('📝 Creating posts...');
-    
-    const getDateMonthsAgo = (months) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - months);
-      return date;
-    };
-
-    const postsData = [
-      { title: 'Getting Started with React Hooks', slug: 'getting-started-with-react-hooks', content: '<p>React Hooks have revolutionized how we write React components...</p>', excerpt: 'Learn how to use React Hooks', categorySlug: 'javascript', monthsAgo: 0 },
-      { title: 'CSS Grid Layout: A Complete Guide', slug: 'css-grid-layout-complete-guide', content: '<p>CSS Grid Layout is a two-dimensional layout system...</p>', excerpt: 'Master CSS Grid Layout', categorySlug: 'css', monthsAgo: 1 },
-      { title: 'Building Scalable APIs with Fastify', slug: 'building-scalable-apis-fastify', content: '<p>Fastify is a high-performance web framework...</p>', excerpt: 'Learn Fastify', categorySlug: 'development', monthsAgo: 1 },
-      { title: 'Advanced TypeScript Patterns', slug: 'advanced-typescript-patterns', content: '<p>TypeScript provides powerful type system features...</p>', excerpt: 'Advanced TypeScript', categorySlug: 'javascript', monthsAgo: 2 },
-      { title: 'UI Design Principles for Developers', slug: 'ui-design-principles-developers', content: '<p>Good UI design is not just for designers...</p>', excerpt: 'UI Design Principles', categorySlug: 'design', monthsAgo: 2 },
-      { title: 'Mastering Flexbox for Modern Layouts', slug: 'mastering-flexbox-modern-layouts', content: '<p>Flexbox is a powerful layout system...</p>', excerpt: 'Master Flexbox', categorySlug: 'css', monthsAgo: 3 },
-      { title: 'Docker for Beginners', slug: 'docker-beginners-containerization-basics', content: '<p>Docker has revolutionized how we deploy applications...</p>', excerpt: 'Get started with Docker', categorySlug: 'development', monthsAgo: 3 },
-      { title: 'Introduction to PostgreSQL', slug: 'introduction-to-postgresql', content: '<p>PostgreSQL is a powerful, open-source relational database...</p>', excerpt: 'Learn PostgreSQL', categorySlug: 'development', monthsAgo: 4 },
-      { title: 'Web Security Best Practices', slug: 'web-security-best-practices', content: '<p>Security should never be an afterthought...</p>', excerpt: 'Security best practices', categorySlug: 'development', monthsAgo: 4 },
-      { title: 'Async/Await in JavaScript', slug: 'async-await-javascript', content: '<p>Async/await has made asynchronous programming...</p>', excerpt: 'Async/await guide', categorySlug: 'javascript', monthsAgo: 5 },
-      { title: 'Responsive Design Patterns', slug: 'responsive-design-patterns', content: '<p>Creating websites that work well on all devices...</p>', excerpt: 'Responsive design', categorySlug: 'design', monthsAgo: 5 },
-      { title: 'Git Workflow Strategies', slug: 'git-workflow-strategies', content: '<p>Choosing the right Git workflow...</p>', excerpt: 'Git workflows', categorySlug: 'development', monthsAgo: 6 },
-      { title: 'Node.js Performance Optimization', slug: 'nodejs-performance-optimization', content: '<p>Performance optimization is crucial...</p>', excerpt: 'Node.js optimization', categorySlug: 'development', monthsAgo: 7 },
-      { title: 'Color Theory for Web Designers', slug: 'color-theory-web-designers', content: '<p>Understanding color theory...</p>', excerpt: 'Color theory basics', categorySlug: 'design', monthsAgo: 8 },
-      { title: 'Modern CSS Features', slug: 'modern-css-features', content: '<p>CSS has evolved significantly...</p>', excerpt: 'Modern CSS', categorySlug: 'css', monthsAgo: 8 },
-      { title: 'React Server Components', slug: 'react-server-components', content: '<p>React Server Components are changing...</p>', excerpt: 'Server Components', categorySlug: 'javascript', monthsAgo: 9 },
-      { title: 'Database Indexing Strategies', slug: 'database-indexing-strategies', content: '<p>Proper indexing is crucial...</p>', excerpt: 'Database indexing', categorySlug: 'development', monthsAgo: 10 },
-      { title: 'Accessibility in Web Design', slug: 'accessibility-web-design', content: '<p>Web accessibility is essential...</p>', excerpt: 'Web accessibility', categorySlug: 'design', monthsAgo: 10 },
-      { title: 'JavaScript ES2024 Features', slug: 'javascript-es2024-features', content: '<p>ES2024 brings exciting new features...</p>', excerpt: 'ES2024 features', categorySlug: 'javascript', monthsAgo: 11 },
-      { title: 'Building RESTful APIs', slug: 'building-restful-apis', content: '<p>RESTful API design principles...</p>', excerpt: 'RESTful APIs', categorySlug: 'development', monthsAgo: 11 },
-    ];
-
-    const tagIds = getTagIds();
-    
-    for (const postData of postsData) {
-      const createdAt = getDateMonthsAgo(postData.monthsAgo);
-      const viewCount = Math.floor(Math.random() * 400) + 100; // 100-500 views
-      
-      const [post] = await db.insert(posts).values({
-        title: postData.title,
-        slug: postData.slug,
-        content: postData.content,
-        excerpt: postData.excerpt,
-        authorId: adminId,
-        categoryId: getCategoryId(postData.categorySlug),
-        status: 'PUBLISHED',
-        viewCount: viewCount,
-        commentCount: 0,
-        publishedAt: createdAt,
-        createdAt: createdAt,
-        updatedAt: createdAt,
-      }).onConflictDoNothing().returning();
-
-      if (post) {
-        // Add random tags (2-4 tags per post)
-        const numTags = Math.floor(Math.random() * 3) + 2;
-        const shuffledTags = tagIds.sort(() => 0.5 - Math.random()).slice(0, numTags);
-        
-        for (const tagId of shuffledTags) {
-          await db.insert(postTags).values({
-            postId: post.id,
-            tagId: tagId,
-          }).onConflictDoNothing();
-        }
-        
-        stats.posts++;
-      }
-    }
-    console.log(`✅ ${stats.posts} posts created\n`);
-
-    // ============================================
-    // 6. IMAGES (from files in public/uploads/images)
+    // 5. IMAGES (from files in public/uploads/images)
     // ============================================
     if (includeImages) {
       console.log('🖼️  Seeding images from files...');
@@ -256,7 +214,7 @@ async function seed() {
             console.log(`  ⚠️  Failed to generate thumbnail for ${file}: ${err.message}`);
           }
           
-          await db.insert(mediaItems).values({
+          await insertWithIgnore(mediaItems, {
             type: 'IMAGE',
             filename: file,
             originalName: file,
@@ -270,7 +228,7 @@ async function seed() {
             thumbnailPath: `/public/uploads/images/thumbs/${file}`,
             uploadedBy: adminId,
             createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-          }).onConflictDoNothing();
+          });
           
           stats.images++;
         }
@@ -281,7 +239,7 @@ async function seed() {
     }
 
     // ============================================
-    // 7. VIDEOS (from files in public/uploads/videos)
+    // 6. VIDEOS (from files in public/uploads/videos)
     // ============================================
     if (includeVideos) {
       console.log('🎥 Seeding videos from files...');
@@ -337,7 +295,7 @@ async function seed() {
             }
           }
           
-          await db.insert(mediaItems).values({
+          await insertWithIgnore(mediaItems, {
             type: 'VIDEO',
             filename: file,
             originalName: file,
@@ -349,7 +307,7 @@ async function seed() {
             thumbnailPath: thumbnailPath,
             uploadedBy: adminId,
             createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-          }).onConflictDoNothing();
+          });
           
           stats.videos++;
         }
@@ -358,6 +316,88 @@ async function seed() {
         console.log('⚠️  No videos directory found or error reading videos:', err.message, '\n');
       }
     }
+
+    // ============================================
+    // 7. POSTS
+    // ============================================
+    console.log('📝 Creating posts...');
+
+    const getDateMonthsAgo = (months) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - months);
+      return date;
+    };
+
+    const imagePool = await db
+      .select({ id: mediaItems.id })
+      .from(mediaItems)
+      .where(eq(mediaItems.type, 'IMAGE'));
+
+    const imageIds = imagePool.map((item) => item.id);
+
+    const postsData = [
+      { title: 'Getting Started with React Hooks', slug: 'getting-started-with-react-hooks', content: '<p>React Hooks have revolutionized how we write React components...</p>', excerpt: 'Learn how to use React Hooks', categorySlug: 'javascript', monthsAgo: 0 },
+      { title: 'CSS Grid Layout: A Complete Guide', slug: 'css-grid-layout-complete-guide', content: '<p>CSS Grid Layout is a two-dimensional layout system...</p>', excerpt: 'Master CSS Grid Layout', categorySlug: 'css', monthsAgo: 1 },
+      { title: 'Building Scalable APIs with Fastify', slug: 'building-scalable-apis-fastify', content: '<p>Fastify is a high-performance web framework...</p>', excerpt: 'Learn Fastify', categorySlug: 'development', monthsAgo: 1 },
+      { title: 'Advanced TypeScript Patterns', slug: 'advanced-typescript-patterns', content: '<p>TypeScript provides powerful type system features...</p>', excerpt: 'Advanced TypeScript', categorySlug: 'javascript', monthsAgo: 2 },
+      { title: 'UI Design Principles for Developers', slug: 'ui-design-principles-developers', content: '<p>Good UI design is not just for designers...</p>', excerpt: 'UI Design Principles', categorySlug: 'design', monthsAgo: 2 },
+      { title: 'Mastering Flexbox for Modern Layouts', slug: 'mastering-flexbox-modern-layouts', content: '<p>Flexbox is a powerful layout system...</p>', excerpt: 'Master Flexbox', categorySlug: 'css', monthsAgo: 3 },
+      { title: 'Docker for Beginners', slug: 'docker-beginners-containerization-basics', content: '<p>Docker has revolutionized how we deploy applications...</p>', excerpt: 'Get started with Docker', categorySlug: 'development', monthsAgo: 3 },
+      { title: 'Introduction to PostgreSQL', slug: 'introduction-to-postgresql', content: '<p>PostgreSQL is a powerful, open-source relational database...</p>', excerpt: 'Learn PostgreSQL', categorySlug: 'development', monthsAgo: 4 },
+      { title: 'Web Security Best Practices', slug: 'web-security-best-practices', content: '<p>Security should never be an afterthought...</p>', excerpt: 'Security best practices', categorySlug: 'development', monthsAgo: 4 },
+      { title: 'Async/Await in JavaScript', slug: 'async-await-javascript', content: '<p>Async/await has made asynchronous programming...</p>', excerpt: 'Async/await guide', categorySlug: 'javascript', monthsAgo: 5 },
+      { title: 'Responsive Design Patterns', slug: 'responsive-design-patterns', content: '<p>Creating websites that work well on all devices...</p>', excerpt: 'Responsive design', categorySlug: 'design', monthsAgo: 5 },
+      { title: 'Git Workflow Strategies', slug: 'git-workflow-strategies', content: '<p>Choosing the right Git workflow...</p>', excerpt: 'Git workflows', categorySlug: 'development', monthsAgo: 6 },
+      { title: 'Node.js Performance Optimization', slug: 'nodejs-performance-optimization', content: '<p>Performance optimization is crucial...</p>', excerpt: 'Node.js optimization', categorySlug: 'development', monthsAgo: 7 },
+      { title: 'Color Theory for Web Designers', slug: 'color-theory-web-designers', content: '<p>Understanding color theory...</p>', excerpt: 'Color theory basics', categorySlug: 'design', monthsAgo: 8 },
+      { title: 'Modern CSS Features', slug: 'modern-css-features', content: '<p>CSS has evolved significantly...</p>', excerpt: 'Modern CSS', categorySlug: 'css', monthsAgo: 8 },
+      { title: 'React Server Components', slug: 'react-server-components', content: '<p>React Server Components are changing...</p>', excerpt: 'Server Components', categorySlug: 'javascript', monthsAgo: 9 },
+      { title: 'Database Indexing Strategies', slug: 'database-indexing-strategies', content: '<p>Proper indexing is crucial...</p>', excerpt: 'Database indexing', categorySlug: 'development', monthsAgo: 10 },
+      { title: 'Accessibility in Web Design', slug: 'accessibility-web-design', content: '<p>Web accessibility is essential...</p>', excerpt: 'Web accessibility', categorySlug: 'design', monthsAgo: 10 },
+      { title: 'JavaScript ES2024 Features', slug: 'javascript-es2024-features', content: '<p>ES2024 brings exciting new features...</p>', excerpt: 'ES2024 features', categorySlug: 'javascript', monthsAgo: 11 },
+      { title: 'Building RESTful APIs', slug: 'building-restful-apis', content: '<p>RESTful API design principles...</p>', excerpt: 'RESTful APIs', categorySlug: 'development', monthsAgo: 11 },
+    ];
+
+    const tagIds = getTagIds();
+
+    for (const [index, postData] of postsData.entries()) {
+      const createdAt = getDateMonthsAgo(postData.monthsAgo);
+      const viewCount = Math.floor(Math.random() * 400) + 100;
+      const featuredImageId = imageIds.length ? imageIds[index % imageIds.length] : null;
+
+      await insertWithIgnore(posts, {
+        title: postData.title,
+        slug: postData.slug,
+        content: postData.content,
+        excerpt: postData.excerpt,
+        featuredImageId,
+        authorId: adminId,
+        categoryId: getCategoryId(postData.categorySlug),
+        status: 'PUBLISHED',
+        viewCount,
+        commentCount: 0,
+        publishedAt: createdAt,
+        createdAt,
+        updatedAt: createdAt,
+      });
+
+      const [post] = await db.select({ id: posts.id }).from(posts).where(eq(posts.slug, postData.slug)).limit(1);
+
+      if (post) {
+        const numTags = Math.floor(Math.random() * 3) + 2;
+        const shuffledTags = [...tagIds].sort(() => 0.5 - Math.random()).slice(0, numTags);
+
+        for (const tagId of shuffledTags) {
+          await insertWithIgnore(postTags, {
+            postId: post.id,
+            tagId,
+          });
+        }
+
+        stats.posts++;
+      }
+    }
+    console.log(`✅ ${stats.posts} posts created\n`);
 
     // ============================================
     // 8. COMMENTS
@@ -381,6 +421,7 @@ async function seed() {
       for (let i = 0; i < numComments; i++) {
         await db.insert(comments).values({
           postId: post.id,
+          parentId: null,
           authorName: `User ${i + 1}`,
           authorEmail: `user${i + 1}@example.com`,
           content: commentTexts[Math.floor(Math.random() * commentTexts.length)],
@@ -409,12 +450,12 @@ async function seed() {
     ];
     
     for (const email of subscriberEmails) {
-      await db.insert(subscribers).values({
+      await insertWithIgnore(subscribers, {
         email: email,
-        firstName: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
+        name: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
         status: Math.random() > 0.2 ? 'ACTIVE' : 'PENDING',
-        subscribedAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
-      }).onConflictDoNothing();
+        createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
+      });
       stats.subscribers++;
     }
     console.log(`✅ ${stats.subscribers} subscribers created\n`);
