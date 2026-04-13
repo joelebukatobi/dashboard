@@ -14,6 +14,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
+      CPANEL_FTP_HOST: ${{ secrets.CPANEL_FTP_HOST }}
+      CPANEL_FTP_USER: ${{ secrets.CPANEL_FTP_USER }}
+      CPANEL_FTP_PASSWORD: ${{ secrets.CPANEL_FTP_PASSWORD }}
+      CPANEL_DEPLOY_PATH: ${{ secrets.CPANEL_DEPLOY_PATH }}
       CPANEL_SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
       CPANEL_SSH_USER: ${{ secrets.CPANEL_SSH_USER }}
       CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
@@ -21,16 +25,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate required deploy secrets
+        run: |
+          set -e
+          if [ -z "$CPANEL_FTP_HOST" ]; then
+            echo "::error::Missing secret: CPANEL_FTP_HOST"
+            exit 1
+          fi
+          if [ -z "$CPANEL_FTP_USER" ]; then
+            echo "::error::Missing secret: CPANEL_FTP_USER"
+            exit 1
+          fi
+          if [ -z "$CPANEL_FTP_PASSWORD" ]; then
+            echo "::error::Missing secret: CPANEL_FTP_PASSWORD"
+            exit 1
+          fi
+          if [ -z "$CPANEL_DEPLOY_PATH" ]; then
+            echo "::error::Missing secret: CPANEL_DEPLOY_PATH"
+            exit 1
+          fi
+
+      - name: Detect SSH configuration
+        id: ssh_check
+        run: |
+          if [ -n "$CPANEL_SSH_HOST" ] && [ -n "$CPANEL_SSH_USER" ] && [ -n "$CPANEL_SSH_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.CPANEL_FTP_HOST }}
-          username: ${{ secrets.CPANEL_FTP_USER }}
-          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          server: ${{ env.CPANEL_FTP_HOST }}
+          username: ${{ env.CPANEL_FTP_USER }}
+          password: ${{ env.CPANEL_FTP_PASSWORD }}
           port: 21
           protocol: ftp
           local-dir: ./
-          server-dir: ${{ secrets.CPANEL_DEPLOY_PATH }}/
+          server-dir: ${{ env.CPANEL_DEPLOY_PATH }}/
           exclude: |
             **/.git*/**
             **/.git*
@@ -44,6 +77,7 @@ jobs:
             **/.idea/**
 
       - name: Install production dependencies and restart app
+        if: steps.ssh_check.outputs.enabled == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.CPANEL_SSH_HOST }}
@@ -51,7 +85,7 @@ jobs:
           key: ${{ env.CPANEL_SSH_KEY }}
           script: |
             set -e
-            cd "${{ secrets.CPANEL_DEPLOY_PATH }}"
+            cd "${{ env.CPANEL_DEPLOY_PATH }}"
             npm install --omit=dev
             mkdir -p tmp
             date > tmp/restart.txt
