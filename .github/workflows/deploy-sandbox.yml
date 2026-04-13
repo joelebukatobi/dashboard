@@ -1,0 +1,55 @@
+name: Deploy Sandbox
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-sandbox
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.CPANEL_FTP_HOST }}
+          username: ${{ secrets.CPANEL_FTP_USER }}
+          password: ${{ secrets.CPANEL_FTP_PASSWORD }}
+          port: ${{ secrets.CPANEL_FTP_PORT || 21 }}
+          protocol: ftp
+          local-dir: ./
+          server-dir: ${{ secrets.CPANEL_DEPLOY_PATH }}/
+          exclude: |
+            **/.git*/**
+            **/.git*
+            **/node_modules/**
+            **/.env*
+            **/.github/**
+            docs/**
+            **/.DS_Store
+            **/tmp/**
+            **/.vscode/**
+            **/.idea/**
+
+      - name: Install production dependencies and restart app
+        if: ${{ secrets.CPANEL_SSH_HOST != '' && secrets.CPANEL_SSH_USER != '' && secrets.CPANEL_SSH_KEY != '' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.CPANEL_SSH_HOST }}
+          username: ${{ secrets.CPANEL_SSH_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          port: ${{ secrets.CPANEL_SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd "${{ secrets.CPANEL_DEPLOY_PATH }}"
+            npm install --omit=dev
+            mkdir -p tmp
+            date > tmp/restart.txt
