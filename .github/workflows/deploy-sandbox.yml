@@ -140,7 +140,7 @@ jobs:
           username: ${{ env.CPANEL_SSH_USER }}
           key: ${{ env.CPANEL_SSH_KEY }}
           port: ${{ env.CPANEL_SSH_PORT }}
-          envs: DATABASE_URL
+          envs: DATABASE_URL,CPANEL_NODE_BIN
           script: |
             set -e
             DEPLOY_DIR="${{ steps.paths.outputs.deploy_dir }}"
