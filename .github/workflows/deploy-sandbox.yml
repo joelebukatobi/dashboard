@@ -13,6 +13,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      CPANEL_SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
+      CPANEL_SSH_USER: ${{ secrets.CPANEL_SSH_USER }}
+      CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,7 +27,7 @@ jobs:
           server: ${{ secrets.CPANEL_FTP_HOST }}
           username: ${{ secrets.CPANEL_FTP_USER }}
           password: ${{ secrets.CPANEL_FTP_PASSWORD }}
-          port: ${{ secrets.CPANEL_FTP_PORT || 21 }}
+          port: 21
           protocol: ftp
           local-dir: ./
           server-dir: ${{ secrets.CPANEL_DEPLOY_PATH }}/
@@ -40,13 +44,12 @@ jobs:
             **/.idea/**
 
       - name: Install production dependencies and restart app
-        if: ${{ secrets.CPANEL_SSH_HOST != '' && secrets.CPANEL_SSH_USER != '' && secrets.CPANEL_SSH_KEY != '' }}
+        if: ${{ env.CPANEL_SSH_HOST != '' && env.CPANEL_SSH_USER != '' && env.CPANEL_SSH_KEY != '' }}
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.CPANEL_SSH_HOST }}
-          username: ${{ secrets.CPANEL_SSH_USER }}
-          key: ${{ secrets.CPANEL_SSH_KEY }}
-          port: ${{ secrets.CPANEL_SSH_PORT || 22 }}
+          host: ${{ env.CPANEL_SSH_HOST }}
+          username: ${{ env.CPANEL_SSH_USER }}
+          key: ${{ env.CPANEL_SSH_KEY }}
           script: |
             set -e
             cd "${{ secrets.CPANEL_DEPLOY_PATH }}"
