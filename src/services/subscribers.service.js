@@ -3,6 +3,7 @@
 
 import { db, subscribers, activities } from '../db/index.js';
 import { eq, and, like, desc, asc, sql, gte, lt } from 'drizzle-orm';
+import crypto from 'crypto';
 
 /**
  * Subscribers Service
@@ -43,7 +44,7 @@ class SubscribersService {
     if (search) {
       const searchTerm = `%${search}%`;
       whereConditions.push(
-        sql`(${subscribers.name} ILIKE ${searchTerm} OR ${subscribers.email} ILIKE ${searchTerm})`
+        sql`(${subscribers.name} LIKE ${searchTerm} OR ${subscribers.email} LIKE ${searchTerm})`
       );
     }
 
@@ -108,14 +109,21 @@ class SubscribersService {
    * @returns {Promise<Object>} - Created subscriber
    */
   async createSubscriber(data) {
-    const result = await db.insert(subscribers).values({
+    const subscriberId = crypto.randomUUID();
+
+    await db.insert(subscribers).values({
+      id: subscriberId,
       email: data.email,
       name: data.name || null,
       status: data.status || 'ACTIVE',
       confirmedAt: data.status === 'ACTIVE' ? new Date() : null
-    }).returning();
+    });
 
-    const subscriber = result[0];
+    const [subscriber] = await db
+      .select()
+      .from(subscribers)
+      .where(eq(subscribers.id, subscriberId))
+      .limit(1);
 
     // Log SUBSCRIBER_CREATED activity
     try {
@@ -146,7 +154,7 @@ class SubscribersService {
    */
   async updateSubscriber(id, data) {
     const updateData = {
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     if (data.name !== undefined) {
@@ -169,12 +177,17 @@ class SubscribersService {
       }
     }
 
-    const result = await db.update(subscribers)
+    await db.update(subscribers)
       .set(updateData)
-      .where(eq(subscribers.id, id))
-      .returning();
+      .where(eq(subscribers.id, id));
 
-    return result[0] || null;
+    const [subscriber] = await db
+      .select()
+      .from(subscribers)
+      .where(eq(subscribers.id, id))
+      .limit(1);
+
+    return subscriber || null;
   }
 
   /**

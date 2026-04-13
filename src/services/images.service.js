@@ -6,6 +6,7 @@ import { eq, like, desc, asc, sql, and } from 'drizzle-orm';
 import { promises as fs } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import crypto from 'crypto';
 
 /**
  * Images Service
@@ -158,10 +159,13 @@ class ImagesService {
       throw new Error(`Failed to process image: ${err.message}`);
     }
 
+    const mediaId = crypto.randomUUID();
+
     // Create database record
-    const [imageRecord] = await db
+    await db
       .insert(mediaItems)
       .values({
+        id: mediaId,
         type: 'IMAGE',
         filename,
         originalName: file.filename,
@@ -176,8 +180,13 @@ class ImagesService {
         path: `/public/uploads/images/${filename}`,
         thumbnailPath: `/public/uploads/images/thumbs/${thumbFilename}`,
         uploadedBy: userId,
-      })
-      .returning();
+      });
+
+    const [imageRecord] = await db
+      .select()
+      .from(mediaItems)
+      .where(eq(mediaItems.id, mediaId))
+      .limit(1);
 
     return imageRecord;
   }
@@ -194,15 +203,20 @@ class ImagesService {
       throw new Error('Image not found');
     }
 
-    const [image] = await db
+    await db
       .update(mediaItems)
       .set({
         title: data.title,
         altText: data.altText,
         updatedAt: new Date(),
       })
+      .where(eq(mediaItems.id, id));
+
+    const [image] = await db
+      .select()
+      .from(mediaItems)
       .where(eq(mediaItems.id, id))
-      .returning();
+      .limit(1);
 
     return image;
   }

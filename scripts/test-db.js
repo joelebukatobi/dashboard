@@ -1,10 +1,11 @@
 // scripts/test-db.js
 // Simple database connection test
 import 'dotenv/config';
-import { Pool } from 'pg';
+import mysql from 'mysql2/promise';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+const pool = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+  connectionLimit: 5,
 });
 
 async function test() {
@@ -12,13 +13,11 @@ async function test() {
     console.log('Testing database connection...');
     console.log('DATABASE_URL:', process.env.DATABASE_URL?.substring(0, 40) + '...');
 
-    const client = await pool.connect();
-    console.log('✅ Connected to PostgreSQL!');
+    console.log('✅ Connected to MySQL!');
 
-    const result = await client.query('SELECT version()');
-    console.log('PostgreSQL version:', result.rows[0].version);
+    const [rows] = await pool.query('SELECT VERSION() AS version');
+    console.log('MySQL version:', rows[0].version);
 
-    client.release();
     await pool.end();
     console.log('✅ Connection test successful');
     process.exit(0);

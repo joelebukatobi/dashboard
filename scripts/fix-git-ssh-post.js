@@ -9,14 +9,19 @@ async function fixGitSSHPost() {
     const imagePath = '/public/uploads/posts/git-ssh-terminal.jpg';
 
     // Update the post - put image in content, remove featured image
-    const [updatedPost] = await db
+    await db
       .update(posts)
       .set({
         content: `<p>So if you're like me chances are you've tried to set up a repository on GitHub once or twice and you must have encountered a number of issues. One such issue is GitHub asking for a username and password for every commit you make, this slows down workflow and can be really frustrating.</p><p><br></p><p>The reason this happens is that a lot of users interact with online repositories over the terminal using HTTP URLs which in itself is an awesome standard because it's straightforward and just works, However like every other thing there's always a "but"&nbsp;and in this case, it involves GitHub requesting for your login details for every push or pull request which can become frustrating over time.</p><p><br></p><p><img src="${imagePath}" alt="Git SSH Terminal"></p>`,
         featuredImageId: null, // Remove featured image
       })
+      .where(eq(posts.slug, 'git-workflow-connecting-through-ssh'));
+
+    const [updatedPost] = await db
+      .select({ id: posts.id, content: posts.content })
+      .from(posts)
       .where(eq(posts.slug, 'git-workflow-connecting-through-ssh'))
-      .returning();
+      .limit(1);
 
     if (updatedPost) {
       console.log('✅ Post updated successfully!');

@@ -27,7 +27,7 @@ async function updateComment() {
   const postId = postResult[0].id;
   
   // Find and update Riley Garcia's comment
-  const updateResult = await db.update(comments)
+  await db.update(comments)
     .set({ 
       content: newContent,
       updatedAt: new Date()
@@ -37,8 +37,18 @@ async function updateComment() {
         eq(comments.postId, postId),
         eq(comments.authorName, 'Riley Garcia')
       )
+    );
+
+  const updateResult = await db
+    .select({ id: comments.id, content: comments.content })
+    .from(comments)
+    .where(
+      and(
+        eq(comments.postId, postId),
+        eq(comments.authorName, 'Riley Garcia')
+      )
     )
-    .returning();
+    .limit(1);
   
   if (updateResult.length > 0) {
     console.log('✅ Updated comment successfully!');

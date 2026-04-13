@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join, basename } from 'path';
 import { existsSync, copyFileSync, mkdirSync } from 'fs';
 import ffmpeg from 'fluent-ffmpeg';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -162,9 +163,11 @@ async function seed() {
       }
       
       // Insert into database with REAL metadata
-      const [videoRecord] = await db
+      const mediaId = crypto.randomUUID();
+      await db
         .insert(mediaItems)
         .values({
+          id: mediaId,
           type: 'VIDEO',
           filename,
           originalName: data.title.replace(/\s+/g, '-').toLowerCase() + '.mp4',
@@ -179,8 +182,13 @@ async function seed() {
           path: `/public/uploads/videos/${filename}`,
           thumbnailPath: thumbnailSuccess ? `/public/uploads/videos/thumbs/${thumbFilename}` : null,
           uploadedBy: adminUser.id,
-        })
-        .returning();
+        });
+
+      await db
+        .select({ id: mediaItems.id })
+        .from(mediaItems)
+        .where(eq(mediaItems.id, mediaId))
+        .limit(1);
       
       console.log(`✅ Seeded: ${data.title} (${formatDuration(sourceMetadata.duration)})`);
     }

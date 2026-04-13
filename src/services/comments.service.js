@@ -3,6 +3,7 @@
 
 import { db, comments, posts, users, activities } from '../db/index.js';
 import { eq, and, isNull, desc, count, sql, gte, lt } from 'drizzle-orm';
+import crypto from 'crypto';
 
 /**
  * Comments Service
@@ -192,27 +193,21 @@ class CommentsService {
    */
   async createComment(data) {
     const sanitizedContent = this.sanitizeContent(data.content);
+    const commentId = crypto.randomUUID();
     
-    const [comment] = await db
+    await db
       .insert(comments)
       .values({
+        id: commentId,
         postId: data.postId,
         parentId: data.parentId || null,
         authorName: data.authorName || 'Anonymous',
         authorEmail: data.authorEmail || null,
         content: sanitizedContent,
         status: 'APPROVED', // Auto-approved
-      })
-      .returning({
-        id: comments.id,
-        postId: comments.postId,
-        parentId: comments.parentId,
-        authorName: comments.authorName,
-        authorEmail: comments.authorEmail,
-        content: comments.content,
-        status: comments.status,
-        createdAt: comments.createdAt,
       });
+
+    const comment = await this.getCommentById(commentId);
 
     // Log COMMENT_CREATED activity
     try {
@@ -250,27 +245,21 @@ class CommentsService {
     }
 
     const sanitizedContent = this.sanitizeContent(data.content);
+    const replyId = crypto.randomUUID();
 
-    const [reply] = await db
+    await db
       .insert(comments)
       .values({
+        id: replyId,
         postId: parent.postId,
         parentId: parentId,
         authorName: `${author.firstName} ${author.lastName}`.trim() || 'Admin',
         authorEmail: author.email,
         content: sanitizedContent,
         status: 'APPROVED',
-      })
-      .returning({
-        id: comments.id,
-        postId: comments.postId,
-        parentId: comments.parentId,
-        authorName: comments.authorName,
-        authorEmail: comments.authorEmail,
-        content: comments.content,
-        status: comments.status,
-        createdAt: comments.createdAt,
       });
+
+    const reply = await this.getCommentById(replyId);
 
     return reply;
   }
@@ -284,7 +273,7 @@ class CommentsService {
   async updateComment(id, content) {
     const sanitizedContent = this.sanitizeContent(content);
 
-    const [updated] = await db
+    await db
       .update(comments)
       .set({
         content: sanitizedContent,
@@ -292,19 +281,9 @@ class CommentsService {
         editedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(eq(comments.id, id))
-      .returning({
-        id: comments.id,
-        postId: comments.postId,
-        parentId: comments.parentId,
-        authorName: comments.authorName,
-        authorEmail: comments.authorEmail,
-        content: comments.content,
-        status: comments.status,
-        isEdited: comments.isEdited,
-        editedAt: comments.editedAt,
-        updatedAt: comments.updatedAt,
-      });
+      .where(eq(comments.id, id));
+
+    const updated = await this.getCommentById(id);
 
     return updated;
   }

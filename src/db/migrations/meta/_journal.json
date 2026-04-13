@@ -1,12 +1,26 @@
 {
   "version": "6",
-  "dialect": "postgresql",
+  "dialect": "mysql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1744387200000,
-      "tag": "0000_initial_schema",
+      "version": "5",
+      "when": 1776046058589,
+      "tag": "0000_fair_doomsday",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776048938135,
+      "tag": "0001_stale_giant_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776050468184,
+      "tag": "0002_square_moonstone",
       "breakpoints": true
     }
   ]

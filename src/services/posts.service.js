@@ -3,6 +3,7 @@ import { db, posts, categories, tags, postTags, users, mediaItems, comments } fr
 import { eq, and, desc, asc, like, sql, gte, lt } from 'drizzle-orm';
 import { activityService } from './activity.service.js';
 import { commentsService } from './comments.service.js';
+import crypto from 'crypto';
 
 /**
  * Posts Service
@@ -202,9 +203,12 @@ class PostsService {
     }
 
     // Create post
-    const [post] = await db
+    const postId = crypto.randomUUID();
+
+    await db
       .insert(posts)
       .values({
+        id: postId,
         title,
         slug,
         content,
@@ -216,12 +220,11 @@ class PostsService {
         metaDescription,
         featuredImageId,
         publishedAt: status === 'PUBLISHED' ? new Date() : null,
-      })
-      .returning();
+      });
 
     // Add tags if provided
     if (tagIds.length > 0) {
-      await this.updatePostTags(post.id, tagIds);
+      await this.updatePostTags(postId, tagIds);
     }
 
     // Increment category post count
@@ -230,7 +233,7 @@ class PostsService {
     }
 
     // Get full post data for logging
-    const fullPost = await this.getPostById(post.id);
+    const fullPost = await this.getPostById(postId);
 
     // Log activity
     await activityService.logPostCreated(userId, fullPost);
@@ -281,7 +284,7 @@ class PostsService {
     const isPublishing = status === 'PUBLISHED' && !wasPublished;
 
     // Update post
-    const [updated] = await db
+    await db
       .update(posts)
       .set({
         title: title || post.title,
@@ -296,8 +299,7 @@ class PostsService {
         publishedAt: isPublishing ? new Date() : post.publishedAt,
         updatedAt: new Date(),
       })
-      .where(eq(posts.id, id))
-      .returning();
+      .where(eq(posts.id, id));
 
     // Update tags if provided
     if (tagIds !== undefined) {
@@ -661,7 +663,7 @@ class PostsService {
   async getTotalViews() {
     const result = await db
       .select({
-        total: sql`COALESCE(SUM(${posts.viewCount}), 0)::integer`,
+        total: sql`COALESCE(SUM(${posts.viewCount}), 0)`,
       })
       .from(posts);
     

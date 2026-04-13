@@ -2,6 +2,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readdirSync, unlinkSync, existsSync } from 'fs';
+import { eq } from 'drizzle-orm';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,8 +28,13 @@ async function clearImages() {
     
     // Delete all image entries from database
     console.log('Deleting database entries...');
-    const deleted = await db.delete(mediaItems).returning();
-    console.log(`✅ Deleted ${deleted.length} database entries\n`);
+    const existing = await db
+      .select({ id: mediaItems.id })
+      .from(mediaItems)
+      .where(eq(mediaItems.type, 'IMAGE'));
+
+    await db.delete(mediaItems).where(eq(mediaItems.type, 'IMAGE'));
+    console.log(`✅ Deleted ${existing.length} database entries\n`);
     
     // Delete all image files except source files
     console.log('Deleting created image files...');

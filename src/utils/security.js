@@ -1,5 +1,5 @@
 // src/utils/security.js
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
 // Password hashing configuration

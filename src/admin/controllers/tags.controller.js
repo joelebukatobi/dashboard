@@ -96,7 +96,7 @@ class TagsController {
   async create(request, reply) {
     try {
       const user = request.user;
-      const { name, slug, description, colorClass } = request.body;
+      const { name, slug, description } = request.body;
 
       // Validate required fields
       if (!name) {
@@ -111,7 +111,6 @@ class TagsController {
         name,
         slug,
         description,
-        colorClass: colorClass || 'badge--primary',
       }, user.id);
 
       // Redirect to edit page with toast notification
@@ -168,7 +167,7 @@ class TagsController {
     try {
       const user = request.user;
       const { id } = request.params;
-      const { name, slug, description, colorClass } = request.body;
+      const { name, slug, description } = request.body;
 
       // Check if tag exists
       const existing = await tagsService.getById(id);
@@ -184,7 +183,6 @@ class TagsController {
         name,
         slug,
         description,
-        colorClass,
       }, user.id);
 
       // Return success with toast notification

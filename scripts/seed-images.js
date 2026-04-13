@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join, basename } from 'path';
 import { existsSync, copyFileSync, mkdirSync } from 'fs';
 import sharp from 'sharp';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -146,7 +147,9 @@ async function seed() {
         }
         
         // Insert into database
-        const [imageRecord] = await db.insert(mediaItems).values({
+        const mediaId = crypto.randomUUID();
+        await db.insert(mediaItems).values({
+          id: mediaId,
           type: 'IMAGE',
           filename: newFilename,
           originalName: imageInfo.title,
@@ -160,7 +163,13 @@ async function seed() {
           path: `/public/uploads/images/${newFilename}`,
           thumbnailPath: `/public/uploads/images/thumbs/${thumbFilename}`,
           uploadedBy: adminId,
-        }).returning();
+        });
+
+        const [imageRecord] = await db
+          .select()
+          .from(mediaItems)
+          .where(eq(mediaItems.id, mediaId))
+          .limit(1);
         
         createdImages.push(imageRecord);
         console.log(`✅ Seeded: ${imageInfo.title}\n`);

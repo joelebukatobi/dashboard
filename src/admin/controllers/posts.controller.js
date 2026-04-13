@@ -4,6 +4,7 @@ import { db, categories, tags } from '../../db/index.js';
 import { eq } from 'drizzle-orm';
 import { imagesService } from '../../services/images.service.js';
 import { videosService } from '../../services/videos.service.js';
+import crypto from 'crypto';
 
 /**
  * Posts Controller
@@ -432,9 +433,12 @@ class PostsController {
       await fs.writeFile(fullPath, fileBuffer);
 
       // Create media record in database with hash
-      const [mediaItem] = await db
+      const mediaItemId = crypto.randomUUID();
+
+      await db
         .insert(mediaItems)
         .values({
+          id: mediaItemId,
           type: 'IMAGE',
           filename,
           originalName: file.filename,
@@ -443,8 +447,13 @@ class PostsController {
           path: filepath,
           hash, // Store the hash for future deduplication
           uploadedBy: request.user.id,
-        })
-        .returning();
+        });
+
+      const [mediaItem] = await db
+        .select()
+        .from(mediaItems)
+        .where(eq(mediaItems.id, mediaItemId))
+        .limit(1);
 
       return reply.send({
         id: mediaItem.id,
