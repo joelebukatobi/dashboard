@@ -87,7 +87,12 @@ jobs:
           port: ${{ env.CPANEL_SSH_PORT }}
           script: |
             set -e
-            cd "${{ env.DEPLOY_PATH }}"
+            DEPLOY_DIR="$(printf '%s' "${{ env.DEPLOY_PATH }}" | tr -d '\r' | xargs)"
+            if [ -z "$DEPLOY_DIR" ]; then
+              echo "DEPLOY_PATH is empty after trim"
+              exit 1
+            fi
+            cd "$DEPLOY_DIR"
             npm install --omit=dev
             mkdir -p tmp
             cp -f src/server.js app.js
