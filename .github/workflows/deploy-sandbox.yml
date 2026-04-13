@@ -46,6 +46,40 @@ jobs:
             exit 1
           fi
 
+      - name: Resolve deploy paths
+        id: paths
+        run: |
+          set -e
+          DEPLOY_DIR="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r' | sed 's/^ *//;s/ *$//')"
+          if [ -z "$DEPLOY_DIR" ]; then
+            echo "::error::DEPLOY_PATH resolved to empty value"
+            exit 1
+          fi
+
+          FTP_DIR="$DEPLOY_DIR"
+          HOME_PREFIX="/home/$CPANEL_FTP_USER"
+          if [ "${FTP_DIR#${HOME_PREFIX}}" != "$FTP_DIR" ]; then
+            FTP_DIR="${FTP_DIR#${HOME_PREFIX}}"
+          fi
+
+          if [ -z "$FTP_DIR" ]; then
+            FTP_DIR="/"
+          fi
+
+          case "$FTP_DIR" in
+            /*) ;;
+            *) FTP_DIR="/$FTP_DIR" ;;
+          esac
+
+          case "$FTP_DIR" in
+            */) ;;
+            *) FTP_DIR="$FTP_DIR/" ;;
+          esac
+
+          echo "deploy_dir=$DEPLOY_DIR" >> "$GITHUB_OUTPUT"
+          echo "ftp_dir=$FTP_DIR" >> "$GITHUB_OUTPUT"
+          echo "Using FTP directory: $FTP_DIR"
+
       - name: Detect SSH configuration
         id: ssh_check
         run: |
@@ -64,7 +98,7 @@ jobs:
           port: 21
           protocol: ftp
           local-dir: ./
-          server-dir: ${{ env.DEPLOY_PATH }}/
+          server-dir: ${{ steps.paths.outputs.ftp_dir }}
           exclude: |
             **/.git*/**
             **/.git*
@@ -87,13 +121,24 @@ jobs:
           port: ${{ env.CPANEL_SSH_PORT }}
           script: |
             set -e
-            DEPLOY_DIR="$(printf '%s' "${{ env.DEPLOY_PATH }}" | tr -d '\r' | xargs)"
-            if [ -z "$DEPLOY_DIR" ]; then
-              echo "DEPLOY_PATH is empty after trim"
-              exit 1
-            fi
+            DEPLOY_DIR="${{ steps.paths.outputs.deploy_dir }}"
             cd "$DEPLOY_DIR"
             npm install --omit=dev
             mkdir -p tmp
             cp -f src/server.js app.js
             date > tmp/restart.txt
+
+      - name: Verify deployed files on server
+        if: steps.ssh_check.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.CPANEL_SSH_HOST }}
+          username: ${{ env.CPANEL_SSH_USER }}
+          key: ${{ env.CPANEL_SSH_KEY }}
+          port: ${{ env.CPANEL_SSH_PORT }}
+          script: |
+            set -e
+            DEPLOY_DIR="${{ steps.paths.outputs.deploy_dir }}"
+            cd "$DEPLOY_DIR"
+            pwd
+            ls -la
