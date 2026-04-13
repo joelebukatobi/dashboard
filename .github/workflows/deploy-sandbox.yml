@@ -90,4 +90,5 @@ jobs:
             cd "${{ env.DEPLOY_PATH }}"
             npm install --omit=dev
             mkdir -p tmp
+            cp -f src/server.js app.js
             date > tmp/restart.txt
