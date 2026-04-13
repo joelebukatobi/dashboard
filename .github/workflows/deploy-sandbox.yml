@@ -99,6 +99,7 @@ jobs:
           protocol: ftp
           local-dir: ./
           server-dir: ${{ steps.paths.outputs.ftp_dir }}
+          state-name: .ftp-deploy-sync-state-v2.json
           exclude: |
             **/.git*/**
             **/.git*
