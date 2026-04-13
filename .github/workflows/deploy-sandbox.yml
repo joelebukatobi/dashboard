@@ -22,7 +22,6 @@ jobs:
       CPANEL_SSH_USER: ${{ secrets.CPANEL_USER }}
       CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
       CPANEL_SSH_PORT: ${{ secrets.CPANEL_PORT }}
-      CPANEL_DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,6 +35,17 @@ jobs:
         run: |
           npm install
           npm run build:css
+
+      - name: Run database migrations (GitHub runner)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          set -e
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Missing secret: DATABASE_URL"
+            exit 1
+          fi
+          npm run db:migrate
 
       - name: Validate required deploy secrets
         run: |
@@ -131,28 +141,12 @@ jobs:
           username: ${{ env.CPANEL_SSH_USER }}
           key: ${{ env.CPANEL_SSH_KEY }}
           port: ${{ env.CPANEL_SSH_PORT }}
-          envs: CPANEL_DATABASE_URL
           script: |
             set -e
             DEPLOY_DIR="${{ steps.paths.outputs.deploy_dir }}"
             cd "$DEPLOY_DIR"
 
             npm install
-
-            if [ -n "$CPANEL_DATABASE_URL" ]; then
-              export DATABASE_URL="$CPANEL_DATABASE_URL"
-              if node -e "process.exit(Number(process.versions.node.split('.')[0]) >= 16 ? 0 : 1)"; then
-                if npm run db:migrate; then
-                  echo "Database migration completed"
-                else
-                  echo "db:migrate failed on remote host; continuing deployment"
-                fi
-              else
-                echo "Remote Node runtime is too old for drizzle-kit; skipping db:migrate"
-              fi
-            else
-              echo "DATABASE_URL secret not set for workflow; skipping db:migrate"
-            fi
 
             npm prune --omit=dev
             mkdir -p tmp
