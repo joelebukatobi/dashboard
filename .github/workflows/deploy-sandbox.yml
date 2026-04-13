@@ -182,7 +182,7 @@ jobs:
 
             "$NODE_BIN" --input-type=module -e "import mysql from 'mysql2/promise'; const conn = await mysql.createConnection(process.env.DATABASE_URL); await conn.query('SELECT 1'); await conn.end(); console.log('Database connectivity check: OK');"
 
-            printf 'y\n' | "$NODE_BIN" ./node_modules/drizzle-kit/bin.cjs push
+            "$NODE_BIN" ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.config.js
 
             npm prune --omit=dev
             mkdir -p tmp
