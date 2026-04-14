@@ -29,7 +29,6 @@ jobs:
       CPANEL_SSH_USER: ${{ secrets.CPANEL_USER }}
       CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
       CPANEL_SSH_PORT: ${{ secrets.CPANEL_PORT }}
-      CPANEL_NODE_BIN: ${{ secrets.CPANEL_NODE_BIN }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout
@@ -109,14 +108,6 @@ jobs:
             echo "enabled=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Validate SSH migration runtime
-        if: steps.ssh_check.outputs.enabled == 'true'
-        run: |
-          if [ -z "$CPANEL_NODE_BIN" ]; then
-            echo "::error::Missing secret: CPANEL_NODE_BIN"
-            exit 1
-          fi
-
       - name: Upload files via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -155,9 +146,6 @@ jobs:
             DEPLOY_DIR="${{ steps.paths.outputs.deploy_dir }}"
             cd "$DEPLOY_DIR"
 
-            NODE_BIN_RAW="${{ env.CPANEL_NODE_BIN }}"
-            NODE_BIN="$(printf '%s' "$NODE_BIN_RAW" | tr -d '\r' | xargs)"
-
             echo "Deploy diagnostics:"
             echo "- working directory: $(pwd)"
             if [ -n "$DATABASE_URL" ]; then
@@ -166,17 +154,7 @@ jobs:
               echo "- DATABASE_URL: missing"
             fi
 
-            if [ -z "$NODE_BIN" ]; then
-              echo "CPANEL_NODE_BIN secret is required"
-              exit 1
-            fi
-
-            echo "- NODE_BIN: $NODE_BIN"
-
-            if [ ! -x "$NODE_BIN" ]; then
-              echo "Configured CPANEL_NODE_BIN is not executable: $NODE_BIN"
-              exit 1
-            fi
+            echo "- Node version: $(node --version)"
 
             LOCK_HASH_FILE=".package-lock.sha256"
             CURRENT_LOCK_HASH="$(sha256sum package-lock.json | awk '{print $1}')"
@@ -199,16 +177,13 @@ jobs:
               exit 1
             fi
 
-            echo "Using Node binary for migration: $NODE_BIN"
-            "$NODE_BIN" --version
+            node --input-type=module -e "import mysql from 'mysql2/promise'; const conn = await mysql.createConnection(process.env.DATABASE_URL); await conn.query('SELECT 1'); await conn.end(); console.log('Database connectivity check: OK');"
 
-            "$NODE_BIN" --input-type=module -e "import mysql from 'mysql2/promise'; const conn = await mysql.createConnection(process.env.DATABASE_URL); await conn.query('SELECT 1'); await conn.end(); console.log('Database connectivity check: OK');"
-
-            "$NODE_BIN" --input-type=module -e "import mysql from 'mysql2/promise'; import { drizzle } from 'drizzle-orm/mysql2'; import { migrate } from 'drizzle-orm/mysql2/migrator'; const pool = mysql.createPool(process.env.DATABASE_URL); const db = drizzle(pool); await migrate(db, { migrationsFolder: './src/db/migrations' }); await pool.end(); console.log('Database migrations: OK');"
+            node --input-type=module -e "import mysql from 'mysql2/promise'; import { drizzle } from 'drizzle-orm/mysql2'; import { migrate } from 'drizzle-orm/mysql2/migrator'; const pool = mysql.createPool(process.env.DATABASE_URL); const db = drizzle(pool); await migrate(db, { migrationsFolder: './src/db/migrations' }); await pool.end(); console.log('Database migrations: OK');"
 
             if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.run_seed }}" = "true" ]; then
               echo "Running database seed script..."
-              "$NODE_BIN" ./scripts/seed.js
+              node ./scripts/seed.js
             else
               echo "Skipping seed script"
             fi
