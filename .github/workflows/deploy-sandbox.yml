@@ -117,14 +117,14 @@ jobs:
             exit 1
           fi
 
-      - name: Upload files via SFTP
+      - name: Upload files via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ env.CPANEL_FTP_HOST }}
           username: ${{ env.CPANEL_FTP_USER }}
           password: ${{ env.CPANEL_FTP_PASSWORD }}
-          port: 22
-          protocol: sftp
+          port: 21
+          protocol: ftps
           local-dir: ./
           server-dir: ${{ steps.paths.outputs.ftp_dir }}
           state-name: .ftp-deploy-sync-state-v2.json
