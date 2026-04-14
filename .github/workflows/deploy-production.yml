@@ -1,0 +1,245 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      CPANEL_FTP_HOST: ${{ secrets.CPANEL_FTP_HOST }}
+      CPANEL_FTP_USER: ${{ secrets.CPANEL_FTP_USER }}
+      CPANEL_FTP_PASSWORD: ${{ secrets.CPANEL_FTP_PASSWORD }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      CPANEL_SSH_HOST: ${{ secrets.CPANEL_HOST }}
+      CPANEL_SSH_USER: ${{ secrets.CPANEL_USER }}
+      CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+      CPANEL_SSH_PORT: ${{ secrets.CPANEL_PORT }}
+      CPANEL_NODE_BIN: ${{ secrets.CPANEL_NODE_BIN }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Build frontend assets
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build:css
+
+      - name: Validate required deploy secrets
+        run: |
+          set -e
+          if [ -z "$CPANEL_FTP_HOST" ]; then
+            echo "::error::Missing secret: CPANEL_FTP_HOST"
+            exit 1
+          fi
+          if [ -z "$CPANEL_FTP_USER" ]; then
+            echo "::error::Missing secret: CPANEL_FTP_USER"
+            exit 1
+          fi
+          if [ -z "$CPANEL_FTP_PASSWORD" ]; then
+            echo "::error::Missing secret: CPANEL_FTP_PASSWORD"
+            exit 1
+          fi
+          if [ -z "$DEPLOY_PATH" ]; then
+            echo "::error::Missing secret: DEPLOY_PATH"
+            exit 1
+          fi
+
+      - name: Resolve deploy paths
+        id: paths
+        run: |
+          set -e
+          DEPLOY_DIR="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r' | sed 's/^ *//;s/ *$//')"
+          if [ -z "$DEPLOY_DIR" ]; then
+            echo "::error::DEPLOY_PATH resolved to empty value"
+            exit 1
+          fi
+
+          FTP_DIR="$DEPLOY_DIR"
+          HOME_PREFIX="/home/$CPANEL_FTP_USER"
+          if [ "${FTP_DIR#${HOME_PREFIX}}" != "$FTP_DIR" ]; then
+            FTP_DIR="${FTP_DIR#${HOME_PREFIX}}"
+          fi
+
+          if [ -z "$FTP_DIR" ]; then
+            FTP_DIR="/"
+          fi
+
+          case "$FTP_DIR" in
+            /*) ;;
+            *) FTP_DIR="/$FTP_DIR" ;;
+          esac
+
+          case "$FTP_DIR" in
+            */) ;;
+            *) FTP_DIR="$FTP_DIR/" ;;
+          esac
+
+          echo "deploy_dir=$DEPLOY_DIR" >> "$GITHUB_OUTPUT"
+          echo "ftp_dir=$FTP_DIR" >> "$GITHUB_OUTPUT"
+          echo "Using FTP directory: $FTP_DIR"
+
+      - name: Detect SSH configuration
+        id: ssh_check
+        run: |
+          if [ -n "$CPANEL_SSH_HOST" ] && [ -n "$CPANEL_SSH_USER" ] && [ -n "$CPANEL_SSH_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate SSH migration runtime
+        if: steps.ssh_check.outputs.enabled == 'true'
+        run: |
+          if [ -z "$CPANEL_NODE_BIN" ]; then
+            echo "::error::Missing secret: CPANEL_NODE_BIN"
+            exit 1
+          fi
+
+      - name: Upload files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ env.CPANEL_FTP_HOST }}
+          username: ${{ env.CPANEL_FTP_USER }}
+          password: ${{ env.CPANEL_FTP_PASSWORD }}
+          port: 21
+          protocol: ftp
+          local-dir: ./
+          server-dir: ${{ steps.paths.outputs.ftp_dir }}
+          state-name: .ftp-deploy-sync-state-v2.json
+          exclude: |
+            **/public/uploads/**
+            **/.git*/**
+            **/.git*
+            **/node_modules/**
+            **/.env*
+            **/.github/**
+            docs/**
+            **/.DS_Store
+            **/tmp/**
+            **/.vscode/**
+            **/.idea/**
+
+      - name: Install production dependencies and restart app
+        if: steps.ssh_check.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.CPANEL_SSH_HOST }}
+          username: ${{ env.CPANEL_SSH_USER }}
+          key: ${{ env.CPANEL_SSH_KEY }}
+          port: ${{ env.CPANEL_SSH_PORT }}
+          envs: DATABASE_URL
+          script: |
+            set -e
+            set -o pipefail
+            DEPLOY_DIR="${{ steps.paths.outputs.deploy_dir }}"
+            cd "$DEPLOY_DIR"
+
+            NODE_BIN_RAW="${{ env.CPANEL_NODE_BIN }}"
+            NODE_BIN="$(printf '%s' "$NODE_BIN_RAW" | tr -d '\r' | xargs)"
+
+            echo "Deploy diagnostics:"
+            echo "- working directory: $(pwd)"
+            if [ -n "$DATABASE_URL" ]; then
+              echo "- DATABASE_URL: present"
+            else
+              echo "- DATABASE_URL: missing"
+            fi
+
+            if [ -z "$NODE_BIN" ]; then
+              echo "CPANEL_NODE_BIN secret is required"
+              exit 1
+            fi
+
+            echo "- NODE_BIN: $NODE_BIN"
+
+            if [ ! -x "$NODE_BIN" ]; then
+              echo "Configured CPANEL_NODE_BIN is not executable: $NODE_BIN"
+              exit 1
+            fi
+
+            LOCK_HASH_FILE=".package-lock.sha256"
+            CURRENT_LOCK_HASH="$(sha256sum package-lock.json | awk '{print $1}')"
+            PREVIOUS_LOCK_HASH=""
+
+            if [ -f "$LOCK_HASH_FILE" ]; then
+              PREVIOUS_LOCK_HASH="$(cat "$LOCK_HASH_FILE")"
+            fi
+
+            if [ ! -d node_modules ] || [ "$CURRENT_LOCK_HASH" != "$PREVIOUS_LOCK_HASH" ]; then
+              echo "Installing production dependencies"
+              npm ci --omit=dev --no-audit --no-fund
+              printf '%s\n' "$CURRENT_LOCK_HASH" > "$LOCK_HASH_FILE"
+            else
+              echo "Skipping dependency install (lockfile unchanged)"
+            fi
+
+            if [ -z "$DATABASE_URL" ]; then
+              echo "DATABASE_URL secret is required for migrations"
+              exit 1
+            fi
+
+            echo "Using Node binary for migration: $NODE_BIN"
+            "$NODE_BIN" --version
+
+            "$NODE_BIN" --input-type=module -e "import mysql from 'mysql2/promise'; const conn = await mysql.createConnection(process.env.DATABASE_URL); await conn.query('SELECT 1'); await conn.end(); console.log('Database connectivity check: OK');"
+
+            "$NODE_BIN" --input-type=module -e "import mysql from 'mysql2/promise'; import { drizzle } from 'drizzle-orm/mysql2'; import { migrate } from 'drizzle-orm/mysql2/migrator'; const pool = mysql.createPool(process.env.DATABASE_URL); const db = drizzle(pool); await migrate(db, { migrationsFolder: './src/db/migrations' }); await pool.end(); console.log('Database migrations: OK');"
+
+            # NO SEEDING IN PRODUCTION
+
+            mkdir -p tmp
+            date > tmp/restart.txt
+
+      - name: Verify deployed files on server
+        if: steps.ssh_check.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.CPANEL_SSH_HOST }}
+          username: ${{ env.CPANEL_SSH_USER }}
+          key: ${{ env.CPANEL_SSH_KEY }}
+          port: ${{ env.CPANEL_SSH_PORT }}
+          script: |
+            set -e
+            DEPLOY_DIR="${{ steps.paths.outputs.deploy_dir }}"
+            cd "$DEPLOY_DIR"
+            pwd
+            ls -la
+
+      - name: Health check - verify app responds
+        if: steps.ssh_check.outputs.enabled == 'true'
+        run: |
+          set -e
+          echo "Waiting for app to start..."
+          sleep 10
+          
+          PRODUCTION_URL="${{ secrets.PRODUCTION_URL || 'https://joelebukatobi.dev' }}"
+          echo "Checking health at: $PRODUCTION_URL"
+          
+          # Retry up to 3 times with 5 second intervals
+          for i in 1 2 3; do
+            if curl -sf "$PRODUCTION_URL" > /dev/null; then
+              echo "✅ Health check passed - app is responding"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          
+          echo "❌ Health check failed - app is not responding"
+          exit 1
