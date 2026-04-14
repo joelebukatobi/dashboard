@@ -230,3 +230,26 @@ jobs:
             cd "$DEPLOY_DIR"
             pwd
             ls -la
+
+      - name: Health check - verify app responds
+        if: steps.ssh_check.outputs.enabled == 'true'
+        run: |
+          set -e
+          echo "Waiting for app to start..."
+          sleep 10
+          
+          SANDBOX_URL="${{ secrets.SANDBOX_URL || 'https://sandbox.joelebukatobi.dev' }}"
+          echo "Checking health at: $SANDBOX_URL"
+          
+          # Retry up to 3 times with 5 second intervals
+          for i in 1 2 3; do
+            if curl -sf "$SANDBOX_URL" > /dev/null; then
+              echo "✅ Health check passed - app is responding"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          
+          echo "❌ Health check failed - app is not responding"
+          exit 1
