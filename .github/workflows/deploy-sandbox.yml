@@ -171,7 +171,7 @@ jobs:
               PREVIOUS_LOCK_HASH="$(cat "$LOCK_HASH_FILE")"
             fi
 
-            if [ ! -d node_modules ] || [ "$CURRENT_LOCK_HASH" != "$PREVIOUS_LOCK_HASH" ]; then
+            if [ ! -d node_modules ] || [ "$CURRENT_LOCK_HASH" != "$PREVIOUS_LOCK_HASH" ] || [ ! -f node_modules/.bin/sass ]; then
               echo "Installing dependencies (including dev for build tools)"
               npm ci --no-audit --no-fund
               printf '%s\n' "$CURRENT_LOCK_HASH" > "$LOCK_HASH_FILE"
