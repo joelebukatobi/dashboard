@@ -1,0 +1,55 @@
+// scss/admin/pages/_setup-wizard.scss
+// Setup wizard page styles - only unique styles, reuse existing components
+
+.setup-wizard {
+  &__token-info {
+    @apply bg-blue-50 border border-blue-200 rounded-lg p-[1.6rem] mb-[2.4rem];
+    @apply flex items-center justify-center gap-[0.8rem];
+    @apply text-body text-blue-700;
+
+    .dark & {
+      @apply bg-blue-900/20 border-blue-800 text-blue-300;
+    }
+
+    i {
+      @apply w-[1.6rem] h-[1.6rem];
+    }
+
+    strong {
+      @apply font-semibold;
+    }
+  }
+}
+
+// Remove double margin when form__group is inside form__row
+.form__row {
+  .form__group {
+    @apply mb-0;
+  }
+}
+
+// Form hint text (e.g., password requirements)
+.form__hint {
+  @apply block mt-[0.8rem] text-body-sm text-grey-500;
+
+  .dark & {
+    @apply text-grey-400;
+  }
+}
+
+// Inline checkbox with aligned text (no background)
+.checkbox-inline {
+  @apply flex items-center gap-[0.8rem];
+
+  .checkbox {
+    @apply flex-shrink-0;
+  }
+
+  &__text {
+    @apply text-body-sm text-grey-500;
+
+    .dark & {
+      @apply text-grey-400;
+    }
+  }
+}

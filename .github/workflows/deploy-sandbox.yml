@@ -183,16 +183,26 @@ jobs:
               exit 1
             fi
 
+            # Check database connectivity
             node --input-type=module -e "import mysql from 'mysql2/promise'; const conn = await mysql.createConnection(process.env.DATABASE_URL); await conn.query('SELECT 1'); await conn.end(); console.log('Database connectivity check: OK');"
 
-            node --input-type=module -e "import mysql from 'mysql2/promise'; import { drizzle } from 'drizzle-orm/mysql2'; import { migrate } from 'drizzle-orm/mysql2/migrator'; const pool = mysql.createPool(process.env.DATABASE_URL); const db = drizzle(pool); await migrate(db, { migrationsFolder: './src/db/migrations' }); await pool.end(); console.log('Database migrations: OK');"
+            # Run migrations using drizzle-kit migrate
+            npm run db:migrate
+            echo "Database migrations: OK"
 
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.run_seed }}" = "true" ]; then
-              echo "Running database seed script..."
-              node ./scripts/seed.js
-            else
-              echo "Skipping seed script"
-            fi
+            # NOTE: Database seeding is disabled. Use setup wizard instead.
+            # To set up the site, SSH into the server and run:
+            #   cd ${{ secrets.DEPLOY_PATH }} && node scripts/generate-setup-token.js
+            # Then share the generated URL with the client.
+            #
+            # if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.run_seed }}" = "true" ]; then
+            #   echo "Running database seed script..."
+            #   node ./scripts/seed.js
+            # else
+            #   echo "Skipping seed script"
+            # fi
+
+            echo "✅ Deployment complete. Run 'node scripts/generate-setup-token.js' to generate setup URL."
 
             mkdir -p tmp
             date > tmp/restart.txt

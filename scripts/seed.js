@@ -519,4 +519,182 @@ async function seed() {
   }
 }
 
-seed();
+/**
+ * Seed demo data programmatically (used by setup wizard)
+ * @param {Object} options
+ * @param {boolean} options.skipAdmin - Skip creating admin user (already created by setup)
+ * @param {boolean} options.includeMedia - Include images and videos
+ */
+export async function seedDemoData(options = {}) {
+  const { skipAdmin = false, includeMedia = false } = options;
+
+  console.log('🌱 Seeding demo data...\n');
+  const startTime = Date.now();
+
+  // Dynamic imports
+  const { db, users, categories, tags, settings, posts, postTags, comments, mediaItems, subscribers, activities } = await import('../src/db/index.js');
+  const { eq, sql } = await import('drizzle-orm');
+  const { default: bcrypt } = await import('bcryptjs');
+
+  const dialect = process.env.DATABASE_URL?.startsWith('mysql') ? 'mysql' : 'postgres';
+
+  const insertWithIgnore = (table, values) => {
+    if (dialect === 'mysql') {
+      return db.insert(table).values(values);
+    }
+    return db.insert(table).values(values).onConflictDoNothing();
+  };
+
+  // Get or create admin user
+  let adminId;
+  if (!skipAdmin) {
+    console.log('👤 Creating admin user...');
+    const adminPassword = await bcrypt.hash('Admin@123', 10);
+    await insertWithIgnore(users, {
+      firstName: 'Admin',
+      lastName: 'User',
+      email: 'admin@example.com',
+      password: adminPassword,
+      role: 'ADMIN',
+      status: 'ACTIVE',
+    });
+    adminId = (await db.select().from(users).where(eq(users.email, 'admin@example.com')).limit(1))[0]?.id;
+    console.log('✅ Admin user created\n');
+  } else {
+    // Get existing admin
+    const [admin] = await db.select().from(users).where(eq(users.role, 'ADMIN')).limit(1);
+    adminId = admin?.id;
+    console.log('👤 Using existing admin user\n');
+  }
+
+  // Seed categories
+  console.log('📁 Creating categories...');
+  const categoryData = [
+    { name: 'Development', slug: 'development', description: 'Software development articles' },
+    { name: 'Design', slug: 'design', description: 'Design tips and inspiration' },
+    { name: 'CSS', slug: 'css', description: 'CSS tutorials and techniques' },
+    { name: 'JavaScript', slug: 'javascript', description: 'JavaScript and Node.js content' },
+    { name: 'Tutorials', slug: 'tutorials', description: 'Step-by-step guides' },
+    { name: 'News', slug: 'news', description: 'Industry news and updates' },
+  ];
+
+  for (const cat of categoryData) {
+    await insertWithIgnore(categories, cat);
+  }
+  const allCategories = await db.select().from(categories);
+  console.log(`✅ ${allCategories.length} categories created\n`);
+
+  // Seed tags
+  console.log('🏷️  Creating tags...');
+  const tagData = [
+    { name: 'Tutorial', slug: 'tutorial' },
+    { name: 'Best Practices', slug: 'best-practices' },
+    { name: 'Tips & Tricks', slug: 'tips-tricks' },
+    { name: 'Beginner', slug: 'beginner' },
+    { name: 'Advanced', slug: 'advanced' },
+    { name: 'Performance', slug: 'performance' },
+    { name: 'Security', slug: 'security' },
+    { name: 'Tools', slug: 'tools' },
+  ];
+
+  for (const tag of tagData) {
+    await insertWithIgnore(tags, tag);
+  }
+  const allTags = await db.select().from(tags);
+  console.log(`✅ ${allTags.length} tags created\n`);
+
+  // Seed settings
+  console.log('⚙️  Creating settings...');
+  const settingData = [
+    { key: 'siteName', value: 'My Blog', group: 'GENERAL', type: 'STRING' },
+    { key: 'siteTagline', value: 'A modern blog built with Fastify', group: 'GENERAL', type: 'STRING' },
+    { key: 'siteUrl', value: process.env.APP_URL || 'http://localhost:3000', group: 'GENERAL', type: 'STRING' },
+    { key: 'timezone', value: 'UTC', group: 'GENERAL', type: 'STRING' },
+    { key: 'postsPerPage', value: '10', group: 'CONTENT', type: 'NUMBER' },
+  ];
+
+  for (const setting of settingData) {
+    await insertWithIgnore(settings, setting);
+  }
+  console.log(`✅ ${settingData.length} settings created\n`);
+
+  // Seed sample posts
+  console.log('📝 Creating sample posts...');
+  const samplePosts = [
+    {
+      title: 'Welcome to Your New Blog',
+      slug: 'welcome-to-your-new-blog',
+      excerpt: 'This is your first blog post. Edit or delete it to get started!',
+      content: '<p>Welcome to your new blog! This is a sample post to help you get started.</p><p>You can create, edit, and manage posts from the admin dashboard.</p>',
+      status: 'PUBLISHED',
+      categoryId: allCategories[0]?.id,
+      tagIds: [allTags[0]?.id, allTags[1]?.id],
+    },
+    {
+      title: 'Getting Started with Fastify',
+      slug: 'getting-started-with-fastify',
+      excerpt: 'Learn how to build high-performance web applications with Fastify.',
+      content: '<p>Fastify is a fast and low overhead web framework for Node.js.</p><p>In this post, we\'ll explore the basics of building applications with Fastify.</p>',
+      status: 'PUBLISHED',
+      categoryId: allCategories[3]?.id,
+      tagIds: [allTags[0]?.id, allTags[3]?.id],
+    },
+    {
+      title: 'CSS Best Practices',
+      slug: 'css-best-practices',
+      excerpt: 'Tips and tricks for writing maintainable CSS.',
+      content: '<p>Writing clean, maintainable CSS is essential for any web project.</p><p>Here are some best practices to follow.</p>',
+      status: 'PUBLISHED',
+      categoryId: allCategories[2]?.id,
+      tagIds: [allTags[1]?.id, allTags[2]?.id],
+    },
+  ];
+
+  for (const postData of samplePosts) {
+    const { tagIds, ...post } = postData;
+    const [inserted] = await db.insert(posts).values({
+      ...post,
+      authorId: adminId,
+      publishedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Add post tags
+    if (tagIds) {
+      for (const tagId of tagIds) {
+        if (tagId) {
+          await db.insert(postTags).values({
+            postId: inserted.insertId || inserted[0]?.insertId,
+            tagId,
+          });
+        }
+      }
+    }
+  }
+  console.log(`✅ ${samplePosts.length} sample posts created\n`);
+
+  // Seed subscribers
+  console.log('📧 Creating subscribers...');
+  const subscriberEmails = ['john@example.com', 'jane@example.com', 'bob@example.com'];
+  for (const email of subscriberEmails) {
+    await insertWithIgnore(subscribers, {
+      email,
+      status: 'ACTIVE',
+      createdAt: new Date(),
+    });
+  }
+  console.log(`✅ ${subscriberEmails.length} subscribers created\n`);
+
+  // Summary
+  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+  console.log('\n✨ Demo data seeded successfully!');
+  console.log(`⏱️  Duration: ${duration}s\n`);
+
+  return { success: true, duration };
+}
+
+// Run seed if called directly (not imported)
+if (import.meta.url === `file://${process.argv[1]}`) {
+  seed();
+}

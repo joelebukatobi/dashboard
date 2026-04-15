@@ -1,0 +1,50 @@
+// scss/admin/pages/_coming-soon.scss
+// Coming soon page styles
+
+.coming-soon {
+  @apply min-h-screen flex items-center justify-center bg-grey-50;
+
+  .dark & {
+    @apply bg-grey-900;
+  }
+
+  &__card {
+    @apply max-w-[44rem] mx-auto p-[4rem] bg-white rounded-xl shadow-sm text-center;
+
+    .dark & {
+      @apply bg-grey-800;
+    }
+  }
+
+  &__icon {
+    @apply mb-[2.4rem] flex justify-center;
+
+    i {
+      @apply text-grey-400;
+
+      .dark & {
+        @apply text-grey-500;
+      }
+    }
+  }
+
+  &__title {
+    @apply text-[2.8rem] font-bold text-grey-900 mb-[1.6rem];
+
+    .dark & {
+      @apply text-grey-50;
+    }
+  }
+
+  &__message {
+    @apply text-body-lg text-grey-600 leading-relaxed;
+
+    .dark & {
+      @apply text-grey-400;
+    }
+
+    br {
+      @apply hidden sm:block;
+    }
+  }
+}

@@ -83,7 +83,7 @@ export function loginPage({ error = '', success = '' } = {}) {
               </div>
 
               <!-- Sign in button -->
-              <button type="submit" class="btn btn--primary btn--lg btn--full">
+              <button type="submit" class="btn btn--primary btn--xl btn--full">
                 Sign In
               </button>
             </form>
@@ -162,7 +162,7 @@ export function loginPage({ error = '', success = '' } = {}) {
                   />
                 </div>
 
-                <button type="submit" class="btn btn--primary btn--lg btn--full">Send reset link</button>
+                <button type="submit" class="btn btn--primary btn--xl btn--full">Send reset link</button>
               </form>
 
               <div class="auth-card__footer">

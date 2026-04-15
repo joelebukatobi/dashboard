@@ -109,11 +109,15 @@
 
   // Sizes
   &--sm {
-    @apply px-[1.2rem] py-[0.4rem] text-body-xs;
+    @apply px-[1.2rem] py-[0.4rem] text-body-xs h-[1.6rem];
   }
 
   &--lg {
-    @apply px-[2.4rem] py-[1.2rem] text-body;
+    @apply px-[2.4rem] py-[1.2rem] text-body h-[3.6rem];
+  }
+
+  &--xl {
+    @apply px-[2.4rem] py-[1.6rem] text-body h-[4rem];
   }
 
   // Icon only
