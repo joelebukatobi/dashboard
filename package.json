@@ -7,7 +7,7 @@
     "start": "node app.js",
     "dev": "concurrently \"npm run dev:server\" \"npm run watch:css\"",
     "dev:server": "nodemon app.js",
-    "build:css": "sass scss/admin/main.scss .build/admin.css --no-source-map && sass scss/app/main.scss .build/app.css --no-source-map && postcss css/index.css -o dist/css/admin.css && postcss css/app.css -o dist/css/app.css && npm run copy:assets",
+    "build:css": "npx sass scss/admin/main.scss .build/admin.css --no-source-map && npx sass scss/app/main.scss .build/app.css --no-source-map && npx postcss css/index.css -o dist/css/admin.css && npx postcss css/app.css -o dist/css/app.css && npm run copy:assets",
     "copy:assets": "cp favicon.svg dist/favicon.svg",
     "watch:css": "chokidar 'scss/**/*.scss' -c 'npm run build:css' --initial",
     "build:js": "esbuild src/client/main.js --bundle --minify --outfile=dist/js/main.js",
