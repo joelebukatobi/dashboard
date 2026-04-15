@@ -14,17 +14,20 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables
-const envFile = process.env.NODE_ENV === 'production'
-  ? '.env.production'
-  : '.env.development';
-
-// Try to load env file, fallback to .env if specific file not found
-dotenv.config({ path: join(__dirname, '..', envFile) });
-
-// If still no DATABASE_URL, try generic .env file
+// Check if DATABASE_URL is already set (e.g., from cPanel environment)
 if (!process.env.DATABASE_URL) {
-  dotenv.config({ path: join(__dirname, '..', '.env') });
+  // Load from .env files if not already set
+  const envFile = process.env.NODE_ENV === 'production'
+    ? '.env.production'
+    : '.env.development';
+
+  // Try to load env file, fallback to .env if specific file not found
+  dotenv.config({ path: join(__dirname, '..', envFile) });
+
+  // If still no DATABASE_URL, try generic .env file
+  if (!process.env.DATABASE_URL) {
+    dotenv.config({ path: join(__dirname, '..', '.env') });
+  }
 }
 
 const DATABASE_URL = process.env.DATABASE_URL;
