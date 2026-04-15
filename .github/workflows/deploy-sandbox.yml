@@ -40,10 +40,11 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Build frontend assets
+      - name: Validate build
         run: |
           npm ci --no-audit --no-fund
           npm run build:css
+          echo "✅ Build validation complete - CSS will be built on server"
 
       - name: Validate required deploy secrets
         run: |
@@ -177,6 +178,11 @@ jobs:
             else
               echo "Skipping dependency install (lockfile unchanged)"
             fi
+
+            # Build CSS on server (ensures fresh compiled assets)
+            echo "Building CSS assets..."
+            npm run build:css
+            echo "✅ CSS build complete"
 
             if [ -z "$DATABASE_URL" ]; then
               echo "DATABASE_URL secret is required for migrations"
