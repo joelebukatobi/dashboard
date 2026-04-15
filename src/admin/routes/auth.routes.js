@@ -33,8 +33,14 @@ export default async function authRoutes(fastify) {
       }
       
       // Get any error or success message from query params
-      const { error, reset } = request.query;
-      const success = reset === 'success' ? 'Password reset successfully. Please sign in.' : '';
+      const { error, reset, setup } = request.query;
+      let success = '';
+      
+      if (reset === 'success') {
+        success = 'Password reset successfully. Please sign in.';
+      } else if (setup === 'success') {
+        success = 'Setup complete! Your admin account has been created. Please sign in.';
+      }
       
       // Serve login page
       return reply.type('text/html').send(loginPage({ error, success }));

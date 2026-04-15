@@ -395,5 +395,14 @@ export const oauthAccounts = mysqlTable(
   }),
 );
 
+// Setup tokens for first-launch configuration
+export const setupTokens = mysqlTable('setup_tokens', {
+  id: idColumn().notNull(),
+  tokenHash: varchar('token_hash', { length: 64 }).notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  usedAt: timestamp('used_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Shared helper to set updatedAt in services when needed
 export const now = () => sql`CURRENT_TIMESTAMP`;

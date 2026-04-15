@@ -12,7 +12,7 @@
     "watch:css": "chokidar 'scss/**/*.scss' -c 'npm run build:css' --initial",
     "build:js": "esbuild src/client/main.js --bundle --minify --outfile=dist/js/main.js",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit push",
+    "db:migrate": "node scripts/migrate.js",
     "db:push": "drizzle-kit push",
     "db:seed": "node scripts/seed.js",
     "db:seed:fresh": "node scripts/seed.js --fresh",

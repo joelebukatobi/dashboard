@@ -108,7 +108,7 @@
   @apply p-[3.2rem] sm:p-[4rem] space-y-[2.4rem];
 
   &__header {
-    @apply text-center mb-[.8rem];
+    @apply text-center mb-[2.4rem];
   }
 
   &__title {
@@ -130,7 +130,7 @@
   &__footer {
     @apply text-center text-body;
 
-    a {
+    a:not(.btn) {
       @apply text-blue-600 hover:underline font-medium;
 
       .dark & {

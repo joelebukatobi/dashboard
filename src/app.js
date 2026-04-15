@@ -11,6 +11,7 @@ import fastifyHtml from 'fastify-html';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { checkSetupStatus } from './middleware/setup-check.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,6 +82,12 @@ export default async function app(fastify, opts) {
 
   // Register fastify-html for templating
   await fastify.register(fastifyHtml);
+
+  // Register setup check middleware (runs on all routes)
+  await checkSetupStatus(fastify);
+
+  // Register setup routes FIRST (must be available before setup is complete)
+  await fastify.register(import('./admin/routes/setup.routes.js'));
 
   // Register static file serving for public uploads
   await fastify.register(fastifyStatic, {
