@@ -172,8 +172,8 @@ jobs:
             fi
 
             if [ ! -d node_modules ] || [ "$CURRENT_LOCK_HASH" != "$PREVIOUS_LOCK_HASH" ]; then
-              echo "Installing production dependencies"
-              npm ci --omit=dev --no-audit --no-fund
+              echo "Installing dependencies (including dev for build tools)"
+              npm ci --no-audit --no-fund
               printf '%s\n' "$CURRENT_LOCK_HASH" > "$LOCK_HASH_FILE"
             else
               echo "Skipping dependency install (lockfile unchanged)"
