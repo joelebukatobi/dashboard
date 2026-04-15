@@ -19,7 +19,13 @@ const envFile = process.env.NODE_ENV === 'production'
   ? '.env.production'
   : '.env.development';
 
+// Try to load env file, fallback to .env if specific file not found
 dotenv.config({ path: join(__dirname, '..', envFile) });
+
+// If still no DATABASE_URL, try generic .env file
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: join(__dirname, '..', '.env') });
+}
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
