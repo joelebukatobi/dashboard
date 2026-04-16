@@ -10,6 +10,9 @@ import { eq } from 'drizzle-orm';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { readFileSync } from 'fs';
+import { homedir, basename } from 'os';
+import { resolve } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,10 +33,57 @@ if (!process.env.DATABASE_URL) {
   }
 }
 
+/**
+ * Load DATABASE_URL from cPanel Node.js selector config
+ * Falls back to node-selector.json where cPanel stores env vars
+ */
+function loadDatabaseUrlFromCpanelConfig() {
+  try {
+    // cPanel stores app config in ~/.cl.selector/node-selector.json
+    const configPath = resolve(homedir(), '.cl.selector', 'node-selector.json');
+    const configContent = readFileSync(configPath, 'utf-8');
+    const config = JSON.parse(configContent);
+
+    // Match app by current directory basename (e.g., "sandbox" or "production")
+    const currentDir = basename(resolve('.'));
+
+    if (config[currentDir] && config[currentDir].env_vars) {
+      const dbUrl = config[currentDir].env_vars.DATABASE_URL;
+      if (dbUrl) {
+        return dbUrl;
+      }
+    }
+
+    // Fallback: search all apps for one with DATABASE_URL
+    for (const [appName, appConfig] of Object.entries(config)) {
+      if (appConfig.env_vars && appConfig.env_vars.DATABASE_URL) {
+        return appConfig.env_vars.DATABASE_URL;
+      }
+    }
+  } catch {
+    // Silently fail if file doesn't exist or can't be parsed
+    // We don't want to leak file existence or structure
+  }
+  return null;
+}
+
+// If still no DATABASE_URL, try cPanel's node-selector.json
+if (!process.env.DATABASE_URL) {
+  const cpanelDbUrl = loadDatabaseUrlFromCpanelConfig();
+  if (cpanelDbUrl) {
+    process.env.DATABASE_URL = cpanelDbUrl;
+  }
+}
+
 const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   console.error('Error: DATABASE_URL environment variable is required');
+  console.error('Could not find DATABASE_URL in:');
+  console.error('  - process.env.DATABASE_URL');
+  console.error('  - .env.development or .env.production');
+  console.error('  - .env file');
+  console.error('  - ~/.cl.selector/node-selector.json');
   process.exit(1);
 }
 
