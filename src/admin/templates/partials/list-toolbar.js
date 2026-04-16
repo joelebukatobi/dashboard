@@ -25,17 +25,17 @@ export function listToolbar({
 }) {
   const filtersHtml = filters
     .map(
-      (filter) => `
-      <div class="list-toolbar__filter">
-        <button type="button" class="list-toolbar__dropdown-trigger">
+      (filter, index) => `
+      <div class="hs-dropdown list-toolbar__filter" data-hs-dropdown-auto-close="outside">
+        <button type="button" id="hs-dropdown-filter-${index}" class="hs-dropdown-toggle list-toolbar__dropdown-trigger">
           <span>${filter.label}</span>
           <i data-lucide="chevron-down"></i>
         </button>
-        <div class="list-toolbar__dropdown-menu">
+        <div class="hs-dropdown-menu dropdown__menu dropdown__menu--sm list-toolbar__dropdown-menu" aria-labelledby="hs-dropdown-filter-${index}">
           ${filter.options
             .map(
               (opt) => `
-            <a href="${opt.url}" class="list-toolbar__dropdown-item ${opt.active ? 'list-toolbar__dropdown-item--active' : ''}">
+            <a href="${opt.url}" class="dropdown__item ${opt.active ? 'dropdown__item--active' : ''} list-toolbar__dropdown-item ${opt.active ? 'list-toolbar__dropdown-item--active' : ''}">
               ${opt.label}
             </a>
           `,
