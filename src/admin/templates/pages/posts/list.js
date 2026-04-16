@@ -233,11 +233,9 @@ export function postsListPage({ posts, total, page, totalPages, categories, filt
 
 function emptyState() {
   return `
-    <div class="empty-state">
-      <div class="empty-state__icon">
-        <i data-lucide="file-text" class="w-16 h-16 text-grey-400"></i>
-      </div>
-      <h3 class="empty-state__title">No posts yet</h3>
+    <div class="empty">
+      <i data-lucide="file-text"></i>
+      <h3>No posts yet</h3>
     </div>
   `;
 }

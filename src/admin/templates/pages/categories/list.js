@@ -181,15 +181,10 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
 
 function emptyState() {
   return `
-    <div class="empty-state">
-      <div class="empty-state__icon">
-        <i data-lucide="folder-tree" class="w-16 h-16 text-grey-400"></i>
-      </div>
-      <h3 class="empty-state__title">No categories yet</h3>
-      <p class="empty-state__description">Create your first category to organize your posts</p>
-      <a href="/admin/categories/new" class="btn btn--primary mt-4">
-        Create Category
-      </a>
+    <div class="empty">
+      <i data-lucide="folder-tree"></i>
+      <h3>No categories yet</h3>
+      <p>Create your first category to organize your posts</p>
     </div>
   `;
 }

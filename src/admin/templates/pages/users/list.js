@@ -255,15 +255,10 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
  */
 function emptyState() {
   return `
-    <div class="empty-state">
-      <div class="empty-state__icon">
-        <i data-lucide="users" class="w-16 h-16 text-grey-400"></i>
-      </div>
-      <h3 class="empty-state__title">No users found</h3>
-      <p class="empty-state__description">Get started by inviting your first team member to collaborate on your blog.</p>
-      <a href="/admin/users/new" class="btn btn--primary mt-4">
-        Add Your First User
-      </a>
+    <div class="empty">
+      <i data-lucide="users"></i>
+      <h3>No users found</h3>
+      <p>Get started by inviting your first team member to collaborate on your blog.</p>
     </div>
   `;
 }

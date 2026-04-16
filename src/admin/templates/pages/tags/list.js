@@ -189,16 +189,10 @@ export function tagsListPage({ tags, total, page, totalPages, filters, user, toa
 
 function emptyState() {
   return `
-    <div class="empty-state">
-      <div class="empty-state__icon">
-        <i data-lucide="tag" class="w-16 h-16 text-grey-400"></i>
-      </div>
-      <h3 class="empty-state__title">No tags yet</h3>
-      <p class="empty-state__description">Create your first tag to organize your posts</p>
-      <a href="/admin/tags/new" class="btn btn--primary mt-4">
-        <i data-lucide="plus"></i>
-        Create Tag
-      </a>
+    <div class="empty">
+      <i data-lucide="tag"></i>
+      <h3>No tags yet</h3>
+      <p>Create your first tag to organize your posts</p>
     </div>
   `;
 }
