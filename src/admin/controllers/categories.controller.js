@@ -259,15 +259,10 @@ class CategoriesController {
 function categoriesTableFragment({ categories, pagination, counts }) {
   if (!categories || categories.length === 0) {
     return `
-      <div class="empty-state">
-        <div class="empty-state__icon">
-          <i data-lucide="folder-open"></i>
-        </div>
-        <h3 class="empty-state__title">No categories found</h3>
-        <p class="empty-state__description">Get started by creating your first category.</p>
-        <a href="/admin/categories/new" class="btn btn--primary mt-4">
-          Create Category
-        </a>
+      <div class="empty">
+        <i data-lucide="folder-open"></i>
+        <h3>No categories found</h3>
+        <p>Get started by creating your first category.</p>
       </div>
     `;
   }

@@ -248,16 +248,10 @@ class TagsController {
 function tagsTableFragment({ tags, pagination }) {
   if (!tags || tags.length === 0) {
     return `
-      <div class="empty-state">
-        <div class="empty-state__icon">
-          <i data-lucide="tag"></i>
-        </div>
-        <h3 class="empty-state__title">No tags found</h3>
-        <p class="empty-state__description">Get started by creating your first tag.</p>
-        <a href="/admin/tags/new" class="btn btn--primary mt-4">
-          <i data-lucide="plus"></i>
-          Create Tag
-        </a>
+      <div class="empty">
+        <i data-lucide="tag"></i>
+        <h3>No tags found</h3>
+        <p>Get started by creating your first tag.</p>
       </div>
     `;
   }

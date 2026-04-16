@@ -301,12 +301,10 @@ class VideosController {
 function videosGridFragment({ videos, pagination }) {
   if (!videos || videos.length === 0) {
     return `
-      <div class="empty-state">
-        <div class="empty-state__icon">
-          <i data-lucide="video" class="w-16 h-16 text-grey-400"></i>
-        </div>
-        <h3 class="empty-state__title">No videos yet</h3>
-        <p class="empty-state__description">Upload your first video to the media library</p>
+      <div class="empty">
+        <i data-lucide="video"></i>
+        <h3>No videos yet</h3>
+        <p>Upload your first video to the media library</p>
       </div>
     `;
   }

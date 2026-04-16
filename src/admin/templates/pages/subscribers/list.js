@@ -294,12 +294,10 @@ function paginationHtml({ page, totalPages, filters }) {
  */
 function emptyState() {
   return `
-    <div class="empty-state">
-      <div class="empty-state__icon">
-        <i data-lucide="mail"></i>
-      </div>
-      <h3 class="empty-state__title">No Subscribers Yet</h3>
-      <p class="empty-state__description">You don't have any subscribers yet. Click "Add Subscriber" to add one manually.</p>
+    <div class="empty">
+      <i data-lucide="mail"></i>
+      <h3>No Subscribers Yet</h3>
+      <p>You don't have any subscribers yet. Click "Add Subscriber" to add one manually.</p>
     </div>
   `;
 }

@@ -264,9 +264,9 @@ export function dashboardPage({ user, stats = {}, activity = [], recentPosts = [
 function getActivityItems(items) {
   if (!items || items.length === 0) {
     return `
-      <div class="empty-state">
-        <i data-lucide="activity" class="empty-state__icon"></i>
-        <p class="empty-state__description">No recent activity</p>
+      <div class="empty">
+        <i data-lucide="activity"></i>
+        <p>No recent activity</p>
       </div>
     `;
   }
@@ -288,9 +288,9 @@ function getActivityItems(items) {
 function getRecentPosts(posts) {
   if (!posts || posts.length === 0) {
     return `
-      <div class="empty-state">
-        <i data-lucide="file-text" class="empty-state__icon"></i>
-        <p class="empty-state__description">No posts yet</p>
+      <div class="empty">
+        <i data-lucide="file-text"></i>
+        <p>No posts yet</p>
       </div>
     `;
   }
@@ -315,9 +315,9 @@ function getRecentPosts(posts) {
 function getTopPosts(posts) {
   if (!posts || posts.length === 0) {
     return `
-      <div class="empty-state">
-        <i data-lucide="trending-up" class="empty-state__icon"></i>
-        <p class="empty-state__description">No posts</p>
+      <div class="empty">
+        <i data-lucide="trending-up"></i>
+        <p>No posts</p>
       </div>
     `;
   }
