@@ -1,7 +1,10 @@
 // scripts/test-db.js
 // Simple database connection test
-import 'dotenv/config';
+import { ensureDatabaseUrl } from './lib/load-env.js';
 import mysql from 'mysql2/promise';
+
+// Load DATABASE_URL from available sources
+ensureDatabaseUrl({ scriptName: 'test-db.js' });
 
 const pool = mysql.createPool({
   uri: process.env.DATABASE_URL,
