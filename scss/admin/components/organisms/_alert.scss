@@ -1,0 +1,57 @@
+// ============================================================================
+// Alert Component
+// For error, success, warning, and info messages
+// ============================================================================
+
+.alert {
+  @apply flex items-center gap-3 px-4 py-3 rounded-md;
+
+  &__icon {
+    @apply flex-shrink-0 w-5 h-5;
+  }
+
+  &__message {
+    @apply text-sm font-medium;
+  }
+
+  // Error variant
+  &--error {
+    @apply bg-red-50 border border-red-200 text-red-800;
+
+    .dark & {
+      @apply bg-red-900/20 border-red-800 text-red-300;
+    }
+  }
+
+  // Success variant
+  &--success {
+    @apply bg-green-50 border border-green-200 text-green-800;
+
+    .dark & {
+      @apply bg-green-900/20 border-green-800 text-green-300;
+    }
+  }
+
+  // Warning variant
+  &--warning {
+    @apply bg-amber-50 border border-amber-200 text-amber-800;
+
+    .dark & {
+      @apply bg-amber-900/20 border-amber-800 text-amber-300;
+    }
+  }
+
+  // Info variant
+  &--info {
+    @apply bg-blue-50 border border-blue-200 text-blue-800;
+
+    .dark & {
+      @apply bg-blue-900/20 border-blue-800 text-blue-300;
+    }
+  }
+
+  // Margin utility for spacing
+  &--mb {
+    @apply mb-4;
+  }
+}

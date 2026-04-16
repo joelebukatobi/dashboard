@@ -775,27 +775,27 @@ function escapeHtmlHelper(text) {
 // Helper functions for fragments
 function errorFragment({ message }) {
   return `
-    <div class="flex items-center gap-3 px-4 py-3 rounded-md bg-red-50 border border-red-200 text-red-800 mb-4" role="alert">
-      <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
-      <span class="text-sm font-medium">${message}</span>
+    <div class="alert alert--error alert--mb" role="alert">
+      <i data-lucide="alert-circle" class="alert__icon"></i>
+      <span class="alert__message">${message}</span>
     </div>
   `;
 }
 
 function successFragment({ message }) {
   return `
-    <div class="flex items-center gap-3 px-4 py-3 rounded-md bg-green-50 border border-green-200 text-green-800 mb-4" role="alert">
-      <i data-lucide="check-circle" class="w-5 h-5 shrink-0"></i>
-      <span class="text-sm font-medium">${message}</span>
+    <div class="alert alert--success alert--mb" role="alert">
+      <i data-lucide="check-circle" class="alert__icon"></i>
+      <span class="alert__message">${message}</span>
     </div>
   `;
 }
 
 function successToast({ message }) {
   return `
-    <div class="flex items-center gap-3 px-4 py-3 rounded-md bg-green-50 border border-green-200 text-green-800 mb-4" role="alert">
-      <i data-lucide="check-circle" class="w-5 h-5 shrink-0"></i>
-      <span class="text-sm font-medium">${message}</span>
+    <div class="alert alert--success alert--mb" role="alert">
+      <i data-lucide="check-circle" class="alert__icon"></i>
+      <span class="alert__message">${message}</span>
     </div>
   `;
 }
