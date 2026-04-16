@@ -41,9 +41,14 @@
     @apply flex flex-wrap items-center gap-[1.2rem];
   }
 
-  // Individual filter dropdown
+  // Individual filter dropdown (works with Preline hs-dropdown)
   &__filter {
     @apply relative;
+
+    // Ensure Preline dropdown menu is positioned correctly
+    &.hs-dropdown {
+      @apply relative inline-flex;
+    }
   }
 
   &__dropdown-trigger {
@@ -61,8 +66,14 @@
 
   &__dropdown-menu {
     @apply absolute right-0 top-full z-50 mt-[0.4rem];
-    @apply hidden min-w-[16rem] rounded-md border border-grey-100 bg-white shadow-lg;
+    @apply min-w-[16rem] rounded-md border border-grey-100 bg-white shadow-lg;
 
+    // Preline dropdown uses display block when open
+    &.hs-dropdown-open {
+      @apply block;
+    }
+
+    // Support for legacy is-open class
     &.is-open {
       @apply block;
     }
