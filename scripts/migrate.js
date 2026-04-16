@@ -4,7 +4,9 @@
 
 import { config } from 'dotenv';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, resolve, basename } from 'path';
+import { readFileSync } from 'fs';
+import { homedir } from 'os';
 import mysql from 'mysql2/promise';
 import { drizzle } from 'drizzle-orm/mysql2';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
@@ -12,12 +14,36 @@ import { migrate } from 'drizzle-orm/mysql2/migrator';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables
+// Load environment variables from .env files
 const envFile = process.env.NODE_ENV === 'production'
   ? '.env.production'
   : '.env.development';
 
 config({ path: join(__dirname, '..', envFile) });
+
+// If still no DATABASE_URL, try cPanel's node-selector.json
+if (!process.env.DATABASE_URL) {
+  try {
+    const configPath = resolve(homedir(), '.cl.selector', 'node-selector.json');
+    const configContent = readFileSync(configPath, 'utf-8');
+    const cpanelConfig = JSON.parse(configContent);
+    const currentDir = basename(resolve('.'));
+
+    if (cpanelConfig[currentDir]?.env_vars?.DATABASE_URL) {
+      process.env.DATABASE_URL = cpanelConfig[currentDir].env_vars.DATABASE_URL;
+    } else {
+      // Fallback: search all apps
+      for (const appConfig of Object.values(cpanelConfig)) {
+        if (appConfig.env_vars?.DATABASE_URL) {
+          process.env.DATABASE_URL = appConfig.env_vars.DATABASE_URL;
+          break;
+        }
+      }
+    }
+  } catch {
+    // Silently fail if cPanel config not found
+  }
+}
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
