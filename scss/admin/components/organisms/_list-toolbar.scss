@@ -1,0 +1,114 @@
+// ============================================================================
+// List Toolbar Component
+// Reusable toolbar for list pages (search, filters, add button)
+// ============================================================================
+
+.list-toolbar {
+  @apply mb-[1.6rem] flex shrink-0 flex-col gap-[1.6rem];
+  @apply sm:flex-row sm:items-center;
+
+  // Search container
+  &__search {
+    @apply relative min-w-0 flex-1;
+  }
+
+  &__search-icon {
+    @apply pointer-events-none absolute left-[1rem] top-1/2 h-[1.6rem] w-[1.6rem];
+    @apply -translate-y-1/2 text-grey-400;
+
+    .dark & {
+      @apply text-grey-500;
+    }
+  }
+
+  &__search-input {
+    @apply h-[3.2rem] w-full rounded-md border border-grey-100/50 bg-white;
+    @apply px-[1.2rem] pl-[4.4rem] text-body-sm text-grey-900;
+    @apply outline-none transition-all duration-200;
+    @apply placeholder:text-body-sm placeholder:text-grey-400;
+    @apply hover:border-grey-300;
+    @apply focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20;
+
+    .dark & {
+      @apply border-grey-700 bg-grey-900 text-white;
+      @apply placeholder:text-grey-500;
+      @apply hover:border-grey-600;
+    }
+  }
+
+  // Filters container
+  &__filters {
+    @apply flex flex-wrap items-center gap-[1.2rem];
+  }
+
+  // Individual filter dropdown
+  &__filter {
+    @apply relative;
+  }
+
+  &__dropdown-trigger {
+    @apply inline-flex h-[3.2rem] items-center gap-[0.6rem];
+    @apply rounded-md border border-grey-200 bg-white px-[1.2rem];
+    @apply text-[1.3rem] font-medium text-grey-700;
+    @apply transition-all duration-200;
+    @apply hover:border-blue-600/30 hover:bg-blue-600/10 hover:text-blue-700;
+
+    .dark & {
+      @apply border-grey-700 bg-grey-900 text-grey-300;
+      @apply hover:border-grey-600 hover:bg-grey-800 hover:text-grey-200;
+    }
+  }
+
+  &__dropdown-menu {
+    @apply absolute right-0 top-full z-50 mt-[0.4rem];
+    @apply hidden min-w-[16rem] rounded-md border border-grey-100 bg-white shadow-lg;
+
+    &.is-open {
+      @apply block;
+    }
+
+    .dark & {
+      @apply border-grey-700 bg-grey-900;
+    }
+  }
+
+  &__dropdown-item {
+    @apply block px-[1.2rem] py-[0.8rem] text-body-sm text-grey-700;
+    @apply transition-colors duration-200;
+    @apply hover:bg-grey-50 hover:text-grey-900;
+
+    &--active {
+      @apply bg-blue-600/10 text-blue-700;
+    }
+
+    .dark & {
+      @apply text-grey-300 hover:bg-grey-800 hover:text-white;
+
+      &--active {
+        @apply bg-blue-500/10 text-blue-400;
+      }
+    }
+  }
+
+  // Add button
+  &__add-btn {
+    @apply inline-flex h-[3.2rem] items-center justify-center gap-[0.8rem];
+    @apply rounded-md bg-blue-600 px-[1.2rem];
+    @apply text-body-sm font-medium text-white;
+    @apply transition-all duration-200;
+    @apply hover:bg-blue-700;
+
+    .dark & {
+      @apply bg-white text-grey-900 hover:bg-grey-100;
+    }
+  }
+
+  // Minimal variant (no filters)
+  &--minimal {
+    @apply sm:justify-between;
+
+    .list-toolbar__search {
+      @apply sm:max-w-[32rem];
+    }
+  }
+}
