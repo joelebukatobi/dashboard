@@ -333,19 +333,20 @@
     @apply divide-grey-700;
   }
 
+  // Container padding when inside widget--flush (matches top-list structure)
+  .widget--flush & {
+    @apply px-8 pb-8;
+  }
+
   &__item {
-    @apply flex items-start gap-[1.6rem] py-[1.2rem] px-[1.6rem] first:pt-0 last:pb-0;
+    @apply flex items-start gap-[1.6rem] py-[1.2rem];
 
-    .widget--flush & {
-      @apply px-8;
+    &:first-child {
+      @apply pt-0;
+    }
 
-      &:first-child {
-        @apply pt-0;
-      }
-
-      &:last-child {
-        @apply pb-8;
-      }
+    &:last-child {
+      @apply pb-0;
     }
   }
 
