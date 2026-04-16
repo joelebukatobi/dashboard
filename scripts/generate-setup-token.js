@@ -34,10 +34,10 @@ if (!process.env.DATABASE_URL) {
 }
 
 /**
- * Load DATABASE_URL from cPanel Node.js selector config
- * Falls back to node-selector.json where cPanel stores env vars
+ * Load config from cPanel Node.js selector
+ * Returns { databaseUrl, domain } or null
  */
-function loadDatabaseUrlFromCpanelConfig() {
+function loadCpanelConfig() {
   try {
     // cPanel stores app config in ~/.cl.selector/node-selector.json
     const configPath = resolve(homedir(), '.cl.selector', 'node-selector.json');
@@ -47,32 +47,40 @@ function loadDatabaseUrlFromCpanelConfig() {
     // Match app by current directory basename (e.g., "sandbox" or "production")
     const currentDir = basename(resolve('.'));
 
-    if (config[currentDir] && config[currentDir].env_vars) {
-      const dbUrl = config[currentDir].env_vars.DATABASE_URL;
-      if (dbUrl) {
-        return dbUrl;
-      }
+    if (config[currentDir]) {
+      const appConfig = config[currentDir];
+      return {
+        databaseUrl: appConfig.env_vars?.DATABASE_URL || null,
+        domain: appConfig.domain || null
+      };
     }
 
     // Fallback: search all apps for one with DATABASE_URL
     for (const [appName, appConfig] of Object.entries(config)) {
       if (appConfig.env_vars && appConfig.env_vars.DATABASE_URL) {
-        return appConfig.env_vars.DATABASE_URL;
+        return {
+          databaseUrl: appConfig.env_vars.DATABASE_URL,
+          domain: appConfig.domain || null
+        };
       }
     }
   } catch {
     // Silently fail if file doesn't exist or can't be parsed
-    // We don't want to leak file existence or structure
   }
   return null;
 }
 
+// Load cPanel config
+const cpanelConfig = loadCpanelConfig();
+
 // If still no DATABASE_URL, try cPanel's node-selector.json
-if (!process.env.DATABASE_URL) {
-  const cpanelDbUrl = loadDatabaseUrlFromCpanelConfig();
-  if (cpanelDbUrl) {
-    process.env.DATABASE_URL = cpanelDbUrl;
-  }
+if (!process.env.DATABASE_URL && cpanelConfig?.databaseUrl) {
+  process.env.DATABASE_URL = cpanelConfig.databaseUrl;
+}
+
+// Set APP_URL from cPanel domain if available
+if (cpanelConfig?.domain && !process.env.APP_URL) {
+  process.env.APP_URL = `https://${cpanelConfig.domain}`;
 }
 
 const DATABASE_URL = process.env.DATABASE_URL;
