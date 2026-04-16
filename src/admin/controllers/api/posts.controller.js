@@ -122,29 +122,32 @@ class PostsAPIController {
 
       const results = await postsQuery;
 
-      // Get tags for each post
+      // Get tags for each post (skip if no posts)
       const postIds = results.map(r => r.post.id);
-      const tagsData = await db
-        .select({
-          postId: postTags.postId,
-          tag: {
-            id: tags.id,
-            name: tags.name,
-            slug: tags.slug,
-            createdAt: tags.createdAt,
-            updatedAt: tags.updatedAt,
-          },
-        })
-        .from(postTags)
-        .innerJoin(tags, eq(postTags.tagId, tags.id))
-        .where(inArray(postTags.postId, postIds));
-
-      // Group tags by post
       const tagsByPost = {};
-      tagsData.forEach(({ postId, tag }) => {
-        if (!tagsByPost[postId]) tagsByPost[postId] = [];
-        tagsByPost[postId].push(tag);
-      });
+      
+      if (postIds.length > 0) {
+        const tagsData = await db
+          .select({
+            postId: postTags.postId,
+            tag: {
+              id: tags.id,
+              name: tags.name,
+              slug: tags.slug,
+              createdAt: tags.createdAt,
+              updatedAt: tags.updatedAt,
+            },
+          })
+          .from(postTags)
+          .innerJoin(tags, eq(postTags.tagId, tags.id))
+          .where(inArray(postTags.postId, postIds));
+
+        // Group tags by post
+        tagsData.forEach(({ postId, tag }) => {
+          if (!tagsByPost[postId]) tagsByPost[postId] = [];
+          tagsByPost[postId].push(tag);
+        });
+      }
 
       // Format posts
       const formattedPosts = results.map(r => ({
