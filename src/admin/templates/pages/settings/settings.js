@@ -215,7 +215,7 @@ export function settingsPage({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
                       name="enableComments"
@@ -228,7 +228,7 @@ export function settingsPage({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
                       name="moderateComments"
@@ -289,7 +289,7 @@ export function settingsPage({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
                       name="requireStrongPasswords"
@@ -302,7 +302,7 @@ export function settingsPage({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
                       name="twoFactorAuth"

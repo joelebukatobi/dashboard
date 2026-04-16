@@ -227,6 +227,11 @@
     }
   }
 
+  // Checkbox wrapper for label + input + text pattern
+  &__checkbox-wrapper {
+    @apply flex items-center gap-3 cursor-pointer;
+  }
+
   // Preline Select Custom Classes
   &__select {
     @apply w-full flex items-center justify-between;
