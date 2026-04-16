@@ -235,6 +235,7 @@ function emptyState() {
   return `
     <div class="empty">
       <h3>No posts yet</h3>
+      <p>Create your first post to start sharing your stories</p>
     </div>
   `;
 }

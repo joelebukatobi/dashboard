@@ -122,7 +122,12 @@ export function videosListPage({ user, videos, pagination, stats, filters, toast
                 </div>
               </a>
             `;
-          }).join('') : ''}
+          }).join('') : `
+          <div class="empty">
+            <h3>No videos yet</h3>
+            <p>Upload your first video to the media library</p>
+          </div>
+        `}
         </div>
 
         ${pagination && pagination.totalPages > 1 ? paginationHtml({ 
