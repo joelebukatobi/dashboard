@@ -56,7 +56,7 @@
 
   // Form Row Layouts (grid variants)
   &__row {
-    @apply grid gap-[1.6rem];
+    @apply grid gap-[1.6rem] mb-[1.6rem];
 
     &--2col {
       @apply grid-cols-1 md:grid-cols-2;
