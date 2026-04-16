@@ -242,8 +242,9 @@
 .top-list {
   @apply space-y-[0.8rem];
 
+  // Container padding when inside widget--flush (matches header padding)
   .widget--flush & {
-    @apply px-8 pb-8;
+    @apply px-[1.6rem] pb-8;
   }
 
   &__left {
@@ -333,9 +334,9 @@
     @apply divide-grey-700;
   }
 
-  // Container padding when inside widget--flush (matches top-list structure)
+  // Container padding when inside widget--flush (matches header padding)
   .widget--flush & {
-    @apply px-8 pb-8;
+    @apply px-[1.6rem] pb-8;
   }
 
   &__item {
