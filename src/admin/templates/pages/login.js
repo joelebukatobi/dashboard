@@ -88,12 +88,12 @@ export function loginPage({ error = '', success = '' } = {}) {
               </button>
             </form>
 
-            <!-- Divider -->
+            <!-- Google SSO - Disabled (requires Google Cloud Console setup) -->
+            <!--
             <div class="auth-divider">
               <span class="auth-divider__text">or continue with</span>
             </div>
 
-            <!-- Google SSO -->
             <a href="/admin/auth/google" class="social-btn social-btn--google">
               <span class="social-btn__icon">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -117,6 +117,7 @@ export function loginPage({ error = '', success = '' } = {}) {
               </span>
               <span class="social-btn__text">Continue with Google</span>
             </a>
+            -->
 
             <!-- Footer -->
             <div class="auth-card__footer">
