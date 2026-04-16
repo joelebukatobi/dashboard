@@ -256,7 +256,6 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
 function emptyState() {
   return `
     <div class="empty">
-      <i data-lucide="users"></i>
       <h3>No users found</h3>
       <p>Get started by inviting your first team member to collaborate on your blog.</p>
     </div>

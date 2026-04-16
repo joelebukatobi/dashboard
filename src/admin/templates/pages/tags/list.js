@@ -190,7 +190,6 @@ export function tagsListPage({ tags, total, page, totalPages, filters, user, toa
 function emptyState() {
   return `
     <div class="empty">
-      <i data-lucide="tag"></i>
       <h3>No tags yet</h3>
       <p>Create your first tag to organize your posts</p>
     </div>

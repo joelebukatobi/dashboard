@@ -295,7 +295,6 @@ function paginationHtml({ page, totalPages, filters }) {
 function emptyState() {
   return `
     <div class="empty">
-      <i data-lucide="mail"></i>
       <h3>No Subscribers Yet</h3>
       <p>You don't have any subscribers yet. Click "Add Subscriber" to add one manually.</p>
     </div>

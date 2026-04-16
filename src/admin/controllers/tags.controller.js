@@ -249,7 +249,6 @@ function tagsTableFragment({ tags, pagination }) {
   if (!tags || tags.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="tag"></i>
         <h3>No tags found</h3>
         <p>Get started by creating your first tag.</p>
       </div>

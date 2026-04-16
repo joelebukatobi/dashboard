@@ -363,7 +363,6 @@ export function renderCommentPartial(comment, currentUser, depth = 0) {
 function emptyCommentsState() {
   return `
     <div class="empty">
-      <i data-lucide="message-circle" stroke-width="1"></i>
       <h3>No Comments Yet</h3>
       <p>This post doesn't have any comments yet.</p>
     </div>

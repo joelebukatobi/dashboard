@@ -56,6 +56,19 @@
 
   &__body {
     @apply px-[1.6rem] pb-[1.6rem] flex-1;
+
+    // Empty state within widget (dashboard widgets)
+    > .empty {
+      @apply text-center py-8;
+
+      > p {
+        @apply text-grey-500;
+
+        .dark & {
+          @apply text-grey-400;
+        }
+      }
+    }
   }
 
   &__footer {

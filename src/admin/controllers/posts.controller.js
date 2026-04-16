@@ -618,7 +618,6 @@ function postsTableFragment({ posts, page, totalPages, filters }) {
   if (!posts || posts.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="file-text"></i>
         <h3>No posts found</h3>
         <p>Try adjusting your search or filters.</p>
       </div>

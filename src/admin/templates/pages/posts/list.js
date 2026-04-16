@@ -234,7 +234,6 @@ export function postsListPage({ posts, total, page, totalPages, categories, filt
 function emptyState() {
   return `
     <div class="empty">
-      <i data-lucide="file-text"></i>
       <h3>No posts yet</h3>
     </div>
   `;

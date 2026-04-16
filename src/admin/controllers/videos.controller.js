@@ -302,7 +302,6 @@ function videosGridFragment({ videos, pagination }) {
   if (!videos || videos.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="video"></i>
         <h3>No videos yet</h3>
         <p>Upload your first video to the media library</p>
       </div>
