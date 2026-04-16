@@ -13,14 +13,8 @@ const listToolbarControlsClass = 'flex flex-wrap items-center gap-[1.2rem]';
 const listToolbarDropdownClass = 'relative';
 const listToolbarDropdownTriggerClass = 'inline-flex h-[3.2rem] items-center gap-[0.6rem] rounded-md border border-grey-200 bg-white px-[1.2rem] text-[1.3rem] font-medium text-grey-700 transition-all duration-200 hover:border-blue-600/30 hover:bg-blue-600/10 hover:text-blue-700 dark:border-grey-700 dark:bg-grey-900 dark:text-grey-300 dark:hover:border-grey-600 dark:hover:bg-grey-800 dark:hover:text-grey-200';
 const listToolbarButtonClass = 'inline-flex h-[3.2rem] items-center justify-center gap-[0.8rem] rounded-md bg-blue-600 px-[1.2rem] text-body-sm font-medium text-white transition-all duration-200 hover:bg-blue-700 hover:text-white focus:ring-[.08rem] focus:ring-blue-500 focus:ring-offset-2 dark:bg-white dark:text-grey-900 dark:hover:bg-grey-100';
-const rowActionGroupClass = 'flex items-center justify-end gap-[1.2rem] lg:gap-[0.64rem]';
-const rowActionBaseClass = 'flex cursor-pointer items-center justify-center gap-[0.6rem] rounded-md p-[0.4rem] text-body-xs font-medium text-grey-500 transition-all duration-200 lg:bg-blue-600/5 lg:text-body-xs dark:text-grey-400 dark:lg:bg-grey-50/10';
 const rowActionIconClass = 'h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]';
 const rowActionTextClass = 'lg:hidden';
-const rowActionEditClass = `${rowActionBaseClass} hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400`;
-const rowActionDeleteClass = `${rowActionBaseClass} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400`;
-const rowActionActivateClass = `${rowActionBaseClass} hover:bg-green-50 hover:text-green-600 dark:hover:bg-green-900/20 dark:hover:text-green-400`;
-const rowActionResendClass = `${rowActionBaseClass} hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400`;
 
 /**
  * Users List Page Template
@@ -182,11 +176,11 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
                       ${u.lastActiveAt ? formatRelativeTime(u.lastActiveAt) : 'Never'}
                     </td>
                     <td class="table__td table__td--actions">
-                      <div class="${rowActionGroupClass}">
+                      <div class="flex items-center justify-end gap-[1.2rem] lg:gap-[0.64rem]">
                         ${u.status === 'INVITED' 
                           ? `<button
                               type="button"
-                              class="${rowActionResendClass}"
+                              class="btn btn--ghost row-action row-action--resend"
                               hx-post="/admin/users/${u.id}/resend-invite"
                               hx-target="#users-table-container"
                               hx-swap="outerHTML"
@@ -198,7 +192,7 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
                           : u.status === 'SUSPENDED'
                             ? `<button
                                 type="button"
-                                class="${rowActionActivateClass}"
+                                class="btn btn--ghost row-action row-action--activate"
                                 hx-post="/admin/users/${u.id}/activate"
                                 hx-target="#users-table-container"
                                 hx-swap="outerHTML"
@@ -207,14 +201,14 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
                                 <i data-lucide="user-check" class="${rowActionIconClass}"></i>
                                 <span class="${rowActionTextClass}">Activate</span>
                               </button>`
-                            : `<a href="/admin/users/${u.id}/edit" class="${rowActionEditClass}">
+                            : `<a href="/admin/users/${u.id}/edit" class="btn btn--ghost row-action row-action--edit">
                                 <i data-lucide="pencil" class="${rowActionIconClass}"></i>
                                 <span class="${rowActionTextClass}">Edit</span>
                               </a>`
                         }
                         <button
                           type="button"
-                          class="${rowActionDeleteClass}"
+                          class="btn btn--ghost row-action row-action--delete"
                           data-user-id="${u.id}"
                           data-user-name="${escapeHtml(u.firstName + ' ' + u.lastName)}"
                           data-user-role="${u.role}"

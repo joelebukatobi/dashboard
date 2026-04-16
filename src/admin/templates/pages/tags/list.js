@@ -11,12 +11,8 @@ const listToolbarInputClass = 'h-[3.2rem] w-full rounded-md border border-grey-1
 const listToolbarControlsClass = 'flex shrink-0 items-center gap-[1.2rem]';
 const listToolbarButtonClass = 'inline-flex h-[3.2rem] items-center justify-center gap-[0.8rem] rounded-md bg-blue-600 px-[1.2rem] text-body-sm font-medium text-white transition-all duration-200 hover:bg-blue-700 hover:text-white focus:ring-[.08rem] focus:ring-blue-500 focus:ring-offset-2 dark:bg-white dark:text-grey-900 dark:hover:bg-grey-100';
 const listToolbarButtonIconClass = 'hidden h-[1.4rem] w-[1.4rem] sm:inline-block';
-const rowActionGroupClass = 'flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]';
-const rowActionBaseClass = 'flex cursor-pointer items-center justify-center gap-[0.8rem] rounded-md p-[0.4rem] text-body-sm font-medium text-grey-500 transition-all duration-200 lg:bg-blue-600/5 lg:text-body-xs dark:text-grey-400 dark:lg:bg-grey-50/10';
 const rowActionIconClass = 'h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]';
 const rowActionTextClass = 'lg:hidden';
-const rowActionEditClass = `${rowActionBaseClass} hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20 dark:hover:text-amber-400`;
-const rowActionDeleteClass = `${rowActionBaseClass} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400`;
 
 /**
  * Tags List Page Template
@@ -140,14 +136,14 @@ export function tagsListPage({ tags, total, page, totalPages, filters, user, toa
                       ${formatDate(tag.updatedAt || tag.createdAt)}
                     </td>
                     <td class="table__td table__td--actions">
-                      <div class="${rowActionGroupClass}">
-                        <a href="/admin/tags/${tag.id}/edit" class="${rowActionEditClass}">
+                      <div class="flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]">
+                        <a href="/admin/tags/${tag.id}/edit" class="btn btn--ghost row-action row-action--edit">
                           <i data-lucide="pencil" class="${rowActionIconClass}"></i>
                           <span class="${rowActionTextClass}">Edit</span>
                         </a>
                         <button 
                           type="button"
-                          class="${rowActionDeleteClass}"
+                          class="btn btn--ghost row-action row-action--delete"
                           data-tag-id="${tag.id}"
                           data-tag-name="${escapeHtml(tag.name)}"
                           data-post-count="${tag.postCount || 0}"
