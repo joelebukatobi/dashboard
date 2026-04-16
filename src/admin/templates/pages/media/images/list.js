@@ -121,7 +121,12 @@ export function imagesListPage({ user, images, pagination, stats, filters, toast
                 </div>
               </a>
             `;
-          }).join('') : ''}
+          }).join('') : `
+          <div class="empty">
+            <h3>No images yet</h3>
+            <p>Upload your first image to the media library</p>
+          </div>
+        `}
         </div>
 
         ${pagination && pagination.totalPages > 1 ? paginationHtml({ 

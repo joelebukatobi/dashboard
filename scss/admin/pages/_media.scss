@@ -15,6 +15,27 @@
     @apply flex-1 min-h-0 overflow-y-auto;
     // padding-right: 1.6rem;
   }
+
+  // Empty state within media grid
+  > .empty {
+    @apply col-span-full text-center py-12;
+
+    > h3 {
+      @apply text-lg font-medium text-grey-900 mb-2;
+
+      .dark & {
+        @apply text-white;
+      }
+    }
+
+    > p {
+      @apply text-grey-500;
+
+      .dark & {
+        @apply text-grey-400;
+      }
+    }
+  }
 }
 
 // Collapsed sidebar: constrain card growth and enforce stable row sizing
