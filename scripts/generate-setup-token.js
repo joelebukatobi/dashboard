@@ -11,8 +11,8 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readFileSync } from 'fs';
-import { homedir, basename } from 'os';
-import { resolve } from 'path';
+import { homedir } from 'os';
+import { resolve, basename } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
