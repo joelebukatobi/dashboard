@@ -119,17 +119,16 @@ class AnalyticsService {
       });
     }
 
-    // Add today's data - generate realistic daily views (5-10 range)
-    // This simulates today's traffic based on recent trend
-    if (endDate >= yesterday) {
+    // Add today's data only if there's historical data
+    if (endDate >= yesterday && historicalData.length > 0) {
       const recentDays = historicalData.slice(-7); // Last 7 days
-      const avgRecentViews = recentDays.length > 0 
-        ? recentDays.reduce((sum, d) => sum + d.totalViews, 0) / recentDays.length 
-        : 5;
-      
-      // Today's views: average of recent days with small random variation
-      const todayViews = Math.max(1, Math.round(avgRecentViews * (0.8 + Math.random() * 0.4)));
-      
+      const avgRecentViews = recentDays.length > 0
+        ? recentDays.reduce((sum, d) => sum + d.totalViews, 0) / recentDays.length
+        : 0;
+
+      // Today's views: average of recent days (no random variation)
+      const todayViews = Math.max(0, Math.round(avgRecentViews));
+
       result.push({
         date: new Date(),
         views: todayViews,
@@ -160,10 +159,8 @@ class AnalyticsService {
     let trend;
     if (previous7Days > 0) {
       trend = ((last7Days - previous7Days) / previous7Days) * 100;
-    } else if (last7Days > 0) {
-      // If no previous data but we have current data, it's 100% growth
-      trend = 100;
     } else {
+      // No previous data to compare, show 0
       trend = 0;
     }
 
