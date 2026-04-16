@@ -617,10 +617,12 @@ class PostsController {
 function postsTableFragment({ posts, page, totalPages, filters }) {
   if (!posts || posts.length === 0) {
     return `
-      <div class="text-center py-12">
-        <i data-lucide="file-text" class="w-16 h-16 mx-auto mb-4 text-gray-300"></i>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No posts found</h3>
-        <p class="text-gray-500 mb-4">Try adjusting your search or filters.</p>
+      <div class="empty-state">
+        <div class="empty-state__icon">
+          <i data-lucide="file-text"></i>
+        </div>
+        <h3 class="empty-state__title">No posts found</h3>
+        <p class="empty-state__description">Try adjusting your search or filters.</p>
       </div>
     `;
   }

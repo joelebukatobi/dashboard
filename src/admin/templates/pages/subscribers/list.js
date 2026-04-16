@@ -299,7 +299,7 @@ function emptyState() {
         <i data-lucide="mail"></i>
       </div>
       <h3 class="empty-state__title">No Subscribers Yet</h3>
-      <p class="empty-state__text">You don't have any subscribers yet. Click "Add Subscriber" to add one manually.</p>
+      <p class="empty-state__description">You don't have any subscribers yet. Click "Add Subscriber" to add one manually.</p>
     </div>
   `;
 }
