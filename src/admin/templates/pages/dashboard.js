@@ -265,7 +265,6 @@ function getActivityItems(items) {
   if (!items || items.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="activity"></i>
         <p>No recent activity</p>
       </div>
     `;
@@ -289,7 +288,6 @@ function getRecentPosts(posts) {
   if (!posts || posts.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="file-text"></i>
         <p>No posts yet</p>
       </div>
     `;
@@ -316,7 +314,6 @@ function getTopPosts(posts) {
   if (!posts || posts.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="trending-up"></i>
         <p>No posts</p>
       </div>
     `;

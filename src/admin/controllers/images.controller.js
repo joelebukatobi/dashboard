@@ -305,7 +305,6 @@ function imagesGridFragment({ images, pagination }) {
   if (!images || images.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="image"></i>
         <h3>No images yet</h3>
         <p>Upload your first image to the media library</p>
       </div>

@@ -182,7 +182,6 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
 function emptyState() {
   return `
     <div class="empty">
-      <i data-lucide="folder-tree"></i>
       <h3>No categories yet</h3>
       <p>Create your first category to organize your posts</p>
     </div>

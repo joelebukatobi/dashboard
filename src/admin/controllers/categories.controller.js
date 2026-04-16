@@ -260,7 +260,6 @@ function categoriesTableFragment({ categories, pagination, counts }) {
   if (!categories || categories.length === 0) {
     return `
       <div class="empty">
-        <i data-lucide="folder-open"></i>
         <h3>No categories found</h3>
         <p>Get started by creating your first category.</p>
       </div>
