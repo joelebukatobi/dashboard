@@ -1,0 +1,61 @@
+// ============================================================================
+// Row Action Component - Table row action buttons (edit, delete, etc.)
+// Uses composed button classes: btn btn--ghost row-action row-action--[type]
+// ============================================================================
+
+.row-action {
+  // Size adjustments specific to table rows
+  @apply p-[0.4rem] gap-[0.6rem];
+
+  // Icon sizing
+  svg,
+  i {
+    @apply w-[1.4rem] h-[1.4rem];
+  }
+
+  // Text hidden on desktop, visible on mobile (reversed from buttons)
+  // This matches existing pattern where row actions are icon-only on desktop
+  span {
+    @apply lg:hidden;
+  }
+
+  // Type modifiers - color variations
+  &--edit {
+    @apply hover:text-amber-600 hover:bg-amber-50;
+
+    .dark & {
+      @apply hover:text-amber-400 hover:bg-amber-900/20;
+    }
+  }
+
+  &--delete {
+    @apply hover:text-red-600 hover:bg-red-50;
+
+    .dark & {
+      @apply hover:text-red-400 hover:bg-red-900/20;
+    }
+  }
+
+  &--activate {
+    @apply hover:text-green-600 hover:bg-green-50;
+
+    .dark & {
+      @apply hover:text-green-400 hover:bg-green-900/20;
+    }
+  }
+
+  &--resend {
+    @apply hover:text-blue-600 hover:bg-blue-50;
+
+    .dark & {
+      @apply hover:text-blue-400 hover:bg-blue-900/20;
+    }
+  }
+
+  // Background variant for desktop (existing pattern)
+  @apply lg:bg-blue-600/5 lg:text-body-xs;
+
+  .dark & {
+    @apply lg:bg-grey-50/10;
+  }
+}
