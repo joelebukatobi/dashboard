@@ -5,7 +5,7 @@
 
 .btn {
   @apply inline-flex items-center justify-center gap-[0.8rem];
-  @apply px-[1.2rem] text-body-sm font-medium rounded-md cursor-pointer h-[3.2rem];
+  @apply px-[1.2rem] text-body-sm font-medium rounded-md cursor-pointer h-[2.4rem];
   @apply transition-all duration-200;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 
@@ -113,7 +113,7 @@
   }
 
   &--lg {
-    @apply px-[2.4rem] py-[1.2rem] text-body h-[3.6rem];
+    @apply px-[2.4rem] py-[1.2rem] text-body h-[3.2rem];
   }
 
   &--xl {

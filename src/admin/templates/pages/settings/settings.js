@@ -59,7 +59,7 @@ export function settingsPage({ user, settings, toast }) {
                   </div>
                 </div>
                 <div class="card__header-actions">
-                  <button type="submit" class="btn btn--primary btn--sm">
+                  <button type="submit" class="btn btn--primary btn--lg">
                     <i data-lucide="save" stroke-width="1"></i>
                     Save Changes
                   </button>
@@ -190,7 +190,7 @@ export function settingsPage({ user, settings, toast }) {
                   </div>
                 </div>
                 <div class="card__header-actions">
-                  <button type="submit" class="btn btn--primary btn--sm">
+                  <button type="submit" class="btn btn--primary btn--lg">
                     <i data-lucide="save" stroke-width="1"></i>
                     Save Changes
                   </button>
@@ -263,7 +263,7 @@ export function settingsPage({ user, settings, toast }) {
                   </div>
                 </div>
                 <div class="card__header-actions">
-                  <button type="submit" class="btn btn--primary btn--sm">
+                  <button type="submit" class="btn btn--primary btn--lg">
                     <i data-lucide="save" stroke-width="1"></i>
                     Save Changes
                   </button>
@@ -338,7 +338,7 @@ export function settingsPage({ user, settings, toast }) {
                   </div>
                 </div>
                 <div class="card__header-actions">
-                  <button type="submit" class="btn btn--primary btn--sm">
+                  <button type="submit" class="btn btn--primary btn--lg">
                     <i data-lucide="save" stroke-width="1"></i>
                     Save Changes
                   </button>
@@ -375,7 +375,7 @@ export function settingsPage({ user, settings, toast }) {
                   </div>
                 </div>
                 <div class="card__header-actions">
-                  <button type="submit" class="btn btn--primary btn--sm">
+                  <button type="submit" class="btn btn--primary btn--lg">
                     <i data-lucide="save" stroke-width="1"></i>
                     Save Changes
                   </button>
