@@ -299,13 +299,13 @@ function categoriesTableFragment({ categories, pagination, counts }) {
         </td>
         <td class="table__td table__td--actions">
           <div class="flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]">
-            <a href="/admin/categories/${category.id}/edit" class="flex cursor-pointer items-center justify-center gap-[0.8rem] rounded-md p-[0.4rem] text-body-sm font-medium text-grey-500 transition-all duration-200 hover:bg-amber-50 hover:text-amber-600 lg:bg-blue-600/5 lg:text-body-xs dark:text-grey-400 dark:lg:bg-grey-50/10 dark:hover:bg-amber-900/20 dark:hover:text-amber-400">
+            <a href="/admin/categories/${category.id}/edit" class="btn btn--ghost row-action row-action--edit">
               <i data-lucide="pencil" class="h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]"></i>
               <span class="lg:hidden">Edit</span>
             </a>
             <button
               type="button"
-              class="flex cursor-pointer items-center justify-center gap-[0.8rem] rounded-md p-[0.4rem] text-body-sm font-medium text-grey-500 transition-all duration-200 hover:bg-red-50 hover:text-red-600 lg:bg-blue-600/5 lg:text-body-xs dark:text-grey-400 dark:lg:bg-grey-50/10 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+              class="btn btn--ghost row-action row-action--delete"
               data-category-id="${category.id}"
               data-category-title="${category.title}"
               data-post-count="${category.postCount || 0}"
