@@ -730,7 +730,7 @@ function topPostsFragment(posts) {
     return `
       <div class="text-center py-8 text-gray-500">
         <i data-lucide="trending-up" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
-        <p>No top posts yet</p>
+        <p>No posts</p>
       </div>
     `;
   }

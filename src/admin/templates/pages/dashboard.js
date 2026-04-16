@@ -291,7 +291,6 @@ function getRecentPosts(posts) {
       <div class="text-center py-8 text-gray-500">
         <i data-lucide="file-text" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
         <p>No posts yet</p>
-        <a href="/admin/posts/new" class="btn btn--primary btn--sm mt-4">Create your first post</a>
       </div>
     `;
   }
@@ -318,7 +317,7 @@ function getTopPosts(posts) {
     return `
       <div class="text-center py-8 text-gray-500">
         <i data-lucide="trending-up" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
-        <p>No top posts yet</p>
+        <p>No posts</p>
       </div>
     `;
   }
