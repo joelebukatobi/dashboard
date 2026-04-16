@@ -151,7 +151,7 @@ export function postsListPage({ posts, total, page, totalPages, categories, filt
         `}
         </div>
 
-        ${pagination && pagination.totalPages > 1 ? paginationHtml({ page, totalPages, filters }) : ''}
+        ${totalPages > 1 ? paginationHtml({ page, totalPages, filters }) : ''}
       </div>
     </div>
 
