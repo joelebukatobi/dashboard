@@ -97,7 +97,7 @@ async function seedDailyViews() {
     const batchSize = 100;
     for (let i = 0; i < dailyData.length; i += batchSize) {
       const batch = dailyData.slice(i, i + batchSize);
-      await db.insert(dailyPageViews).values(batch).onConflictDoNothing();
+      await db.insert(dailyPageViews).values(batch);
       console.log(`Inserted batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(dailyData.length / batchSize)}`);
     }
 

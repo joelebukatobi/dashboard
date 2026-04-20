@@ -30,6 +30,7 @@ const stats = {
   posts: 0,
   images: 0,
   videos: 0,
+  dailyPageViews: 0,
   comments: 0,
   subscribers: 0,
   activities: 0,
@@ -400,7 +401,78 @@ async function seed() {
     console.log(`✅ ${stats.posts} posts created\n`);
 
     // ============================================
-    // 8. COMMENTS
+    // 8. DAILY PAGE VIEWS (Traffic Analytics)
+    // ============================================
+    console.log('📊 Creating daily page views...');
+    const { dailyPageViews } = await import('../src/db/index.js');
+
+    // Generate daily view data for the past 365 days
+    // Target: ~2000 total views, ~1000 total visitors over the year
+    const dailyData = [];
+    const today = new Date();
+    const targetTotalViews = 2000;
+    const targetTotalVisitors = 1000;
+    const days = 366;
+
+    // Generate base daily values with some randomness
+    for (let i = 0; i < days; i++) {
+      const dayOffset = days - 1 - i;
+      const date = new Date(today);
+      date.setDate(date.getDate() - dayOffset);
+      date.setHours(0, 0, 0, 0);
+
+      // Generate random daily views (3-10 range)
+      const dailyViews = Math.floor(3 + Math.random() * 7);
+      const dailyVisitors = Math.floor(dailyViews * 0.5);
+
+      dailyData.push({
+        date: date.toISOString().split('T')[0],
+        totalViews: dailyViews,
+        uniqueVisitors: dailyVisitors,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    }
+
+    // Normalize to hit exact targets
+    const currentTotalViews = dailyData.reduce((sum, d) => sum + d.totalViews, 0);
+    const currentTotalVisitors = dailyData.reduce((sum, d) => sum + d.uniqueVisitors, 0);
+
+    const viewsMultiplier = targetTotalViews / currentTotalViews;
+    const visitorsMultiplier = targetTotalVisitors / currentTotalVisitors;
+
+    dailyData.forEach(day => {
+      day.totalViews = Math.max(1, Math.floor(day.totalViews * viewsMultiplier));
+      day.uniqueVisitors = Math.max(1, Math.floor(day.uniqueVisitors * visitorsMultiplier));
+    });
+
+    // Fine-tune to hit exact targets
+    let finalViews = dailyData.reduce((sum, d) => sum + d.totalViews, 0);
+    let finalVisitors = dailyData.reduce((sum, d) => sum + d.uniqueVisitors, 0);
+
+    while (finalViews < targetTotalViews) {
+      const randomDay = dailyData[Math.floor(Math.random() * dailyData.length)];
+      randomDay.totalViews += 1;
+      finalViews++;
+    }
+    while (finalVisitors < targetTotalVisitors) {
+      const randomDay = dailyData[Math.floor(Math.random() * dailyData.length)];
+      randomDay.uniqueVisitors += 1;
+      finalVisitors++;
+    }
+
+    // Insert data in batches to avoid overwhelming the database
+    const batchSize = 100;
+    for (let i = 0; i < dailyData.length; i += batchSize) {
+      const batch = dailyData.slice(i, i + batchSize);
+      await db.insert(dailyPageViews).values(batch);
+      stats.dailyPageViews += batch.length;
+    }
+
+    console.log(`✅ ${dailyData.length} days of page view data created\n`);
+
+    // ============================================
+    // 9. COMMENTS
     // ============================================
     console.log('💬 Creating comments...');
     const allPosts = await db.select({ id: posts.id }).from(posts);
@@ -439,7 +511,7 @@ async function seed() {
     console.log(`✅ ${stats.comments} comments created\n`);
 
     // ============================================
-    // 9. SUBSCRIBERS
+    // 10. SUBSCRIBERS
     // ============================================
     console.log('📧 Creating subscribers...');
     const subscriberEmails = [
@@ -461,7 +533,7 @@ async function seed() {
     console.log(`✅ ${stats.subscribers} subscribers created\n`);
 
     // ============================================
-    // 10. ACTIVITIES
+    // 11. ACTIVITIES
     // ============================================
     console.log('📊 Creating activities...');
     const activityTypes = [
@@ -503,6 +575,7 @@ async function seed() {
     console.log(`  📝 Posts: ${stats.posts}`);
     console.log(`  🖼️  Images: ${stats.images}`);
     console.log(`  🎥 Videos: ${stats.videos}`);
+    console.log(`  📊 Daily Page Views: ${stats.dailyPageViews}`);
     console.log(`  💬 Comments: ${stats.comments}`);
     console.log(`  📧 Subscribers: ${stats.subscribers}`);
     console.log(`  📈 Activities: ${stats.activities}`);
