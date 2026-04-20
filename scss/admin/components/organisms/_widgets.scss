@@ -247,20 +247,43 @@
     @apply px-[1.6rem] pb-8;
   }
 
-  &__left {
-    @apply flex items-start gap-[1.2rem];
-  }
-
-  &__right {
-    @apply ml-16 flex items-start lg:ml-auto lg:justify-end lg:gap-[1.2rem];
-  }
-
   &__item {
     @apply flex flex-col justify-between gap-[1.2rem] rounded-lg px-[1.2rem] py-4 lg:flex-row lg:items-start;
     @apply bg-blue-600/5;
 
     .dark & {
       @apply bg-grey-800/50;
+    }
+  }
+
+  &__item {
+    & > div:first-child {
+      @apply flex items-start gap-[1.2rem];
+
+      & > div {
+        @apply flex-1 min-w-0 flex flex-col;
+
+        & h6 {
+          @apply text-body-sm lg:text-body m-0;
+        }
+
+        & span {
+          @apply text-body-sm truncate m-0;
+        }
+      }
+    }
+
+    & > div:last-child {
+      @apply ml-16 flex items-start lg:ml-auto lg:justify-end lg:gap-[1.2rem];
+
+      & > span:first-child {
+        @apply shrink-0 text-body-sm font-semibold tabular-nums lg:text-right;
+        @apply text-grey-900 min-w-[3.5rem];
+
+        .dark & {
+          @apply text-white;
+        }
+      }
     }
   }
 
@@ -271,30 +294,6 @@
 
     .dark & {
       @apply bg-blue-500 text-white;
-    }
-  }
-
-  &__info {
-    @apply flex-1 min-w-0 flex flex-col;
-  }
-
-  &__title {
-    @apply text-body-sm lg:text-body;
-    @apply m-0;
-  }
-
-  &__url {
-    @apply text-body-sm truncate;
-    @apply m-0;
-  }
-
-  &__value {
-    @apply shrink-0 text-body-sm font-semibold tabular-nums lg:text-right;
-    @apply text-grey-900;
-    @apply min-w-[3.5rem];
-
-    .dark & {
-      @apply text-white;
     }
   }
 

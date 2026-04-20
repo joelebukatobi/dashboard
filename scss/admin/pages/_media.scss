@@ -69,9 +69,17 @@
 .media-layout {
   @apply flex flex-col lg:flex-row gap-[2.4rem] items-stretch;
 
+  &--start {
+    @apply items-start;
+  }
+
   &__content {
     @apply flex-1;
     @apply flex flex-col;
+
+    &--start {
+      @apply items-start;
+    }
   }
 
   &__sidebar {
@@ -96,6 +104,7 @@
   &__preview {
     @apply w-full h-full;
     @apply object-cover rounded-md max-h-[640px];
+    @apply hidden;
 
     @media (min-width: 1024px) {
       @apply max-h-[640px];
@@ -106,15 +115,43 @@
     @apply border-blue-500 bg-blue-50;
   }
 
+  &--full {
+    @apply w-full;
+  }
+
+  &--clickable {
+    @apply cursor-pointer;
+  }
+
   // Non-interactive preview mode (for edit pages)
   &--preview {
     @apply cursor-default;
+  }
+
+  &__preview--visible {
+    @apply block;
+  }
+}
+
+.media-info-card {
+  @apply bg-grey-50 p-[1rem] rounded-md;
+
+  .dark & {
+    @apply bg-grey-800;
+  }
+
+  & p {
+    @apply text-body-sm text-grey-600;
+
+    .dark & {
+      @apply text-grey-400;
+    }
   }
 }
 
 // Upload placeholder text styles
 .upload-placeholder {
-  &__title {
+  & p:first-child {
     @apply text-grey-600 mb-[0.5rem] text-body;
 
     .dark & {
@@ -122,7 +159,7 @@
     }
   }
 
-  &__hint {
+  & p:last-child {
     @apply text-grey-400 text-body-sm;
 
     .dark & {
@@ -202,12 +239,14 @@
     @apply bg-[linear-gradient(to_top,rgba(17,24,39,0.85),rgba(17,24,39,0))];
   }
 
-  &__title {
-    @apply text-body-sm font-medium text-white truncate;
-  }
+  &__details {
+    & h3 {
+      @apply text-body-sm font-medium text-white truncate;
+    }
 
-  &__meta {
-    @apply text-body-xs text-white/80 truncate;
+    & span {
+      @apply text-body-xs text-white/80 truncate;
+    }
   }
 
   // Category/Tag Badge (creative addition)
@@ -231,6 +270,12 @@
   &__actions-overlay {
     @apply absolute top-[0.8rem] right-[0.8rem] z-10;
     @apply flex gap-[0.4rem];
+    @apply opacity-0 transition-opacity duration-200;
+
+    // Show on card hover
+    .media-card:hover & {
+      @apply opacity-100;
+    }
   }
 
   &__action-btn {
@@ -274,5 +319,3 @@
     }
   }
 }
-
-

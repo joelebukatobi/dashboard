@@ -3,14 +3,20 @@
 // Uses composed button classes: btn btn--ghost row-action row-action--[type]
 // ============================================================================
 
+// Container for row action buttons
+.row-actions {
+  @apply flex items-center justify-end gap-[1.6rem];
+  @apply lg:gap-[0.64rem];
+}
+
 .row-action {
   // Size adjustments specific to table rows
   @apply p-[0.4rem] gap-[0.6rem];
 
-  // Icon sizing
+  // Icon sizing - responsive: larger on mobile, smaller on desktop
   svg,
   i {
-    @apply w-[1.4rem] h-[1.4rem];
+    @apply h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem];
   }
 
   // Text hidden on desktop, visible on mobile (reversed from buttons)

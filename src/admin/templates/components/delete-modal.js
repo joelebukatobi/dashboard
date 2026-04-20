@@ -1,7 +1,5 @@
-/**
- * Reusable Delete Modal Component
- * Handles delete confirmation modals with consistent styling and behavior
- */
+// src/admin/templates/components/delete-modal.js
+// Reusable Delete Modal Component - Simplified Structure
 
 export class DeleteModal {
   constructor(config) {
@@ -16,8 +14,6 @@ export class DeleteModal {
       message: config.message || null,
       buttonText: config.buttonText || 'Delete',
       csrfToken: config.csrfToken || '',
-      
-      // Conditional message config for Categories/Tags
       hasConditionalMessage: config.hasConditionalMessage || false,
       conditionalConfig: config.conditionalConfig || null
     };
@@ -32,55 +28,49 @@ export class DeleteModal {
 
   template() {
     const { entityName, title, csrfToken } = this.config;
-    
-    // Conditional message HTML for Categories/Tags
+
     let messageHtml = '';
     if (this.config.hasConditionalMessage && this.config.conditionalConfig) {
       const { messageWithItems, messageWithoutItems } = this.config.conditionalConfig;
       messageHtml = `
-        <div id="conditionalMessages">
-          <p class="modal__description hidden" id="deleteWithItems">
-            ${messageWithItems.replace('{count}', '<span id="deleteItemCount"></span>')}
-          </p>
-          <p class="modal__description hidden" id="deleteNoItems">
-            ${messageWithoutItems}
-          </p>
-        </div>
+        <p class="modal__description hidden" id="deleteWithItems">
+          ${messageWithItems.replace('{count}', '<span id="deleteItemCount"></span>')}
+        </p>
+        <p class="modal__description hidden" id="deleteNoItems">
+          ${messageWithoutItems}
+        </p>
       `;
     } else {
       messageHtml = `<p class="modal__description">${this.getMessage()}</p>`;
     }
 
     return `
-      <div id="${this.config.id}" class="hs-overlay hidden" role="dialog" tabindex="-1">
-        <div class="fixed inset-0 bg-black/50 transition-opacity opacity-0" id="modalBackdrop"></div>
-        <div class="fixed inset-0 z-50 flex min-h-full items-center justify-center p-4">
-          <div class="modal__content modal__content--confirm">
-            <div class="modal__header">
-              <div class="modal__icon modal__icon--danger">
-                <i data-lucide="alert-triangle" class="size-6"></i>
-              </div>
-              <h3 class="modal__title">${title}</h3>
-              ${messageHtml}
+      <div id="${this.config.id}" class="modal" role="dialog" tabindex="-1">
+        <div class="modal__backdrop" onclick="closeDeleteModal()"></div>
+        <div class="modal__panel">
+          <div class="modal__header">
+            <div class="modal__icon modal__icon--danger">
+              <i data-lucide="alert-triangle"></i>
             </div>
-
-            <form 
-              id="delete${entityName}Form"
-              hx-delete=""
-              hx-target="body"
-              hx-swap="none"
-              hx-on::after-request="closeDeleteModal()"
-              class="modal__actions"
-            >
-              <input type="hidden" name="_csrf" value="${csrfToken}" />
-              <button type="submit" class="btn btn--danger btn--full">
-                ${this.config.buttonText}
-              </button>
-              <button type="button" class="btn btn--outline btn--full" onclick="closeDeleteModal()">
-                Cancel
-              </button>
-            </form>
+            <h3 class="modal__title">${title}</h3>
+            ${messageHtml}
           </div>
+          <form
+            id="delete${entityName}Form"
+            hx-delete=""
+            hx-target="body"
+            hx-swap="none"
+            hx-on::after-request="closeDeleteModal()"
+            class="modal__footer"
+          >
+            <input type="hidden" name="_csrf" value="${csrfToken}" />
+            <button type="submit" class="btn btn--danger btn--full btn--lg">
+              ${this.config.buttonText}
+            </button>
+            <button type="button" class="btn btn--outline btn--full btn--lg" onclick="closeDeleteModal()">
+              Cancel
+            </button>
+          </form>
         </div>
       </div>
     `;
@@ -88,20 +78,16 @@ export class DeleteModal {
 
   script() {
     const { entityName, entityLabel, hasConditionalMessage, conditionalConfig } = this.config;
-    
+
     let conditionalLogic = '';
     if (hasConditionalMessage && conditionalConfig) {
       conditionalLogic = `
         const itemCount = button.getAttribute('${conditionalConfig.countAttribute}');
         const hasItems = parseInt(itemCount) > 0;
-        
-        // Update both conditional messages with the entity name
         const withItemsMsg = document.getElementById('deleteWithItems');
         const noItemsMsg = document.getElementById('deleteNoItems');
-        
         withItemsMsg.innerHTML = withItemsMsg.innerHTML.replace(/\\{name\\}/g, entityDisplayName);
         noItemsMsg.innerHTML = noItemsMsg.innerHTML.replace(/\\{name\\}/g, entityDisplayName);
-        
         withItemsMsg.classList.toggle('hidden', !hasItems);
         noItemsMsg.classList.toggle('hidden', hasItems);
         if (hasItems) {
@@ -115,63 +101,33 @@ export class DeleteModal {
         function openDeleteModal(button) {
           const entityId = button.getAttribute('data-${entityName.toLowerCase()}-id');
           const entityDisplayName = button.getAttribute('data-${entityName.toLowerCase()}-${entityLabel}');
-          
           const modal = document.getElementById('deleteModal');
           const form = document.getElementById('delete${entityName}Form');
-          
-          // Update form action
           form.setAttribute('hx-delete', '${this.config.deleteUrlPath}/' + entityId);
           if (typeof htmx !== 'undefined') {
             htmx.process(form);
           }
-          
-          // Update name display
           const nameElement = document.getElementById('deleteEntityName');
           if (nameElement) nameElement.textContent = entityDisplayName;
-          
           ${conditionalLogic}
-          
-          // Show modal with animation
-          modal.classList.remove('hidden');
-          
-          setTimeout(() => {
-            document.getElementById('modalBackdrop').classList.remove('opacity-0');
-            modal.querySelector('.modal__content').classList.add('hs-overlay-open:scale-100');
-          }, 10);
+          modal.classList.add('is-open');
         }
-        
+
         function closeDeleteModal() {
           const modal = document.getElementById('deleteModal');
-          
-          document.getElementById('modalBackdrop').classList.add('opacity-0');
-          modal.querySelector('.modal__content').classList.remove('hs-overlay-open:scale-100');
-          
-          setTimeout(() => {
-            modal.classList.add('hidden');
-          }, 200);
+          modal.classList.remove('is-open');
         }
-        
-        // Close on backdrop click
-        document.addEventListener('click', function(e) {
-          if (e.target.id === 'modalBackdrop') {
-            closeDeleteModal();
-          }
-        });
-        
-        // Close on escape key
+
         document.addEventListener('keydown', function(e) {
           if (e.key === 'Escape') {
             closeDeleteModal();
           }
         });
-        
-        // Handle subscriber deleted event - remove row from table
+
         document.body.addEventListener('subscriberDeleted', function(evt) {
           if (evt.detail && evt.detail.id) {
             const row = document.getElementById('subscriber-' + evt.detail.id);
-            if (row) {
-              row.remove();
-            }
+            if (row) row.remove();
           }
         });
       </script>

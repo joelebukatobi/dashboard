@@ -19,8 +19,8 @@
   &__icon {
     @apply mb-[2.4rem] flex justify-center;
 
-    i {
-      @apply text-grey-400;
+    svg, i {
+      @apply w-[4.8rem] h-[4.8rem] text-grey-400;
 
       .dark & {
         @apply text-grey-500;

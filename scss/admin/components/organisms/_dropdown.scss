@@ -19,6 +19,10 @@
   &--full {
     @apply w-full;
   }
+
+  &--bottom-right {
+    --placement: bottom-right;
+  }
 }
 
 // Dropdown toggle chevron animation

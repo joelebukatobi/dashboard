@@ -1,6 +1,7 @@
 // Edit video page template
 
 import { mainLayout } from '../../../layouts/main.js';
+import { escapeHtml } from '../../../utils/helpers.js';
 
 /**
  * Generate video edit page
@@ -24,10 +25,10 @@ export function videosEditPage({ user, video, posts }) {
         </div>
 
         <!-- Edit Form Layout -->
-        <div class="media-layout items-start">
+        <div class="media-layout media-layout--start">
           <!-- Left: Video Preview -->
-          <div class="media-layout__content flex items-start">
-            <div class="upload-zone upload-zone--preview w-full video-preview-container">
+          <div class="media-layout__content media-layout__content--start">
+            <div class="upload-zone upload-zone--preview upload-zone--full video-preview-container">
               <!-- Background video (blurred backdrop) -->
               <video 
                 id="videoBg"
@@ -41,7 +42,7 @@ export function videosEditPage({ user, video, posts }) {
               <!-- Main video (foreground) -->
               <video 
                 id="videoMain"
-                class="upload-zone__preview video-preview video-preview-main" 
+                class="upload-zone__preview video-preview-main" 
                 src="${video.path}"
                 controls
               >
@@ -92,8 +93,8 @@ export function videosEditPage({ user, video, posts }) {
                 <!-- Video Info -->
                 <div class="form__group form__group--spaced">
                   <label class="label">Video Information</label>
-                  <div class="card card__panel bg-grey-50 dark:bg-grey-800 p-[1rem]">
-                    <p class="text-body-sm text-grey-600">
+                  <div class="card card__panel media-info-card">
+                    <p>
                       <strong>Duration:</strong> ${video.durationFormatted}<br>
                       <strong>Dimensions:</strong> ${video.width || 'N/A'} x ${video.height || 'N/A'}<br>
                       <strong>Size:</strong> ${video.sizeFormatted}<br>
@@ -107,7 +108,7 @@ export function videosEditPage({ user, video, posts }) {
                   <label class="label">Attach to Post (Optional)</label>
                   <select 
                     name="postId" 
-                    class="hidden"
+                    class="form__select-native"
                     data-hs-select='{
                       "hasSearch": true,
                       "searchPlaceholder": "Search posts...",
@@ -129,13 +130,13 @@ export function videosEditPage({ user, video, posts }) {
                 <div id="form-response"></div>
 
                 <!-- Submit Button -->
-                <div class="form__group mb-0 mt-6">
+                <div class="form__group form__group--tight">
                   <button type="submit" class="btn btn--primary btn--full">
                     Save Changes
                   </button>
                   <button 
                     type="button" 
-                    class="btn btn--danger btn--outline btn--full mt-[1.6rem]"
+                    class="btn btn--danger btn--outline btn--full btn--spaced"
                     onclick="openDeleteModal(event)"
                   >
                     Delete Video
@@ -149,78 +150,41 @@ export function videosEditPage({ user, video, posts }) {
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div
-      id="deleteModal"
-      class="hs-overlay hidden"
-      role="dialog"
-      tabindex="-1"
-    >
-      <!-- Backdrop -->
-      <div class="fixed inset-0 bg-black/50 transition-opacity opacity-0" id="modalBackdrop"></div>
-
-      <!-- Modal Container -->
-      <div class="fixed inset-0 z-50 flex min-h-full items-center justify-center p-4">
-        <div class="modal__content modal__content--confirm">
-          <!-- Icon -->
-          <div class="pt-8 pb-4">
-            <div class="modal__icon modal__icon--danger mx-auto">
-              <i data-lucide="alert-triangle" class="size-6"></i>
-            </div>
+    <div id="deleteModal" class="modal" role="dialog" tabindex="-1">
+      <div class="modal__backdrop" onclick="closeDeleteModal()"></div>
+      <div class="modal__panel">
+        <div class="modal__header">
+          <div class="modal__icon modal__icon--danger">
+            <i data-lucide="alert-triangle"></i>
           </div>
-
-          <!-- Body -->
-          <div class="px-6 modal__body--padded-bottom">
-            <h3 class="modal__title">Are you sure you want to delete?</h3>
-            <p class="modal__description">
-              Are you sure you want to delete "<span id="deleteVideoName">${escapeHtml(video.originalName)}</span>"?
-            </p>
-          </div>
-
-          <!-- Buttons -->
-          <form
-            id="deleteVideoForm"
-            hx-delete="/admin/media/videos/${video.id}"
-            hx-redirect="/admin/media/videos"
-            class="px-6 pb-6 flex flex-col gap-3"
-          >
-            <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
-            <button type="submit" class="btn btn--danger btn--full">
-              Delete Video
-            </button>
-            <button type="button" class="btn btn--outline btn--full" onclick="closeDeleteModal()">
-              Cancel
-            </button>
-          </form>
+          <h3 class="modal__title">Are you sure you want to delete?</h3>
+          <p class="modal__description">
+            Are you sure you want to delete "<span id="deleteVideoName">${escapeHtml(video.originalName)}</span>"?
+          </p>
         </div>
+        <form
+          id="deleteVideoForm"
+          hx-delete="/admin/media/videos/${video.id}"
+          hx-redirect="/admin/media/videos"
+          class="modal__footer"
+        >
+          <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
+          <button type="submit" class="btn btn--danger btn--full">Delete Video</button>
+          <button type="button" class="btn btn--outline btn--full" onclick="closeDeleteModal()">Cancel</button>
+        </form>
       </div>
     </div>
 
     <script>
       function openDeleteModal(event) {
-        if (event) {
-          event.preventDefault();
-        }
+        if (event) event.preventDefault();
         const modal = document.getElementById('deleteModal');
-        const backdrop = document.getElementById('modalBackdrop');
-        if (!modal) return;
-        modal.classList.remove('hidden');
-        if (backdrop) {
-          requestAnimationFrame(() => {
-            backdrop.classList.remove('opacity-0');
-          });
-        }
+        if (modal) modal.classList.add('is-open');
       }
 
       function closeDeleteModal() {
         const modal = document.getElementById('deleteModal');
-        const backdrop = document.getElementById('modalBackdrop');
-        if (!modal) return;
-        if (backdrop) {
-          backdrop.classList.add('opacity-0');
-        }
-        setTimeout(() => {
-          modal.classList.add('hidden');
-        }, 200);
+        if (modal) modal.classList.remove('is-open');
       }
 
       document.addEventListener('DOMContentLoaded', function() {
@@ -286,19 +250,4 @@ export function videosEditPage({ user, video, posts }) {
       { label: video.title || 'Edit', url: `/admin/media/videos/${video.id}/edit` },
     ],
   });
-}
-
-/**
- * Escape HTML to prevent XSS
- * @param {string} text - Text to escape
- * @returns {string} - Escaped text
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

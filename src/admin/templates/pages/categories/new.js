@@ -23,9 +23,9 @@ export function categoryNewPage({ user, errors = {} }) {
 
         <!-- New Category Form -->
         <div class="card">
-        <div class="card__header">
-          <h2 class="card__title">Category Details</h2>
-        </div>
+          <div class="card__header">
+            <h2>Category Details</h2>
+          </div>
         <div class="card__body">
           <form
             class="form"

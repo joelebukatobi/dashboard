@@ -5,6 +5,21 @@
 // ============================================================================
 
 .form {
+  // [UNUSED - COMMENTED OUT] Form container with max-width constraint
+  // &__container {
+  //   @apply max-w-lg;
+  // }
+
+  // [UNUSED - COMMENTED OUT] Form with vertical spacing between groups
+  // &--spaced {
+  //   @apply space-y-6;
+  //
+  //   // Override default margin on groups since we're using space-y
+  //   .form__group {
+  //     @apply mb-0;
+  //   }
+  // }
+
   // Form Group - Layout container for label + input + feedback
   &__group {
     @apply mb-[1.6rem];
@@ -42,6 +57,10 @@
     // Spacing modifier for additional top margin
     &--spaced {
       @apply mt-[1.6rem];
+    }
+
+    &--tight {
+      @apply mb-0 mt-6;
     }
   }
 
@@ -103,24 +122,33 @@
     & .card__title {
       @apply text-body-sm lg:text-body;
     }
-  }
 
-  &__list-divided {
-    @apply divide-y divide-grey-100;
-    .dark & {
-      @apply divide-grey-500;
-    }
+    & p {
+      @apply text-body-sm text-grey-600;
 
-    & > * {
-      @apply py-[0.8rem];
-      &:first-child {
-        @apply pt-[1.2rem];
-      }
-      &:last-child {
-        @apply pb-0;
+      .dark & {
+        @apply text-grey-400;
       }
     }
   }
+
+  // [UNUSED - COMMENTED OUT]
+  // &__list-divided {
+  //   @apply divide-y divide-grey-100;
+  //   .dark & {
+  //     @apply divide-grey-500;
+  //   }
+  //
+  //   & > * {
+  //     @apply py-[0.8rem];
+  //     &:first-child {
+  //       @apply pt-[1.2rem];
+  //     }
+  //     &:last-child {
+  //       @apply pb-0;
+  //     }
+  //   }
+  // }
 
   &__details-list {
     @apply flex flex-col text-body-sm;
@@ -194,113 +222,161 @@
   &__avatar-placeholder {
     @apply w-[12rem] h-[12rem] rounded-full bg-grey-200 flex items-center justify-center;
 
-    span {
-      @apply text-[3rem] font-semibold text-grey-600;
+    img {
+      @apply w-full h-full rounded-full object-cover;
+    }
+
+    svg, i {
+      @apply w-[4.8rem] h-[4.8rem] text-grey-400;
     }
 
     .dark & {
       @apply bg-grey-700;
-
-      span {
-        @apply text-grey-300;
-      }
     }
   }
 
-  &__item-group {
-    @apply flex items-center gap-[1.2rem];
+  &__select-native {
+    @apply hidden;
   }
 
-  // Control groups for checkboxes/radios
-  &__control-group {
-    @apply flex items-center gap-[1.2rem] cursor-pointer;
-  }
+  // [UNUSED - COMMENTED OUT]
+  // &__item-group {
+  //   @apply flex items-center gap-[1.2rem];
+  // }
 
-  &__check-group {
-    @apply flex items-center gap-[1.2rem] cursor-pointer;
-  }
-
-  &__check-label {
-    @apply text-body-sm text-grey-700;
-    .dark & {
-      @apply text-grey-300;
-    }
-  }
+  // [UNUSED - COMMENTED OUT] Control groups for checkboxes/radios
+  // &__control-group {
+  //   @apply flex items-center gap-[1.2rem] cursor-pointer;
+  // }
+  //
+  // &__check-group {
+  //   @apply flex items-center gap-[1.2rem] cursor-pointer;
+  // }
+  //
+  // &__check-label {
+  //   @apply text-body-sm text-grey-700;
+  //   .dark & {
+  //     @apply text-grey-300;
+  //   }
+  // }
 
   // Checkbox wrapper for label + input + text pattern
   &__checkbox-wrapper {
     @apply flex items-center gap-3 cursor-pointer;
+
+    & > span {
+      @apply text-body-sm text-grey-600;
+
+      .dark & {
+        @apply text-grey-400;
+      }
+    }
+  }
+
+  // Form hint text (e.g., file requirements)
+  &__hint {
+    @apply block mt-[0.8rem] text-body-sm text-grey-500;
+
+    .dark & {
+      @apply text-grey-400;
+    }
+  }
+
+  // Role hints with color-coded text
+  &__role-hints {
+    @apply text-body-sm;
+
+    & strong {
+      @apply font-semibold;
+
+      &:nth-of-type(1) {
+        @apply text-blue-600;
+      }
+
+      &:nth-of-type(2) {
+        @apply text-purple-600;
+      }
+
+      &:nth-of-type(3) {
+        @apply text-cyan-600;
+      }
+
+      &:nth-of-type(4) {
+        @apply text-amber-600;
+      }
+    }
   }
 
   // Preline Select Custom Classes
-  &__select {
-    @apply w-full flex items-center justify-between;
+  // [UNUSED - COMMENTED OUT] Base class only - variants still used
+  // &__select {
+  //   @apply w-full flex items-center justify-between;
+  // }
 
-    &-toggle {
-      @apply hs-select-disabled:pointer-events-none hs-select-disabled:opacity-50 relative w-full flex items-center justify-between cursor-pointer px-[1.2rem] bg-white border border-grey-100/50 text-body-sm text-grey-900 hover:border-grey-300 focus:outline-none dark:bg-grey-900 dark:border-grey-800 dark:text-white dark:hover:border-grey-600 h-[3.2rem] rounded-md;
-    }
+  &__select-toggle {
+    @apply hs-select-disabled:pointer-events-none hs-select-disabled:opacity-50 relative w-full flex items-center justify-between cursor-pointer px-[1.2rem] bg-white border border-grey-100/50 text-body-sm text-grey-900 hover:border-grey-300 focus:outline-none dark:bg-grey-900 dark:border-grey-800 dark:text-white dark:hover:border-grey-600 h-[3.2rem] rounded-md;
+  }
 
-    &-dropdown {
-      @apply mt-[0.8rem] z-50 w-full max-h-56 bg-white border border-grey-100 shadow-lg overflow-y-auto p-[0.4rem] rounded-md dark:bg-grey-900 dark:border-grey-700;
-    }
+  &__select-dropdown {
+    @apply mt-[0.8rem] z-50 w-full max-h-56 bg-white border border-grey-100 shadow-lg overflow-y-auto p-[0.4rem] rounded-md dark:bg-grey-900 dark:border-grey-700;
+  }
 
-    &-search {
-      @apply sticky top-0 p-[0.8rem] bg-white border-b border-grey-100 mb-[0.4rem];
-      
-      &__input {
-        @apply w-full;
-        @apply text-body-sm placeholder:text-body-sm;
-        @apply bg-white text-grey-900 placeholder-grey-400;
-        @apply border border-grey-100/50 rounded-md;
-        @apply outline-none;
-        @apply transition-all duration-200;
-        @apply h-[3.2rem] px-[1.2rem];
+  &__select-search {
+    @apply sticky top-0 p-[0.8rem] bg-white border-b border-grey-100 mb-[0.4rem];
+
+    &__input {
+      @apply w-full;
+      @apply text-body-sm placeholder:text-body-sm;
+      @apply bg-white text-grey-900 placeholder-grey-400;
+      @apply border border-grey-100/50 rounded-md;
+      @apply outline-none;
+      @apply transition-all duration-200;
+      @apply h-[3.2rem] px-[1.2rem];
+
+      &:focus {
+        @apply border-blue-600 ring-2 ring-blue-600/20;
+      }
+
+      .dark & {
+        @apply bg-grey-900 text-white placeholder-grey-500;
+        @apply border-grey-700;
 
         &:focus {
-          @apply border-blue-600 ring-2 ring-blue-600/20;
-        }
-
-        .dark & {
-          @apply bg-grey-900 text-white placeholder-grey-500;
-          @apply border-grey-700;
-
-          &:focus {
-            @apply border-blue-600 ring-blue-600/20;
-          }
+          @apply border-blue-600 ring-blue-600/20;
         }
       }
     }
+  }
 
-    &-option {
-      @apply py-[0.64rem] px-[0.8rem] mb-[0.4rem] w-full text-body-sm text-grey-900 cursor-pointer transition-all duration-200 border-0 rounded-md focus:outline-none hs-selected:bg-blue-600/10 hs-selected:border-0 dark:text-white dark:hs-selected:bg-grey-700/50;
+  &__select-option {
+    @apply py-[0.64rem] px-[0.8rem] mb-[0.4rem] w-full text-body-sm text-grey-900 cursor-pointer transition-all duration-200 border-0 rounded-md focus:outline-none hs-selected:bg-blue-600/10 hs-selected:border-0 dark:text-white dark:hs-selected:bg-grey-700/50;
 
-      &:last-child {
-        @apply mb-0;
-      }
+    &:last-child {
+      @apply mb-0;
     }
   }
 
-  // Horizontal Divider
-  &__hr {
-    @apply border-grey-50 my-6;
+  // [UNUSED - COMMENTED OUT] Horizontal Divider
+  // &__hr {
+  //   @apply border-grey-50 my-6;
+  //
+  //   .dark & {
+  //     @apply border-grey-700;
+  //   }
+  // }
 
-    .dark & {
-      @apply border-grey-700;
-    }
-  }
-
-  // Form Actions (for sticky save buttons)
-  &__actions {
-    @apply flex items-center gap-[1.6rem];
-
-    &--sticky {
-      @apply sticky bottom-0;
-      @apply bg-white dark:bg-grey-900;
-      @apply border-t border-grey-100 dark:border-grey-700;
-      @apply py-[1.6rem] px-0;
-      @apply z-10;
-    }
-  }
+  // [UNUSED - COMMENTED OUT] Form Actions (for sticky save buttons)
+  // &__actions {
+  //   @apply flex items-center gap-[1.6rem];
+  //
+  //   &--sticky {
+  //     @apply sticky bottom-0;
+  //     @apply bg-white dark:bg-grey-900;
+  //     @apply border-t border-grey-100 dark:border-grey-700;
+  //     @apply py-[1.6rem] px-0;
+  //     @apply z-10;
+  //   }
+  // }
 }
 
 // Image Upload Component

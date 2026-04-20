@@ -157,59 +157,27 @@ export function postCommentsPage({ user, post, comments, pagination, toast }) {
   // Delete Modal
   const modal = `
     <!-- Delete Confirmation Modal -->
-    <div
-      id="deleteCommentModal"
-      class="hs-overlay hidden z-[100]"
-      role="dialog"
-      tabindex="-1"
-      aria-labelledby="deleteCommentModalLabel"
-    >
-      <!-- Backdrop -->
-      <div class="fixed inset-0 bg-black/50 transition-opacity opacity-0 z-[100]" id="commentModalBackdrop"></div>
-
-      <!-- Modal Container -->
-      <div
-        class="fixed inset-0 z-[100] flex min-h-full items-center justify-center p-4"
-      >
-        <div class="modal__content modal__content--confirm">
-          <!-- Icon -->
-          <div class="pt-8 pb-4">
-            <div class="modal__icon modal__icon--danger mx-auto">
-              <i data-lucide="alert-triangle" class="size-6"></i>
-            </div>
+    <div id="deleteCommentModal" class="modal modal--high" role="dialog" tabindex="-1" aria-labelledby="deleteCommentModalLabel">
+      <div class="modal__backdrop" onclick="closeDeleteModal()"></div>
+      <div class="modal__panel">
+        <div class="modal__header">
+          <div class="modal__icon modal__icon--danger">
+            <i data-lucide="alert-triangle"></i>
           </div>
-
-          <!-- Body -->
-          <div class="px-6 pb-6">
-            <h3 id="deleteCommentModalLabel" class="modal__title">Delete Comment?</h3>
-            <p class="modal__description">
-              This action cannot be undone. <span id="deleteCommentAuthor">this comment</span> will be permanently deleted, including all replies.
-            </p>
-          </div>
-
-          <!-- Buttons (stacked, full-width) -->
-          <form
-            id="deleteCommentForm"
-            hx-delete=""
-            class="px-6 pb-6 flex flex-col gap-3"
-          >
-            <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
-            <button 
-              type="submit" 
-              class="btn btn--danger btn--full"
-              onclick="closeDeleteModal()"
-            >
-              Delete Comment
-            </button>
-            <button 
-              type="button" 
-              class="btn btn--outline btn--full"
-              onclick="closeDeleteModal()"
-            >
-              Cancel
-            </button>
-          </form>
+          <h3 id="deleteCommentModalLabel" class="modal__title">Delete Comment?</h3>
+          <p class="modal__description">
+            This action cannot be undone. <span id="deleteCommentAuthor">this comment</span> will be permanently deleted, including all replies.
+          </p>
         </div>
+        <form
+          id="deleteCommentForm"
+          hx-delete=""
+          class="modal__footer"
+        >
+          <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
+          <button type="submit" class="btn btn--danger btn--full" onclick="closeDeleteModal()">Delete Comment</button>
+          <button type="button" class="btn btn--outline btn--full" onclick="closeDeleteModal()">Cancel</button>
+        </form>
       </div>
     </div>
   `;

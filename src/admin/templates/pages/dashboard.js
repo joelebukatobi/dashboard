@@ -177,8 +177,8 @@ export function dashboardPage({ user, stats = {}, activity = [], recentPosts = [
             ${trafficChart || `
             <div id="chart-panel-${range || '30d'}" role="tabpanel" aria-labelledby="chart-range-${range || '30d'}">
               <div class="chart-container__chart">
-                <div class="text-center text-gray-500 py-8">
-                  <i data-lucide="bar-chart-2" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+                <div class="chart-container__loading">
+                  <i data-lucide="bar-chart-2"></i>
                   <p>Loading chart...</p>
                 </div>
               </div>
@@ -321,15 +321,15 @@ function getTopPosts(posts) {
 
   return posts.map((post, index) => `
     <div class="top-list__item">
-      <div class="top-list__left">
-         <span class="top-list__rank top-list__rank--neutral">${index + 1}</span>
-        <div class="top-list__info">
-          <h6 class="top-list__title">${post.title}</h6>
-          <span class="top-list__url">${post.url || '/blog/' + post.slug}</span>
+      <div>
+         <span class="top-list__rank">${index + 1}</span>
+        <div>
+          <h6>${post.title}</h6>
+          <span>${post.url || '/blog/' + post.slug}</span>
         </div>
       </div>
-      <div class="top-list__right">
-        <span class="top-list__value">${post.views || 0} Views</span>
+      <div>
+        <span>${post.views || 0} Views</span>
         <span class="top-list__change top-list__change--${post.trend === 'up' ? 'up' : 'down'}">
           <i data-lucide="${post.trend === 'up' ? 'trending-up' : 'trending-down'}"></i>
           ${post.change || 0}%

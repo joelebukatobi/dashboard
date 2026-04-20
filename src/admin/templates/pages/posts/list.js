@@ -4,9 +4,9 @@
 import { mainLayout } from '../../layouts/main.js';
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
+import { escapeHtml, formatDate, POST_STATUS_LABELS } from '../../utils/helpers.js';
 
-const rowActionIconClass = 'h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]';
-const rowActionTextClass = 'lg:hidden';
+
 
 /**
  * Posts List Page Template
@@ -35,7 +35,7 @@ export function postsListPage({ posts, total, page, totalPages, categories, filt
   // Build filters array for toolbar
   const toolbarFilters = [
     {
-      label: filters.status || 'Status',
+      label: filters.status ? POST_STATUS_LABELS[filters.status] : 'Status',
       options: [
         { url: '/admin/posts', label: 'All Statuses', active: !filters.status },
         { url: '/admin/posts?status=PUBLISHED', label: 'Published', active: filters.status === 'PUBLISHED' },
@@ -127,21 +127,23 @@ export function postsListPage({ posts, total, page, totalPages, categories, filt
                      ${formatDate(post.publishedAt || post.createdAt)}
                    </td>
                   <td class="table__td table__td--actions">
-                    <a href="/admin/posts/${post.id}/edit" class="btn btn--ghost row-action row-action--edit">
-                      <i data-lucide="pencil" class="${rowActionIconClass}"></i>
-                      <span class="${rowActionTextClass}">Edit</span>
-                    </a>
-                    <button
-                      type="button"
-                      class="btn btn--ghost row-action row-action--delete"
-                      data-post-id="${post.id}"
-                      data-post-title="${escapeHtml(post.title)}"
-                      onclick="openDeleteModal(this)"
-                    >
-                      <i data-lucide="trash-2" class="${rowActionIconClass}"></i>
-                      <span class="${rowActionTextClass}">Delete</span>
-                    </button>
-                  </td>
+                     <div class="row-actions">
+                       <a href="/admin/posts/${post.id}/edit" class="btn btn--ghost row-action row-action--edit">
+                         <i data-lucide="pencil"></i>
+                         <span>Edit</span>
+                       </a>
+                       <button
+                         type="button"
+                         class="btn btn--ghost row-action row-action--delete"
+                         data-post-id="${post.id}"
+                         data-post-title="${escapeHtml(post.title)}"
+                         onclick="openDeleteModal(this)"
+                       >
+                         <i data-lucide="trash-2"></i>
+                         <span>Delete</span>
+                       </button>
+                     </div>
+                   </td>
                 </tr>
               `,
                 )
@@ -201,26 +203,6 @@ function getStatusBadge(status) {
 
   const config = statusConfig[status] || statusConfig.DRAFT;
   return `<span class="badge ${config.class}">${config.label}</span>`;
-}
-
-function formatDate(dateString) {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 function paginationHtml({ page, totalPages, filters }) {

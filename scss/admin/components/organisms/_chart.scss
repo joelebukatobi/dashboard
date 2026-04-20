@@ -44,6 +44,19 @@
 
     // Default height when not in a constrained widget
     @apply min-h-[28rem] h-[28rem];
+
+    & .chart-container__loading {
+      @apply text-center text-grey-500 py-8;
+
+      .dark & {
+        @apply text-grey-400;
+      }
+
+      & i,
+      & svg {
+        @apply w-12 h-12 mx-auto mb-4 opacity-50;
+      }
+    }
   }
 }
 

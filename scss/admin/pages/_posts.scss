@@ -3,16 +3,12 @@
 // ============================================================================
 
 // Sticky table header for desktop scrollable area
-.posts {
-  .content {
-    .posts__table-content {
-      .table__thead {
-        @apply sticky top-0 z-10 bg-white;
+.posts__table-content {
+  .table__thead {
+    @apply sticky top-0 z-10 bg-white;
 
-        .dark & {
-          @apply bg-grey-900;
-        }
-      }
+    .dark & {
+      @apply bg-grey-900;
     }
   }
 }
@@ -47,21 +43,69 @@
     }
   }
 
+  &__header {
+    @apply mb-[1.2rem] flex items-center justify-between;
+
+    & h3 {
+      @apply text-body-lg font-semibold;
+    }
+  }
+
+  &__toolbar {
+    @apply mb-[1.2rem] flex items-center gap-[0.8rem];
+  }
+
+  #mediaPickerStatus {
+    @apply mb-[0.8rem] text-body-sm text-grey-500;
+
+    .dark & {
+      @apply text-grey-400;
+    }
+  }
+
   &__grid {
     @apply grid max-h-[52vh] grid-cols-2 gap-[1.2rem] overflow-y-auto md:grid-cols-3;
     padding-right: 0.8rem;
   }
+
+  &__item {
+    @apply rounded-[0.8rem] border border-grey-200 p-[0.8rem] text-left transition-colors duration-200;
+
+    &:hover {
+      @apply border-amber-400;
+    }
+
+    .dark & {
+      @apply border-grey-700;
+    }
+
+    & p {
+      @apply line-clamp-2 text-body-sm text-grey-700;
+
+      .dark & {
+        @apply text-grey-300;
+      }
+    }
+  }
+
+  &__item-preview {
+    @apply mb-[0.6rem] aspect-video overflow-hidden rounded-[0.6rem] bg-grey-100;
+
+    .dark & {
+      @apply bg-grey-700;
+    }
+
+    img {
+      @apply h-full w-full object-cover;
+    }
+  }
+
 }
 
 .editor-video {
-  &__media {
+  & video {
     @apply max-w-full h-auto;
   }
-}
-
-// Above sticky headers
-#deleteModal {
-  @apply z-100;
 }
 
 // Mobile: card-style table rows

@@ -5,7 +5,7 @@
 
 .btn {
   @apply inline-flex items-center justify-center gap-[0.8rem];
-  @apply px-[1.2rem] text-body-sm font-medium rounded-md cursor-pointer h-[2.4rem];
+  @apply px-[1.2rem] text-body-sm font-medium rounded-sm cursor-pointer h-[2.4rem];
   @apply transition-all duration-200;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 
@@ -110,14 +110,15 @@
   // Sizes
   &--sm {
     @apply px-[1.2rem] py-[0.4rem] text-body-xs h-[1.6rem];
+    // Inherits rounded-sm from base
   }
 
   &--lg {
-    @apply px-[2.4rem] py-[1.2rem] text-body h-[3.2rem];
+    @apply px-[2.4rem] py-[1.2rem] text-body h-[3.2rem] rounded-md;
   }
 
   &--xl {
-    @apply px-[2.4rem] py-[1.6rem] text-body h-[4rem];
+    @apply px-[2.4rem] py-[1.6rem] text-body h-[4rem] rounded-md;
   }
 
   // Icon only
@@ -147,6 +148,10 @@
     }
   }
 
+  &--spaced {
+    @apply mt-[1.6rem];
+  }
+
   svg {
     @apply w-[1.2rem] h-[1.2rem];
   }
@@ -161,4 +166,3 @@
 .btn-group {
   @apply flex gap-[0.8rem];
 }
-

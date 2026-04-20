@@ -102,3 +102,48 @@ export function getStatusClass(status) {
   };
   return map[status?.toUpperCase()] || 'grey';
 }
+
+// ============================================================================
+// Filter Label Mappings
+// Used to display human-readable labels for filter dropdowns
+// ============================================================================
+
+/**
+ * Post status labels for filter dropdowns
+ * Maps database/URL values to display labels
+ */
+export const POST_STATUS_LABELS = {
+  'PUBLISHED': 'Published',
+  'DRAFT': 'Draft',
+  'SCHEDULED': 'Scheduled',
+  'ARCHIVED': 'Archived',
+};
+
+/**
+ * User role labels for filter dropdowns
+ */
+export const USER_ROLE_LABELS = {
+  'ADMIN': 'Admin',
+  'EDITOR': 'Editor',
+  'AUTHOR': 'Author',
+  'VIEWER': 'Viewer',
+};
+
+/**
+ * User status labels for filter dropdowns
+ */
+export const USER_STATUS_LABELS = {
+  'ACTIVE': 'Active',
+  'INVITED': 'Invited',
+  'SUSPENDED': 'Suspended',
+};
+
+/**
+ * Subscriber status labels for filter dropdowns
+ */
+export const SUBSCRIBER_STATUS_LABELS = {
+  'ACTIVE': 'Active',
+  'PENDING': 'Pending',
+  'UNSUBSCRIBED': 'Unsubscribed',
+  'BOUNCED': 'Bounced',
+};

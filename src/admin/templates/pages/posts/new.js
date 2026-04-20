@@ -188,22 +188,22 @@ export function postNewPage({ categories, tags, user }) {
       </div>
     </div>
 
-    <div id="editorMediaModal" class="hs-overlay editor-media-modal hidden" role="dialog" tabindex="-1" aria-hidden="true">
+    <div id="editorMediaModal" class="editor-media-modal hidden" role="dialog" tabindex="-1" aria-hidden="true">
       <div class="editor-media-modal__backdrop" onclick="closeMediaModal()"></div>
       <div class="editor-media-modal__panel">
-        <div class="mb-[1.2rem] flex items-center justify-between">
-          <h3 id="mediaModalTitle" class="text-body-lg font-semibold">Insert Media</h3>
+        <div class="editor-media-modal__header">
+          <h3 id="mediaModalTitle">Insert Media</h3>
           <button type="button" class="btn btn--ghost" onclick="closeMediaModal()">Close</button>
         </div>
 
-        <div class="mb-[1.2rem] flex items-center gap-[0.8rem]">
+        <div class="editor-media-modal__toolbar">
           <input id="mediaSearchInput" class="input" type="text" placeholder="Search media..." />
           <button type="button" class="btn btn--outline-primary" onclick="searchMedia()">Search</button>
           <button type="button" class="btn btn--primary" onclick="triggerMediaUpload()">Upload</button>
           <input id="mediaUploadInput" type="file" hidden />
         </div>
 
-        <div id="mediaPickerStatus" class="mb-[0.8rem] text-body-sm text-grey-500"></div>
+        <div id="mediaPickerStatus"></div>
         <div id="mediaPickerGrid" class="editor-media-modal__grid"></div>
       </div>
     </div>
@@ -315,7 +315,7 @@ export function postNewPage({ categories, tags, user }) {
                 url: new RegExp('^/public/uploads/videos/(.+)$'),
                 html: match => {
                   const videoPath = '/public/uploads/videos/' + match[1];
-                  return '<div class="editor-video"><video class="editor-video__media" controls preload="metadata"><source src="' + videoPath + '"></video></div>';
+                  return '<div class="editor-video"><video controls preload="metadata"><source src="' + videoPath + '"></video></div>';
                 }
               }
             ]
@@ -415,10 +415,10 @@ export function postNewPage({ categories, tags, user }) {
           gridEl.innerHTML = items.map((item) => {
             const preview = item.thumbnailUrl || item.url;
             const title = item.title || 'Untitled';
-            return '<button type="button" class="rounded-[0.8rem] border border-grey-200 p-[0.8rem] text-left hover:border-amber-400" onclick="insertMedia(' + "'" + item.id + "'" + ')"><div class="mb-[0.6rem] aspect-video overflow-hidden rounded-[0.6rem] bg-grey-100">' + (currentMediaType === 'video'
-                    ? '<img src="' + preview + '" alt="' + title.replace(/"/g, '&quot;') + '" class="h-full w-full object-cover" />'
-                    : '<img src="' + preview + '" alt="' + title.replace(/"/g, '&quot;') + '" class="h-full w-full object-cover" />') +
-                '</div><p class="line-clamp-2 text-body-sm text-grey-700">' + title + '</p></button>';
+            return '<button type="button" class="editor-media-modal__item" onclick="insertMedia(' + "'" + item.id + "'" + ')"><div class="editor-media-modal__item-preview">' + (currentMediaType === 'video'
+                    ? '<img src="' + preview + '" alt="' + title.replace(/"/g, '&quot;') + '" />'
+                    : '<img src="' + preview + '" alt="' + title.replace(/"/g, '&quot;') + '" />') +
+                '</div><p>' + title + '</p></button>';
           }).join('');
 
           window.__editorMediaItems = items;

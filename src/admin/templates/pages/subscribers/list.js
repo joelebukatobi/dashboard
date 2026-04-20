@@ -1,29 +1,19 @@
 // src/admin/templates/pages/subscribers/list.js
-// Subscribers List Page - Matches Posts structure exactly
+// Subscribers List Page - Refactored with list-toolbar partial
 
 import { mainLayout } from '../../layouts/main.js';
 import { DeleteModal } from '../../components/delete-modal.js';
-import { formatRelativeTime } from '../../utils/helpers.js';
+import { listToolbar } from '../../partials/list-toolbar.js';
+import { escapeHtml, formatRelativeTime, SUBSCRIBER_STATUS_LABELS } from '../../utils/helpers.js';
 
-const listToolbarClass = 'mb-[1.6rem] flex shrink-0 flex-col gap-[1.6rem] sm:flex-row sm:items-center';
-const listToolbarSearchClass = 'relative min-w-0 flex-1';
-const listToolbarSearchIconClass = 'pointer-events-none absolute left-[1rem] top-1/2 h-[1.6rem] w-[1.6rem] -translate-y-1/2 text-grey-400 dark:text-grey-500';
-const listToolbarInputClass = 'h-[3.2rem] w-full rounded-md border border-grey-100/50 bg-white px-[1.2rem] pl-[4.4rem] text-body-sm text-grey-900 outline-none transition-all duration-200 placeholder:text-body-sm placeholder:text-grey-400 hover:border-grey-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-grey-700 dark:bg-grey-900 dark:text-white dark:placeholder:text-grey-500 dark:hover:border-grey-600';
-const listToolbarControlsClass = 'flex flex-wrap items-center gap-[1.2rem]';
-const listToolbarDropdownClass = 'relative';
-const listToolbarDropdownTriggerClass = 'inline-flex h-[3.2rem] items-center gap-[0.6rem] rounded-md border border-grey-200 bg-white px-[1.2rem] text-[1.3rem] font-medium text-grey-700 transition-all duration-200 hover:border-blue-600/30 hover:bg-blue-600/10 hover:text-blue-700 dark:border-grey-700 dark:bg-grey-900 dark:text-grey-300 dark:hover:border-grey-600 dark:hover:bg-grey-800 dark:hover:text-grey-200';
-const listToolbarButtonClass = 'inline-flex h-[3.2rem] items-center justify-center gap-[0.8rem] rounded-md bg-blue-600 px-[1.2rem] text-body-sm font-medium text-white transition-all duration-200 hover:bg-blue-700 hover:text-white focus:ring-[.08rem] focus:ring-blue-500 focus:ring-offset-2 dark:bg-white dark:text-grey-900 dark:hover:bg-grey-100';
-const listToolbarButtonIconClass = 'hidden h-[1.4rem] w-[1.4rem] sm:inline-block';
-const rowActionIconClass = 'h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]';
-const rowActionTextClass = 'lg:hidden';
+
 
 /**
  * Subscribers List Page Template
  * Display all subscribers with filters and pagination
- * Structure matches Posts exactly
  */
-export function subscribersListPage({ subscribers, pagination, filters, user, toast, error }) {
-  const { total, page, totalPages } = pagination;
+export function subscribersListPage({ subscribers, pagination, filters, user, toast }) {
+  const { page, totalPages } = pagination;
 
   // Build toast script
   const toastScript = toast ? `
@@ -45,6 +35,20 @@ export function subscribersListPage({ subscribers, pagination, filters, user, to
     </script>
   ` : '';
 
+  // Build filters array for toolbar
+  const toolbarFilters = [
+    {
+      label: filters.status ? SUBSCRIBER_STATUS_LABELS[filters.status] : 'Status',
+      options: [
+        { url: '/admin/subscribers', label: 'All Statuses', active: !filters.status },
+        { url: '/admin/subscribers?status=ACTIVE', label: 'Active', active: filters.status === 'ACTIVE' },
+        { url: '/admin/subscribers?status=PENDING', label: 'Pending', active: filters.status === 'PENDING' },
+        { url: '/admin/subscribers?status=UNSUBSCRIBED', label: 'Unsubscribed', active: filters.status === 'UNSUBSCRIBED' },
+        { url: '/admin/subscribers?status=BOUNCED', label: 'Bounced', active: filters.status === 'BOUNCED' },
+      ],
+    },
+  ];
+
   // Initialize delete modal with custom config for subscribers
   const deleteModal = new DeleteModal({
     entityName: 'Subscriber',
@@ -64,60 +68,20 @@ export function subscribersListPage({ subscribers, pagination, filters, user, to
         <div class="page-header">
           <div class="page-header__left">
             <h1 class="page-header__title">Subscribers</h1>
-            <p class="page-header__subtitle">Manage newsletter subscribers (${total} total)</p>
+            <p class="page-header__subtitle">Manage newsletter subscribers (${pagination.total} total)</p>
           </div>
           <div class="page-header__toast-container"></div>
         </div>
 
         <!-- Data Filter -->
-        <div class="${listToolbarClass}">
-          <div class="${listToolbarSearchClass}">
-            <i data-lucide="search" class="${listToolbarSearchIconClass}"></i>
-            <input
-              type="text"
-              class="${listToolbarInputClass}"
-              placeholder="Search subscribers..."
-              value="${filters.search || ''}"
-              hx-get="/admin/subscribers"
-              hx-target="#subscribers-table-container"
-              hx-trigger="keyup changed delay:500ms"
-              name="search"
-            />
-          </div>
-
-          <div class="${listToolbarControlsClass}">
-            <!-- Status Filter Dropdown -->
-            <div class="hs-dropdown ${listToolbarDropdownClass}">
-              <button
-                id="hs-dropdown-status"
-                type="button"
-                class="hs-dropdown-toggle ${listToolbarDropdownTriggerClass} ${filters.status ? 'border-blue-600/30 bg-blue-600/10 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400' : ''}"
-              >
-                <span>${filters.status || 'Status'}</span>
-                <i data-lucide="chevron-down"></i>
-              </button>
-              <div class="hs-dropdown-menu dropdown__menu dropdown__menu--sm" aria-labelledby="hs-dropdown-status">
-                <a href="/admin/subscribers${filters.search ? '?search=' + encodeURIComponent(filters.search) : ''}" class="dropdown__item ${!filters.status ? 'dropdown__item--active' : ''}">All Statuses</a>
-                <a href="/admin/subscribers?status=ACTIVE${filters.search ? '&search=' + encodeURIComponent(filters.search) : ''}" class="dropdown__item ${filters.status === 'ACTIVE' ? 'dropdown__item--active' : ''}">Active</a>
-                <a href="/admin/subscribers?status=PENDING${filters.search ? '&search=' + encodeURIComponent(filters.search) : ''}" class="dropdown__item ${filters.status === 'PENDING' ? 'dropdown__item--active' : ''}">Pending</a>
-                <a href="/admin/subscribers?status=UNSUBSCRIBED${filters.search ? '&search=' + encodeURIComponent(filters.search) : ''}" class="dropdown__item ${filters.status === 'UNSUBSCRIBED' ? 'dropdown__item--active' : ''}">Unsubscribed</a>
-                <a href="/admin/subscribers?status=BOUNCED${filters.search ? '&search=' + encodeURIComponent(filters.search) : ''}" class="dropdown__item ${filters.status === 'BOUNCED' ? 'dropdown__item--active' : ''}">Bounced</a>
-              </div>
-            </div>
-
-            <!-- Add Subscriber Button -->
-            <a
-              href="/admin/subscribers/new"
-              class="${listToolbarButtonClass}"
-            >
-              <i data-lucide="plus" class="${listToolbarButtonIconClass}"></i>
-              <span>Add Subscriber</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Error Message -->
-        ${error ? `<div class="alert alert--error mb-[1.6rem]">${error}</div>` : ''}
+        ${listToolbar({
+          searchPlaceholder: 'Search subscribers...',
+          searchValue: filters.search || '',
+          filters: toolbarFilters,
+          hasAddButton: true,
+          addButtonUrl: '/admin/subscribers/new',
+          addButtonText: 'Add Subscriber',
+        })}
 
         <!-- Subscribers Table -->
         <div id="subscribers-table-container" class="subscribers__table-content">
@@ -206,13 +170,13 @@ export function renderSubscriberRow(subscriber) {
         ${formatRelativeTime(subscriber.createdAt)}
       </td>
       <td class="table__td table__td--actions">
-        <div class="flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]">
+        <div class="row-actions">
           <a
             href="/admin/subscribers/${subscriber.id}/edit"
             class="btn btn--ghost row-action row-action--edit"
           >
-            <i data-lucide="pencil" class="${rowActionIconClass}"></i>
-            <span class="${rowActionTextClass}">Edit</span>
+            <i data-lucide="pencil"></i>
+            <span>Edit</span>
           </a>
           <button
             type="button"
@@ -222,8 +186,8 @@ export function renderSubscriberRow(subscriber) {
             data-subscriber-email="${escapeHtml(subscriber.email)}"
             onclick="openDeleteModal(this)"
           >
-            <i data-lucide="trash-2" class="${rowActionIconClass}"></i>
-            <span class="${rowActionTextClass}">Delete</span>
+            <i data-lucide="trash-2"></i>
+            <span>Delete</span>
           </button>
         </div>
       </td>
@@ -301,15 +265,4 @@ function emptyState() {
   `;
 }
 
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+
