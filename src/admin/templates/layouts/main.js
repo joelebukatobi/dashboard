@@ -316,8 +316,8 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
                 if (isPageHeaderToast) {
                   // Page header toast: class-based animation (no inline styles)
                   toast.className = 'page-header-toast page-header-toast--enter ' + (isSuccess ? 'page-header-toast--success' : 'page-header-toast--error');
-                  toast.innerHTML = '<div class="flex items-center gap-3 px-4 py-3 whitespace-nowrap">' + iconSvg + '<span class="text-sm font-medium">' + toastInfo.message + '</span></div>';
-                  
+                  toast.innerHTML = '<div class="toast__wrapper">' + iconSvg + '<span class="toast__message">' + toastInfo.message + '</span></div>';
+
                   toastContainer.appendChild(toast);
 
                   // Animate in
@@ -325,7 +325,7 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
                     toast.classList.remove('page-header-toast--enter');
                     toast.classList.add('page-header-toast--active');
                   });
-                  
+
                   // Fade out and remove after 3 seconds
                   setTimeout(function() {
                     toast.classList.remove('page-header-toast--active');
@@ -334,8 +334,8 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
                   }, 3000);
                 } else {
                   // Global toast: slide from right to left (original behavior)
-                  toast.className = 'max-w-xs border rounded-md shadow-sm mb-3 transform transition-all duration-300 translate-x-full ' + bgClass;
-                  toast.innerHTML = '<div class="flex items-center gap-3 px-4 py-3">' + iconSvg + '<span class="text-sm font-medium">' + toastInfo.message + '</span></div>';
+                  toast.className = 'toast toast--hidden ' + (isSuccess ? 'toast--success' : 'toast--error');
+                  toast.innerHTML = '<div class="toast__icon">' + iconSvg + '</div><div class="toast__content"><p class="toast__message">' + toastInfo.message + '</p></div>';
                   
                   toastContainer.appendChild(toast);
                   
@@ -370,7 +370,7 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
     </script>
 
     <!-- Preline Toast Container -->
-    <div class="fixed top-4 right-4 z-50" id="toast-container"></div>
+    <div class="layout-toast-container" id="toast-container"></div>
   </body>
 </html>`;
 }

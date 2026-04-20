@@ -1,0 +1,18 @@
+// ============================================================================
+// Users Page Styles
+// ============================================================================
+
+.users {
+  // Muted title style for suspended users
+  .table__tr--muted {
+    .table__title {
+      & a {
+        @apply text-grey-400;
+
+        .dark & {
+          @apply text-grey-500;
+        }
+      }
+    }
+  }
+}

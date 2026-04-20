@@ -23,7 +23,7 @@ export function tagNewPage({ user, errors = {} }) {
         <!-- New Tag Form -->
         <div class="card">
         <div class="card__header">
-          <h2 class="card__title">Tag Details</h2>
+          <h2>Tag Details</h2>
         </div>
         <div class="card__body">
           <form

@@ -37,7 +37,7 @@ export default function comingSoon() {
     <div class="coming-soon">
       <div class="coming-soon__card">
         <div class="coming-soon__icon">
-          <i data-lucide="construction" class="w-[4.8rem] h-[4.8rem] text-grey-400"></i>
+          <i data-lucide="construction"></i>
         </div>
         <h1 class="coming-soon__title">Coming Soon</h1>
         <p class="coming-soon__message">

@@ -2,6 +2,7 @@
 // Settings Page - Individual section forms with accordion
 
 import { mainLayout } from '../../layouts/main.js';
+import { escapeHtml } from '../../utils/helpers.js';
 
 /**
  * Settings Page Template
@@ -53,10 +54,10 @@ export function settingsPage({ user, settings, toast }) {
                   <div class="card__icon-box card__icon-box--blue">
                     <i data-lucide="globe" stroke-width="1"></i>
                   </div>
-                  <div class="card__info">
-                    <h2 class="card__title">General Settings</h2>
-                    <p class="card__subtitle">Basic site information and configuration</p>
-                  </div>
+                   <div class="card__info">
+                     <h2>General Settings</h2>
+                     <p>Basic site information and configuration</p>
+                   </div>
                 </div>
                 <div class="card__header-actions">
                   <button type="submit" class="btn btn--primary btn--lg">
@@ -184,10 +185,10 @@ export function settingsPage({ user, settings, toast }) {
                   <div class="card__icon-box card__icon-box--green">
                     <i data-lucide="file-text" stroke-width="1"></i>
                   </div>
-                  <div class="card__info">
-                    <h2 class="card__title">Content Settings</h2>
-                    <p class="card__subtitle">Control how content is published and displayed</p>
-                  </div>
+                   <div class="card__info">
+                     <h2>Content Settings</h2>
+                     <p>Control how content is published and displayed</p>
+                   </div>
                 </div>
                 <div class="card__header-actions">
                   <button type="submit" class="btn btn--primary btn--lg">
@@ -257,10 +258,10 @@ export function settingsPage({ user, settings, toast }) {
                   <div class="card__icon-box card__icon-box--red">
                     <i data-lucide="shield" stroke-width="1"></i>
                   </div>
-                  <div class="card__info">
-                    <h2 class="card__title">Security</h2>
-                    <p class="card__subtitle">Protect your account and manage access</p>
-                  </div>
+                   <div class="card__info">
+                     <h2>Security</h2>
+                     <p>Protect your account and manage access</p>
+                   </div>
                 </div>
                 <div class="card__header-actions">
                   <button type="submit" class="btn btn--primary btn--lg">
@@ -332,10 +333,10 @@ export function settingsPage({ user, settings, toast }) {
                   <div class="card__icon-box card__icon-box--purple">
                     <i data-lucide="mail" stroke-width="1"></i>
                   </div>
-                  <div class="card__info">
-                    <h2 class="card__title">Email Settings</h2>
-                    <p class="card__subtitle">Configure email notifications and SMTP</p>
-                  </div>
+                   <div class="card__info">
+                     <h2>Email Settings</h2>
+                     <p>Configure email notifications and SMTP</p>
+                   </div>
                 </div>
                 <div class="card__header-actions">
                   <button type="submit" class="btn btn--primary btn--lg">
@@ -348,9 +349,9 @@ export function settingsPage({ user, settings, toast }) {
                 </div>
               </div>
               <div class="card__body card__body--accordion" data-accordion-body="email">
-                <div class="form__info-box">
-                  <p class="form__info-box-text">Email configuration coming soon. Contact your administrator to configure SMTP settings.</p>
-                </div>
+                 <div class="form__info-box">
+                   <p>Email configuration coming soon. Contact your administrator to configure SMTP settings.</p>
+                 </div>
 
                 <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
               </div>
@@ -369,10 +370,10 @@ export function settingsPage({ user, settings, toast }) {
                   <div class="card__icon-box card__icon-box--cyan">
                     <i data-lucide="share-2" stroke-width="1"></i>
                   </div>
-                  <div class="card__info">
-                    <h2 class="card__title">Social Media</h2>
-                    <p class="card__subtitle">Link your social media accounts</p>
-                  </div>
+                   <div class="card__info">
+                     <h2>Social Media</h2>
+                     <p>Link your social media accounts</p>
+                   </div>
                 </div>
                 <div class="card__header-actions">
                   <button type="submit" class="btn btn--primary btn--lg">
@@ -471,17 +472,4 @@ export function settingsPage({ user, settings, toast }) {
       { label: 'Settings', url: '/admin/settings' },
     ],
   });
-}
-
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

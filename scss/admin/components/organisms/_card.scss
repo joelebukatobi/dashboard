@@ -25,6 +25,24 @@
     &-group {
       @apply flex items-center gap-[1.2rem];
     }
+
+    // Page section titles in card headers (new/edit forms, accordions)
+    & h2 {
+      @apply text-body font-semibold text-grey-900;
+
+      .dark & {
+        @apply text-white;
+      }
+    }
+
+    // Subtitle/paragraph in headers
+    & p {
+      @apply text-body-sm text-grey-500;
+
+      .dark & {
+        @apply text-grey-400;
+      }
+    }
   }
 
   &__title {
@@ -104,10 +122,6 @@
     }
   }
 
-  &__info {
-    @apply flex flex-col gap-[0.2rem];
-  }
-
   &__body {
     @apply p-[2.4rem];
   }
@@ -151,6 +165,24 @@
     .card--collapsed & {
       .btn {
         @apply hidden;
+      }
+    }
+  }
+
+  &__info {
+    & h2 {
+      @apply text-body font-semibold text-grey-900;
+
+      .dark & {
+        @apply text-white;
+      }
+    }
+
+    & p {
+      @apply text-body-sm text-grey-500;
+
+      .dark & {
+        @apply text-grey-400;
       }
     }
   }
@@ -385,5 +417,4 @@
 // .media-grid {
 //   @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-[1.6rem];
 // }
-
 

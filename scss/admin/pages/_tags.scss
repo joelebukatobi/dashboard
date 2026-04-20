@@ -2,18 +2,29 @@
 // Tags Page Styles
 // ============================================================================
 
-// Delete Modal - High z-index to appear above sticky headers
-#deleteModal {
-  @apply z-100;
-  
-  // Backdrop covers sidebar/header
-  > div:first-child {
-    @apply z-100;
-  }
-  
-  // Modal content above backdrop
-  > div:nth-child(2) {
-    @apply z-101;
+.tags {
+  .table__tbody {
+    .table__td {
+      &:nth-child(2) {
+        & > div {
+          @apply text-body-sm text-grey-600;
+
+          .dark & {
+            @apply text-grey-400;
+          }
+        }
+      }
+
+      &:nth-child(3) {
+        & > div {
+          @apply text-body-sm text-grey-700;
+
+          .dark & {
+            @apply text-grey-300;
+          }
+        }
+      }
+    }
   }
 }
 

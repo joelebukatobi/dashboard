@@ -2,6 +2,7 @@
 // Edit Category Page - Exact structure from edit-category.html
 
 import { mainLayout } from '../../layouts/main.js';
+import { escapeHtml } from '../../utils/helpers.js';
 
 /**
  * Edit Category Page Template
@@ -23,9 +24,9 @@ export function categoryEditPage({ category, user, errors = {} }) {
 
         <!-- Edit Category Form -->
         <div class="card">
-        <div class="card__header">
-          <h2 class="card__title">Category Details</h2>
-        </div>
+          <div class="card__header">
+            <h2>Category Details</h2>
+          </div>
         <div class="card__body">
           <form
             class="form"
@@ -113,14 +114,4 @@ export function categoryEditPage({ category, user, errors = {} }) {
       { label: escapeHtml(category.title), url: `/admin/categories/${category.id}/edit` }
     ]
   });
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

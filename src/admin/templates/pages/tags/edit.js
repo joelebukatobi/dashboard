@@ -2,6 +2,7 @@
 // Edit Tag Page
 
 import { mainLayout } from '../../layouts/main.js';
+import { escapeHtml } from '../../utils/helpers.js';
 
 /**
  * Edit Tag Page Template
@@ -23,7 +24,7 @@ export function tagEditPage({ tag, user, errors = {} }) {
         <!-- Edit Tag Form -->
         <div class="card">
         <div class="card__header">
-          <h2 class="card__title">Tag Details</h2>
+          <h2>Tag Details</h2>
         </div>
         <div class="card__body">
           <form
@@ -113,14 +114,4 @@ export function tagEditPage({ tag, user, errors = {} }) {
       { label: escapeHtml(tag.name), url: `/admin/tags/${tag.id}/edit` }
     ]
   });
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

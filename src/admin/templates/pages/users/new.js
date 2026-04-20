@@ -25,7 +25,7 @@ export function usersNewPage({ user, errors = {} }) {
           <div class="form__col">
             <div class="card">
               <div class="card__header">
-                <h2 class="card__title">User Details</h2>
+                <h2>User Details</h2>
               </div>
               <div class="card__body">
                 <form
@@ -41,7 +41,7 @@ export function usersNewPage({ user, errors = {} }) {
                   <div class="form__group">
                     <div class="form__avatar-group form__avatar-group--centered">
                       <div id="avatarPreview" class="form__avatar-placeholder">
-                        <i data-lucide="user" stroke-width="1" class="h-12 w-12 text-grey-400"></i>
+                        <i data-lucide="user" stroke-width="1"></i>
                       </div>
                       <div class="form__avatar-actions">
                         <input
@@ -53,7 +53,7 @@ export function usersNewPage({ user, errors = {} }) {
                         />
                         <button
                           type="button"
-                          class="btn btn--outline btn--sm"
+                          class="btn btn--outline"
                           onclick="document.getElementById('avatarInput').click()"
                         >
                           Change Photo
@@ -94,29 +94,29 @@ export function usersNewPage({ user, errors = {} }) {
                     </div>
                   </div>
 
-                  <!-- Email -->
-                  <div class="form__group ${errors.email ? 'form__group--error' : ''}">
-                    <label class="label label--required">Email Address</label>
-                    <input
-                      type="email"
-                      class="input"
-                      id="userEmail"
-                      name="email"
-                      placeholder="user@example.com"
-                      required
-                    />
-                    ${errors.email ? `<p class="form-feedback form-feedback--error">${errors.email}</p>` : ''}
-                  </div>
+                  <!-- Email & Role Row -->
+                  <div class="form__row form__row--2col">
+                    <div class="form__group ${errors.email ? 'form__group--error' : ''}">
+                      <label class="label label--required">Email Address</label>
+                      <input
+                        type="email"
+                        class="input"
+                        id="userEmail"
+                        name="email"
+                        placeholder="user@example.com"
+                        required
+                      />
+                      ${errors.email ? `<p class="form-feedback form-feedback--error">${errors.email}</p>` : ''}
+                    </div>
 
-                  <!-- Role -->
-                  <div class="form__group ${errors.role ? 'form__group--error' : ''}">
-                    <label class="label label--required">Role</label>
-                    <select
-                      name="role"
-                      id="userRole"
-                      data-hs-select='{
-                        "placeholder": "Select a role...",
-                        "toggleClasses": "form__select-toggle",
+                    <div class="form__group ${errors.role ? 'form__group--error' : ''}">
+                      <label class="label label--required">Role</label>
+                      <select
+                        name="role"
+                        id="userRole"
+                        data-hs-select='{
+                          "placeholder": "Select a role...",
+                          "toggleClasses": "form__select-toggle",
                         "dropdownClasses": "form__select-dropdown",
                         "optionClasses": "form__select-option"
                       }'
@@ -129,18 +129,19 @@ export function usersNewPage({ user, errors = {} }) {
                       <option value="AUTHOR">Author - Can Create and Edit Own Posts</option>
                       <option value="VIEWER">Viewer - Read-Only Access</option>
                     </select>
-                    <p class="form-feedback form-feedback--hint">
-                      <span class="text-blue-600 font-semibold">Admin:</span> <span class="text-blue-600">Full Access</span> |
-                      <span class="text-purple-600 font-semibold">Editor:</span> <span class="text-purple-600">Manage All Content</span> |
-                      <span class="text-cyan-600 font-semibold">Author:</span> <span class="text-cyan-600">Own Content Only</span> |
-                      <span class="text-amber-600 font-semibold">Viewer:</span> <span class="text-amber-600">Read Only</span>
+                    <p class="form-feedback form-feedback--hint form__role-hints">
+                      <strong>Admin:</strong> Full Access |
+                      <strong>Editor:</strong> Manage All Content |
+                      <strong>Author:</strong> Own Content Only |
+                      <strong>Viewer:</strong> Read Only
                     </p>
                     ${errors.role ? `<p class="form-feedback form-feedback--error">${errors.role}</p>` : ''}
+                  </div>
                   </div>
 
                   <!-- Invite Options -->
                   <div class="form__group">
-                    <label class="flex items-center gap-2">
+                    <label class="form__checkbox-wrapper">
                       <input
                         type="checkbox"
                         class="form__checkbox"
@@ -149,7 +150,7 @@ export function usersNewPage({ user, errors = {} }) {
                         value="true"
                         checked
                       />
-                      <span class="text-sm text-grey-600 dark:text-grey-400">
+                      <span>
                         Send invitation email (user will set their own password)
                       </span>
                     </label>

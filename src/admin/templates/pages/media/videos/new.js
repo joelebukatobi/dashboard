@@ -1,6 +1,7 @@
 // New video page template
 
 import { mainLayout } from '../../../layouts/main.js';
+import { escapeHtml } from '../../../utils/helpers.js';
 
 /**
  * Generate new video page
@@ -23,10 +24,10 @@ export function videosNewPage({ user, posts }) {
         </div>
 
         <!-- Upload Form Layout -->
-        <div class="media-layout items-start">
+        <div class="media-layout">
           <!-- Left: Upload Zone -->
-          <div class="media-layout__content flex items-start">
-            <div class="upload-zone w-full cursor-pointer" id="dropZone" onclick="document.getElementById('videoInput').click()">
+          <div class="media-layout__content">
+            <div class="upload-zone upload-zone--full upload-zone--clickable" id="dropZone" onclick="document.getElementById('videoInput').click()">
               <input 
                 type="file" 
                 name="video" 
@@ -38,10 +39,10 @@ export function videosNewPage({ user, posts }) {
                 onchange="handleFileSelect(this)"
               />
               <div class="upload-placeholder" id="uploadPlaceholder">
-                <p class="upload-placeholder__title">Drag & Drop or Click to Upload</p>
-                <p class="upload-placeholder__hint">MP4, MOV, WebM, AVI</p>
+                <p>Drag & Drop or Click to Upload</p>
+                <p>MP4, MOV, WebM, AVI</p>
               </div>
-              <video id="videoPreview" class="upload-zone__preview hidden" controls></video>
+              <video id="videoPreview" class="upload-zone__preview" controls></video>
             </div>
           </div>
 
@@ -88,7 +89,7 @@ export function videosNewPage({ user, posts }) {
                   <label class="label">Attach to Post (Optional)</label>
                   <select 
                     name="postId" 
-                    class="hidden"
+                    class="form__select-native"
                     data-hs-select='{
                       "hasSearch": true,
                       "searchPlaceholder": "Search posts...",
@@ -111,11 +112,11 @@ export function videosNewPage({ user, posts }) {
                 <div id="form-response"></div>
 
                 <!-- Submit Button -->
-                <div class="form__group mb-0 mt-6">
+                <div class="form__group form__group--spaced">
                   <button type="submit" class="btn btn--primary btn--full">
                     Upload Video
                   </button>
-                  <a href="/admin/media/videos" class="btn btn--outline btn--full btn--cancel mt-[1.6rem]">Cancel</a>
+                  <a href="/admin/media/videos" class="btn btn--outline btn--full btn--cancel">Cancel</a>
                 </div>
               </form>
             </div>
@@ -181,19 +182,4 @@ export function videosNewPage({ user, posts }) {
       { label: 'New', url: '/admin/media/videos/new' },
     ],
   });
-}
-
-/**
- * Escape HTML to prevent XSS
- * @param {string} text - Text to escape
- * @returns {string} - Escaped text
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }

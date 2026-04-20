@@ -56,7 +56,7 @@ export function header({ user, breadcrumbs = [] }) {
         </button>
 
         <!-- Notifications - Commented out for now
-        <div class="hs-dropdown [--placement:bottom-right]" id="notifications-dropdown" data-user-id="${user?.id || ''}">
+        <div class="hs-dropdown hs-dropdown--bottom-right" id="notifications-dropdown" data-user-id="${user?.id || ''}">
           <button
             id="hs-dropdown-notifications"
             type="button"
@@ -84,7 +84,7 @@ export function header({ user, breadcrumbs = [] }) {
         -->
 
         <!-- User Menu -->
-        <div class="hs-dropdown [--placement:bottom-right]">
+        <div class="hs-dropdown hs-dropdown--bottom-right">
           <button id="hs-dropdown-user" type="button" class="hs-dropdown-toggle header__user-btn">
             ${avatarUrl
               ? `<img src="${avatarUrl}" alt="${displayName}" class="avatar avatar--sm" />`

@@ -27,7 +27,7 @@
   }
 
   // Main video (foreground)
-  .video-preview-main {
+  .video-preview-container > video[id="videoMain"] {
     position: relative;
     z-index: 2;
     max-height: 500px;
@@ -65,7 +65,7 @@
       display: none;
     }
 
-    .video-preview-main {
+    .video-preview-container > video[id="videoMain"] {
       max-height: 300px;
       position: static;
     }

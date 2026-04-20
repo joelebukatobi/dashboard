@@ -101,6 +101,10 @@
         @apply lg:bg-grey-700/50;
       }
     }
+
+    &--muted {
+      @apply opacity-60;
+    }
   }
 
   // ========================================
@@ -158,6 +162,22 @@
 
       .dark & {
         @apply text-white hover:text-blue-400;
+      }
+    }
+
+    &--muted {
+      @apply text-grey-400;
+
+      .dark & {
+        @apply text-grey-500;
+      }
+
+      a {
+        @apply text-grey-400;
+
+        .dark & {
+          @apply text-grey-500;
+        }
       }
     }
   }

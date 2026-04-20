@@ -1,22 +1,16 @@
 // src/admin/templates/pages/categories/list.js
-// Categories List Page - Exact structure from categories.html
+// Categories List Page - Refactored with list-toolbar partial
 
 import { mainLayout } from '../../layouts/main.js';
 import { DeleteModal } from '../../components/delete-modal.js';
+import { listToolbar } from '../../partials/list-toolbar.js';
+import { escapeHtml, formatDate } from '../../utils/helpers.js';
 
-const listToolbarClass = 'mb-[1.6rem] flex shrink-0 flex-row items-center gap-[1.6rem]';
-const listToolbarSearchClass = 'relative min-w-0 flex-1';
-const listToolbarSearchIconClass = 'pointer-events-none absolute left-[1rem] top-1/2 h-[1.6rem] w-[1.6rem] -translate-y-1/2 text-grey-400 dark:text-grey-500';
-const listToolbarInputClass = 'h-[3.2rem] w-full rounded-md border border-grey-100/50 bg-white px-[1.2rem] pl-[4.4rem] text-body-sm text-grey-900 outline-none transition-all duration-200 placeholder:text-body-sm placeholder:text-grey-400 hover:border-grey-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-grey-700 dark:bg-grey-900 dark:text-white dark:placeholder:text-grey-500 dark:hover:border-grey-600';
-const listToolbarControlsClass = 'flex shrink-0 items-center gap-[1.2rem]';
-const listToolbarButtonClass = 'inline-flex h-[3.2rem] items-center justify-center gap-[0.8rem] rounded-md bg-blue-600 px-[1.2rem] text-body-sm font-medium text-white transition-all duration-200 hover:bg-blue-700 hover:text-white focus:ring-[.08rem] focus:ring-blue-500 focus:ring-offset-2 dark:bg-white dark:text-grey-900 dark:hover:bg-grey-100';
-const rowActionIconClass = 'h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]';
-const rowActionTextClass = 'lg:hidden';
+
 
 /**
  * Categories List Page Template
- * Display all categories with filters and pagination
- * Structure matches categories.html exactly
+ * Display all categories with search and pagination
  */
 export function categoriesListPage({ categories, total, page, totalPages, filters, user, toast }) {
   // Build toast script if toast param is present
@@ -65,28 +59,14 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
         </div>
 
         <!-- Data Filter -->
-        <div class="${listToolbarClass}">
-          <div class="${listToolbarSearchClass}">
-            <i data-lucide="search" class="${listToolbarSearchIconClass}"></i>
-            <input
-              type="text"
-              class="${listToolbarInputClass}"
-              placeholder="Search categories..."
-              value="${filters.search || ''}"
-              hx-get="/admin/categories"
-              hx-target=".categories__table-content"
-              hx-trigger="keyup changed delay:500ms"
-              name="search"
-            />
-          </div>
-
-          <div class="${listToolbarControlsClass}">
-            <!-- Add New -->
-            <a href="/admin/categories/new" class="${listToolbarButtonClass}">
-              <span>${categories.length === 0 ? 'Create First Category' : 'New Category'}</span>
-            </a>
-          </div>
-        </div>
+        ${listToolbar({
+          searchPlaceholder: 'Search categories...',
+          searchValue: filters.search || '',
+          filters: [],
+          hasAddButton: true,
+          addButtonUrl: '/admin/categories/new',
+          addButtonText: categories.length === 0 ? 'Create First Category' : 'New Category',
+        })}
 
         <div class="categories__table-content">
         ${
@@ -118,21 +98,24 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
 
                     <td class="table__td">
                       <span class="table__label">Slug</span>
-                      <div class="table__slug">${category.slug}</div>
+                      <div>${category.slug}</div>
                     </td>
+
                     <td class="table__td">
-                      <span class="table__label">Desc</span>
-                      <div class="table__title">${escapeHtml(category.description) || '-'}</div>
+                      <span class="table__label">Description</span>
+                      <div class="table__title">${category.description || '-'}</div>
                     </td>
+
                     <td class="table__td">
                       <span class="table__label">Date</span>
-                      ${formatDate(category.updatedAt || category.createdAt)}
+                      ${formatDate(category.createdAt)}
                     </td>
+
                     <td class="table__td table__td--actions">
-                      <div class="flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]">
+                      <div class="row-actions">
                         <a href="/admin/categories/${category.id}/edit" class="btn btn--ghost row-action row-action--edit">
-                          <i data-lucide="pencil" class="${rowActionIconClass}"></i>
-                          <span class="${rowActionTextClass}">Edit</span>
+                          <i data-lucide="pencil"></i>
+                          <span>Edit</span>
                         </a>
                         <button
                           type="button"
@@ -142,8 +125,8 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
                           data-post-count="${category.postCount || 0}"
                           onclick="openDeleteModal(this)"
                         >
-                          <i data-lucide="trash-2" class="${rowActionIconClass}"></i>
-                          <span class="${rowActionTextClass}">Delete</span>
+                          <i data-lucide="trash-2"></i>
+                          <span>Delete</span>
                         </button>
                       </div>
                     </td>
@@ -152,12 +135,11 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
                   )
                   .join('')}
               </tbody>
-          </table>
-
-          ${totalPages > 1 ? paginationHtml({ page, totalPages, filters }) : ''}
-        `
-        }
+            </table>
+        `}
         </div>
+
+        ${totalPages > 1 ? paginationHtml({ page, totalPages, filters }) : ''}
       </div>
     </div>
 
@@ -188,37 +170,13 @@ function emptyState() {
   `;
 }
 
-
-
-function formatDate(dateString) {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
 function paginationHtml({ page, totalPages, filters }) {
   const params = new URLSearchParams();
-  if (filters.status) params.set('status', filters.status);
-  if (filters.search) params.set('search', filters.search);
+  if (filters?.search) params.set('search', filters.search);
 
   const baseQuery = params.toString();
   const queryPrefix = baseQuery ? `&${baseQuery}` : '';
 
-  return `
-    <!-- Sticky Footer Pagination -->
-    <footer class="page-footer">
-      <div class="pagination">
-        ${generatePaginationLinks(page, totalPages, queryPrefix)}
-      </div>
-    </footer>
-  `;
-}
-
-function generatePaginationLinks(page, totalPages, queryPrefix) {
   let links = '';
 
   // Previous button
@@ -254,15 +212,11 @@ function generatePaginationLinks(page, totalPages, queryPrefix) {
   const nextHref = page < totalPages ? `/admin/categories?page=${page + 1}${queryPrefix}` : '#';
   links += `<a href="${nextHref}" class="pagination__item ${nextDisabled}"><i data-lucide="chevron-right"></i></a>`;
 
-  return links;
-}
-
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+  return `
+    <footer class="page-footer">
+      <div class="pagination">
+        ${links}
+      </div>
+    </footer>
+  `;
 }
