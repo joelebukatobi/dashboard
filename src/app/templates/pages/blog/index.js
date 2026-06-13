@@ -22,7 +22,29 @@ function formatDate(isoString) {
   });
 }
 
-export function appBlogIndexPage({ posts = [], page = 1, totalPages = 1 }) {
+export function blogIndexMeta({ page = 1, totalPages = 1 }) {
+  return {
+    title: 'Blog',
+    layout: 'blog',
+    activeBlogNav: true,
+    footer: blogIndexFooter({ page, totalPages }),
+  };
+}
+
+export function blogIndexFooter({ page = 1, totalPages = 1 }) {
+  const prevPage = Math.max(1, page - 1);
+  const nextPage = Math.min(totalPages, page + 1);
+
+  return `
+    <footer class="blog-pagination">
+      <a class="blog-pagination__link ${page <= 1 ? 'blog-pagination__link--disabled' : ''}" href="/blog?page=${prevPage}">Previous</a>
+      <span class="blog-pagination__current">Page ${page}</span>
+      <a class="blog-pagination__link ${page >= totalPages ? 'blog-pagination__link--disabled' : ''}" href="/blog?page=${nextPage}">Next</a>
+    </footer>
+  `;
+}
+
+export function blogIndexContent({ posts = [], page = 1, totalPages = 1 }) {
   const cardsHtml = posts.length
     ? posts
       .map((post) => {
@@ -52,50 +74,20 @@ export function appBlogIndexPage({ posts = [], page = 1, totalPages = 1 }) {
       </div>
     `;
 
-  const prevPage = Math.max(1, page - 1);
-  const nextPage = Math.min(totalPages, page + 1);
+  return `
+    <section class="blog-content">
+      ${cardsHtml}
+    </section>
 
-  return `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blog</title>
-    <link rel="icon" type="image/svg+xml" href="/dist/favicon.svg" />
-    <link rel="stylesheet" href="/dist/css/app.css" />
-  </head>
-  <body class="app-shell blog-home">
-    <header class="blog-header">
-      <div class="blog-header__inner">
-        <a class="blog-header__brand" href="/">BlogCMS</a>
-        <nav class="blog-header__nav">
-          <a class="blog-header__link blog-header__link--active" href="/blog">Blog</a>
-        </nav>
+    <aside class="blog-sidebar">
+      <div class="blog-widget">
+        <h3 class="blog-widget__title">About</h3>
+        <p class="blog-widget__text">A clean blog layout powered by your internal API.</p>
       </div>
-    </header>
-
-    <main class="blog-main">
-      <section class="blog-content">
-        ${cardsHtml}
-      </section>
-
-      <aside class="blog-sidebar">
-        <div class="blog-widget">
-          <h3 class="blog-widget__title">About</h3>
-          <p class="blog-widget__text">A clean blog layout powered by your internal API.</p>
-        </div>
-        <div class="blog-widget">
-          <h3 class="blog-widget__title">Archive</h3>
-          <p class="blog-widget__text">Page ${page} of ${totalPages}</p>
-        </div>
-      </aside>
-    </main>
-
-    <footer class="blog-pagination">
-      <a class="blog-pagination__link ${page <= 1 ? 'blog-pagination__link--disabled' : ''}" href="/blog?page=${prevPage}">Previous</a>
-      <span class="blog-pagination__current">Page ${page}</span>
-      <a class="blog-pagination__link ${page >= totalPages ? 'blog-pagination__link--disabled' : ''}" href="/blog?page=${nextPage}">Next</a>
-    </footer>
-  </body>
-</html>`;
+      <div class="blog-widget">
+        <h3 class="blog-widget__title">Archive</h3>
+        <p class="blog-widget__text">Page ${page} of ${totalPages}</p>
+      </div>
+    </aside>
+  `;
 }
