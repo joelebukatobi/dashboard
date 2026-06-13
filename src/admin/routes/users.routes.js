@@ -3,70 +3,60 @@
 
 import { usersController } from '../controllers/users.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
+import { createUserSchema, updateUserSchema } from '../schemas/user.schema.js';
+import { listQuerySchema, resourceIdSchema, usersListQuerySchema } from '../schemas/common.schema.js';
 
-/**
- * Register user routes
- * @param {FastifyInstance} fastify - Fastify instance
- * @param {Object} opts - Route options
- */
+const auth = requireAuthRedirect('/admin/auth/login');
+
 export default async function userRoutes(fastify, opts) {
-  // GET /admin/users - List all users
   fastify.get('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateQuery(usersListQuerySchema)],
     handler: usersController.list.bind(usersController),
   });
 
-  // GET /admin/users/new - Show new user form
   fastify.get('/new', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: usersController.showNewForm.bind(usersController),
   });
 
-  // POST /admin/users - Create user
   fastify.post('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateBody(createUserSchema)],
     handler: usersController.create.bind(usersController),
   });
 
-  // GET /admin/users/:id/edit - Show edit form
   fastify.get('/:id/edit', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: usersController.showEditForm.bind(usersController),
   });
 
-  // PUT /admin/users/:id - Update user
   fastify.put('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema), validateBody(updateUserSchema)],
     handler: usersController.update.bind(usersController),
   });
 
-  // DELETE /admin/users/:id - Delete user
   fastify.delete('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: usersController.delete.bind(usersController),
   });
 
-  // POST /admin/users/:id/suspend - Suspend user
   fastify.post('/:id/suspend', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: usersController.suspend.bind(usersController),
   });
 
-  // POST /admin/users/:id/activate - Activate user
   fastify.post('/:id/activate', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: usersController.activate.bind(usersController),
   });
 
-  // POST /admin/users/:id/resend-invite - Resend invitation
   fastify.post('/:id/resend-invite', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: usersController.resendInvite.bind(usersController),
   });
 
-  // POST /admin/users/:id/avatar - Upload avatar
   fastify.post('/:id/avatar', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: usersController.uploadAvatar.bind(usersController),
   });
 }

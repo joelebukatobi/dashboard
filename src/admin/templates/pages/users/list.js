@@ -1,51 +1,28 @@
 // src/admin/templates/pages/users/list.js
 // Users List Page - Refactored with list-toolbar partial
 
-import { mainLayout } from '../../layouts/main.js';
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
-import { escapeHtml, formatDate, formatRelativeTime, USER_ROLE_LABELS, USER_STATUS_LABELS } from '../../utils/helpers.js';
+import { escapeHtml, formatDate, formatRelativeTime, USER_ROLE_LABELS, USER_STATUS_LABELS, paginationHtml as buildPaginationHtml, toastQueryScript } from '../../utils/helpers.js';
+
+const USER_FILTER_KEYS = ['search', 'role', 'status'];
 
 
 
 /**
- * Users List Page Template
- * Display all users with filters, role/status badges, and pagination
+ * Users list page inner content (layout applied via fastify-html addLayout).
  */
-export function usersListPage({ users, pagination, counts, filters, user, toast }) {
+export function usersListContent({ users, pagination, counts, filters, user, toast }) {
   const { total, page, totalPages, limit } = pagination;
   const { roleCounts = {}, statusCounts = {} } = counts || {};
 
-  // Build toast script
-  const toastScript = toast ? `
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const toastMessages = {
-          created: 'User created successfully!',
-          updated: 'User updated successfully!',
-          deleted: 'User deleted successfully!',
-          suspended: 'User suspended successfully!',
-          activated: 'User activated successfully!',
-          'invite-resent': 'Invitation resent successfully!',
-        };
-        const message = toastMessages['${toast}'] || '${toast}';
-        document.body.dispatchEvent(new CustomEvent('htmx:toast', {
-          detail: { message: message, type: 'success' }
-        }));
-        const url = new URL(window.location);
-        url.searchParams.delete('toast');
-        window.history.replaceState({}, '', url);
-      });
-    </script>
-  ` : '';
-
-  // Initialize delete modal
-  const deleteModal = new DeleteModal({
-    entityName: 'User',
-    entityLabel: 'name',
-    deleteUrlPath: '/admin/users',
-    csrfToken: user?.csrfToken || '',
-    title: 'Remove User?'
+  const toastScript = toastQueryScript(toast, {
+    created: 'User created successfully!',
+    updated: 'User updated successfully!',
+    deleted: 'User deleted successfully!',
+    suspended: 'User suspended successfully!',
+    activated: 'User activated successfully!',
+    'invite-resent': 'Invitation resent successfully!',
   });
 
   // Build filters array for toolbar
@@ -192,7 +169,7 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
             </table>
           </div>
 
-          ${totalPages > 1 ? paginationHtml({ page, totalPages, filters }) : ''}
+          ${totalPages > 1 ? buildPaginationHtml({ basePath: '/admin/users', page, totalPages, filters, filterKeys: USER_FILTER_KEYS }) : ''}
         `
         }
         </div>
@@ -202,17 +179,196 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
     ${toastScript}
   `;
 
-  return mainLayout({
+  return content;
+}
+
+/** Delete modal HTML for users list page */
+export function usersListModals({ user }) {
+  const deleteModal = new DeleteModal({
+    entityName: 'User',
+    entityLabel: 'name',
+    deleteUrlPath: '/admin/users',
+    csrfToken: user?.csrfToken || '',
+    title: 'Remove User?'
+  });
+
+  return deleteModal.render();
+}
+
+/** Page metadata for users list */
+export function usersListMeta({ user }) {
+  return {
     title: 'Users',
     description: 'Manage team members and permissions',
-    content: content + deleteModal.render(),
-    user,
     activeRoute: '/admin/users',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Users', url: '/admin/users' },
     ],
-  });
+    modals: usersListModals({ user }),
+  };
+}
+
+/**
+ * Generate users table HTML fragment for HTMX updates
+ * Matches the structure in users/list.js exactly
+ */
+export function usersTableFragment({ users, total, page, totalPages, limit, filters = {} }) {
+  if (!users || users.length === 0) {
+    return `
+      <div class="empty">
+        <h3>No users found</h3>
+        <p>Get started by inviting your first team member to collaborate on your blog.</p>
+      </div>
+    `;
+  }
+
+  const USER_ROLE_LABELS = {
+    ADMIN: 'Admin',
+    EDITOR: 'Editor',
+    AUTHOR: 'Author',
+    VIEWER: 'Viewer',
+  };
+
+  function formatDate(date) {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  function formatRelativeTime(date) {
+    if (!date) return 'Never';
+    const now = new Date();
+    const then = new Date(date);
+    const diffMs = now - then;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+
+    if (diffDay > 30) return formatDate(date);
+    if (diffDay > 0) return `${diffDay}d ago`;
+    if (diffHour > 0) return `${diffHour}h ago`;
+    if (diffMin > 0) return `${diffMin}m ago`;
+    return 'Just now';
+  }
+
+  function getStatusClass(status) {
+    const classes = {
+      ACTIVE: 'success',
+      INVITED: 'warning',
+      SUSPENDED: 'neutral',
+    };
+    return classes[status] || 'neutral';
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  const rows = users.map((u) => `
+    <tr class="table__tr ${u.status === 'SUSPENDED' ? 'table__tr--muted' : ''}">
+      <td class="table__td">
+        <span class="table__label">User</span>
+        <div class="table__title">
+          <a href="/admin/users/${u.id}/edit">${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}</a>
+        </div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Role</span>
+        <span class="text-grey-900 dark:text-grey-100">${USER_ROLE_LABELS[u.role] || u.role}</span>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Status</span>
+        <span class="badge badge--${getStatusClass(u.status)}">${u.status}</span>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Date Joined</span>
+        ${formatDate(u.createdAt)}
+      </td>
+      <td class="table__td">
+        <span class="table__label">Last Active</span>
+        ${u.lastActiveAt ? formatRelativeTime(u.lastActiveAt) : 'Never'}
+      </td>
+      <td class="table__td table__td--actions">
+        <div class="row-actions">
+          ${u.status === 'INVITED'
+            ? `<button
+                type="button"
+                class="btn btn--ghost row-action row-action--resend"
+                hx-post="/admin/users/${u.id}/resend-invite"
+                hx-target="#users-table-container"
+                hx-swap="outerHTML"
+                title="Resend Invite"
+              >
+                <i data-lucide="send"></i>
+                <span>Resend</span>
+              </button>`
+            : u.status === 'SUSPENDED'
+              ? `<button
+                  type="button"
+                  class="btn btn--ghost row-action row-action--activate"
+                  hx-post="/admin/users/${u.id}/activate"
+                  hx-target="#users-table-container"
+                  hx-swap="outerHTML"
+                  title="Activate"
+                >
+                  <i data-lucide="user-check"></i>
+                  <span>Activate</span>
+                </button>`
+              : `<a href="/admin/users/${u.id}/edit" class="btn btn--ghost row-action row-action--edit">
+                  <i data-lucide="pencil"></i>
+                  <span>Edit</span>
+                </a>`
+          }
+          <button
+            type="button"
+            class="btn btn--ghost row-action row-action--delete"
+            data-user-id="${u.id}"
+            data-user-name="${escapeHtml(u.firstName + ' ' + u.lastName)}"
+            data-user-role="${u.role}"
+            onclick="openDeleteModal(this)"
+          >
+            <i data-lucide="trash-2"></i>
+            <span>Delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  const paginationMarkup = totalPages > 1
+    ? buildPaginationHtml({ basePath: '/admin/users', page, totalPages, filters, filterKeys: USER_FILTER_KEYS })
+    : '';
+
+  return `
+    <div class="table">
+      <table class="table__table">
+        <thead class="table__thead">
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Date Joined</th>
+            <th>Last Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table__tbody">
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+    ${paginationMarkup}
+  `;
 }
 
 // Helper Functions
@@ -243,57 +399,4 @@ function getStatusClass(status) {
     SUSPENDED: 'neutral',
   };
   return classes[status] || 'neutral';
-}
-
-function paginationHtml({ page, totalPages, filters }) {
-  const params = new URLSearchParams();
-  if (filters?.search) params.set('search', filters.search);
-  if (filters?.role) params.set('role', filters.role);
-  if (filters?.status) params.set('status', filters.status);
-
-  const baseQuery = params.toString();
-  const queryPrefix = baseQuery ? `&${baseQuery}` : '';
-
-  let links = '';
-
-  // Previous button
-  const prevDisabled = page <= 1 ? 'pagination__item--disabled' : '';
-  const prevHref = page > 1 ? `/admin/users?page=${page - 1}${queryPrefix}` : '#';
-  links += `<a href="${prevHref}" class="pagination__item ${prevDisabled}"><i data-lucide="chevron-left"></i></a>`;
-
-  // Page numbers
-  let pageNumbers = [];
-  const maxVisible = 5;
-
-  if (totalPages <= maxVisible) {
-    pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-  } else if (page <= 3) {
-    pageNumbers = [1, 2, 3, 4, '...', totalPages];
-  } else if (page >= totalPages - 2) {
-    pageNumbers = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-  } else {
-    pageNumbers = [1, '...', page - 1, page, page + 1, '...', totalPages];
-  }
-
-  pageNumbers.forEach((p) => {
-    if (p === '...') {
-      links += '<span class="pagination__ellipsis">...</span>';
-    } else {
-      const active = p === page ? 'pagination__item--active' : '';
-      links += `<a href="/admin/users?page=${p}${queryPrefix}" class="pagination__item ${active}">${p}</a>`;
-    }
-  });
-
-  // Next button
-  const nextDisabled = page >= totalPages ? 'pagination__item--disabled' : '';
-  const nextHref = page < totalPages ? `/admin/users?page=${page + 1}${queryPrefix}` : '#';
-  links += `<a href="${nextHref}" class="pagination__item ${nextDisabled}"><i data-lucide="chevron-right"></i></a>`;
-
-  return `
-    <footer class="page-footer">
-      <div class="pagination">
-        ${links}
-      </div>
-    </footer>
-  `;
 }
