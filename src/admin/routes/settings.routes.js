@@ -3,28 +3,24 @@
 
 import { settingsController } from '../controllers/settings.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody } from '../middleware/validate.js';
+import { settingsUpdateSchema } from '../schemas/settings.schema.js';
 
-/**
- * Register settings routes
- * @param {FastifyInstance} fastify - Fastify instance
- * @param {Object} opts - Route options
- */
+const auth = requireAuthRedirect('/admin/auth/login');
+
 export default async function settingsRoutes(fastify, opts) {
-  // GET /admin/settings - Show settings page (admin only)
   fastify.get('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: settingsController.showSettings.bind(settingsController),
   });
 
-  // PUT /admin/settings - Update settings (admin only)
   fastify.put('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateBody(settingsUpdateSchema)],
     handler: settingsController.updateSettings.bind(settingsController),
   });
 
-  // POST /admin/settings/logo - Upload logo (admin only)
   fastify.post('/logo', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: settingsController.uploadLogo.bind(settingsController),
   });
 }
