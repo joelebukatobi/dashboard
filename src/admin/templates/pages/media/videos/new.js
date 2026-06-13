@@ -1,17 +1,12 @@
 // New video page template
 
-import { mainLayout } from '../../../layouts/main.js';
 import { escapeHtml } from '../../../utils/helpers.js';
 
 /**
- * Generate new video page
- * @param {Object} options - Page options
- * @param {Object} options.user - Current user
- * @param {Array} options.posts - Posts for attachment dropdown
- * @returns {string} - HTML string
+ * New video page inner content (layout applied via fastify-html addLayout).
  */
-export function videosNewPage({ user, posts }) {
-  const content = `
+export function videosNewContent({ user, posts }) {
+  return `
     <div class="media">
       <div class="content">
         <!-- Page Header -->
@@ -179,12 +174,12 @@ export function videosNewPage({ user, posts }) {
       });
     </script>
   `;
+}
 
-  return mainLayout({
+export function videosNewMeta() {
+  return {
     title: 'New Video',
     description: 'Upload a new video to the media library',
-    content,
-    user,
     activeRoute: '/admin/media/videos',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
@@ -192,5 +187,5 @@ export function videosNewPage({ user, posts }) {
       { label: 'Videos', url: '/admin/media/videos' },
       { label: 'New Video', url: '/admin/media/videos/new' },
     ],
-  });
+  };
 }
