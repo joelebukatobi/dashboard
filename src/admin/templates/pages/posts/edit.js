@@ -1,15 +1,12 @@
 // src/admin/templates/pages/posts/edit.js
 // Edit Post Page - Exact structure from edit-post.html
 
-import { mainLayout } from '../../layouts/main.js';
 import { escapeHtml } from '../../utils/helpers.js';
 
 /**
- * Edit Post Page Template
- * Edit existing blog post
- * Structure matches edit-post.html exactly
+ * Edit Post page inner content (layout applied via fastify-html addLayout).
  */
-export function postEditPage({ categories, tags, post, user }) {
+export function postEditContent({ categories, tags, post, user }) {
   const content = `
     <div class="content content-main">
       <!-- Page Header -->
@@ -506,16 +503,18 @@ export function postEditPage({ categories, tags, post, user }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function postEditMeta({ post }) {
+  return {
     title: 'Edit Post',
     description: 'Edit blog post',
-    content,
-    user,
     activeRoute: '/admin/posts',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Blog Posts', url: '/admin/posts' },
-      { label: post.title.substring(0, 30) + (post.title.length > 30 ? '...' : ''), url: `/admin/posts/${post.id}/edit` }
-    ]
-  });
+      { label: post.title.substring(0, 30) + (post.title.length > 30 ? '...' : ''), url: `/admin/posts/${post.id}/edit` },
+    ],
+  };
 }

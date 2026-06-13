@@ -5,6 +5,16 @@ import { eq } from 'drizzle-orm';
 import { imagesService } from '../../services/images.service.js';
 import { videosService } from '../../services/videos.service.js';
 import crypto from 'crypto';
+import {
+  renderAdminPage,
+  renderFragment,
+  renderEmpty,
+  errorAlert,
+  successAlert,
+  htmxLocation,
+  htmxRedirect,
+  setHtmxToast,
+} from '../render.js';
 
 /**
  * Posts Controller
@@ -73,19 +83,27 @@ class PostsController {
       // Check if HTMX request - return only table fragment
       const isHtmx = request.headers['hx-request'] === 'true';
 
+      const {
+        postsListContent,
+        postsListMeta,
+        postsTableFragment,
+      } = await import('../templates/pages/posts/index.js');
+
       if (isHtmx) {
-        return reply.type('text/html').send(postsTableFragment(data));
+        return renderFragment(reply, postsTableFragment(data));
       }
 
-      // Import template
-      const { postsListPage } = await import('../templates/pages/posts/index.js');
-
-      return reply.type('text/html').send(postsListPage(data));
+      return renderAdminPage(
+        request,
+        reply,
+        postsListMeta({ user: request.user }),
+        postsListContent(data),
+      );
 
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: 'Failed to load posts. Please try again.'
       }));
     }
@@ -108,14 +126,19 @@ class PostsController {
         user: request.user,
       };
 
-      const { postNewPage } = await import('../templates/pages/posts/index.js');
+      const { postNewContent, postNewMeta } = await import('../templates/pages/posts/index.js');
 
-      return reply.type('text/html').send(postNewPage(data));
+      return renderAdminPage(
+        request,
+        reply,
+        postNewMeta(),
+        postNewContent(data),
+      );
 
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: 'Failed to load post form. Please try again.'
       }));
     }
@@ -139,14 +162,6 @@ class PostsController {
         metaDescription,
       } = request.body;
 
-      // Validate required fields
-      if (!title || !slug || !content) {
-        reply.code(400);
-        return reply.type('text/html').send(errorFragment({
-          message: 'Title, slug, and content are required'
-        }));
-      }
-
       // Parse tags - handle both array (from multi-select) and comma-separated string
       const tagIds = Array.isArray(tagIdsString)
         ? tagIdsString.filter(Boolean)
@@ -168,14 +183,14 @@ class PostsController {
       }, request.user.id);
 
       // Send location for delayed redirect + toast trigger
-      reply.header('HX-Location', `/admin/posts/${post.id}/edit`);
-      reply.header('HX-Trigger', JSON.stringify({ "htmx:toast": { message: status === 'PUBLISHED' ? 'Post published successfully!' : 'Draft saved successfully!', type: 'success' } }));
-      return reply.type('text/html').send('');
+      return htmxLocation(reply, `/admin/posts/${post.id}/edit`, {
+        message: status === 'PUBLISHED' ? 'Post published successfully!' : 'Draft saved successfully!',
+      });
 
     } catch (error) {
       request.log.error(error);
       reply.code(400);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: error.message || 'Failed to create post. Please try again.'
       }));
     }
@@ -193,7 +208,7 @@ class PostsController {
       
       if (!post) {
         reply.code(404);
-        return reply.type('text/html').send(errorFragment({
+        return renderFragment(reply, errorAlert({
           message: 'Post not found'
         }));
       }
@@ -209,14 +224,19 @@ class PostsController {
         user: request.user,
       };
 
-      const { postEditPage } = await import('../templates/pages/posts/index.js');
+      const { postEditContent, postEditMeta } = await import('../templates/pages/posts/index.js');
 
-      return reply.type('text/html').send(postEditPage(data));
+      return renderAdminPage(
+        request,
+        reply,
+        postEditMeta({ post }),
+        postEditContent(data),
+      );
 
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: 'Failed to load post. Please try again.'
       }));
     }
@@ -241,14 +261,6 @@ class PostsController {
         metaDescription,
       } = request.body;
 
-      // Validate required fields
-      if (!title || !slug || !content) {
-        reply.code(400);
-        return reply.type('text/html').send(errorFragment({
-          message: 'Title, slug, and content are required'
-        }));
-      }
-
       // Parse tags - handle both array (from multi-select) and comma-separated string
       const tagIds = Array.isArray(tagIdsString)
         ? tagIdsString.filter(Boolean)
@@ -269,13 +281,14 @@ class PostsController {
         metaDescription,
       });
 
-      reply.header('HX-Trigger', JSON.stringify({ "htmx:toast": { message: status === 'PUBLISHED' ? 'Post updated and published!' : 'Draft updated successfully!', type: 'success' } }));
-      return reply.type('text/html').send('');
+      return renderEmpty(setHtmxToast(reply, {
+        message: status === 'PUBLISHED' ? 'Post updated and published!' : 'Draft updated successfully!',
+      }));
 
     } catch (error) {
       request.log.error(error);
       reply.code(400);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: error.message || 'Failed to update post. Please try again.'
       }));
     }
@@ -292,13 +305,12 @@ class PostsController {
       await postsService.deletePost(id);
 
       // Full browser redirect with toast param (avoids isHtmx fragment response)
-      reply.header('HX-Redirect', '/admin/posts?toast=deleted');
-      return reply.type('text/html').send('');
+      return htmxRedirect(reply, '/admin/posts?toast=deleted');
 
     } catch (error) {
       request.log.error(error);
       reply.code(400);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: error.message || 'Failed to delete post. Please try again.'
       }));
     }
@@ -314,15 +326,14 @@ class PostsController {
       
       await postsService.updatePost(id, { status: 'PUBLISHED' });
 
-      reply.header('HX-Trigger', JSON.stringify({ "htmx:toast": { message: 'Post published successfully!', type: 'success' } }));
-      return reply.type('text/html').send(successToast({
+      return renderFragment(setHtmxToast(reply, { message: 'Post published successfully!' }), successAlert({
         message: 'Post published successfully!'
       }));
 
     } catch (error) {
       request.log.error(error);
       reply.code(400);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: error.message || 'Failed to publish post.'
       }));
     }
@@ -338,15 +349,14 @@ class PostsController {
       
       await postsService.updatePost(id, { status: 'DRAFT' });
 
-      reply.header('HX-Trigger', JSON.stringify({ "htmx:toast": { message: 'Post moved to drafts', type: 'success' } }));
-      return reply.type('text/html').send(successToast({
+      return renderFragment(setHtmxToast(reply, { message: 'Post moved to drafts' }), successAlert({
         message: 'Post moved to drafts'
       }));
 
     } catch (error) {
       request.log.error(error);
       reply.code(400);
-      return reply.type('text/html').send(errorFragment({
+      return renderFragment(reply, errorAlert({
         message: error.message || 'Failed to unpublish post.'
       }));
     }
@@ -611,190 +621,6 @@ class PostsController {
       return reply.code(500).send({ error: 'Failed to track view' });
     }
   }
-}
-
-// Posts table fragment for HTMX partial responses (search, filters)
-function postsTableFragment({ posts, page, totalPages, filters }) {
-  if (!posts || posts.length === 0) {
-    return `
-      <div class="empty">
-        <h3>No posts found</h3>
-        <p>Try adjusting your search or filters.</p>
-      </div>
-    `;
-  }
-
-  const rows = posts.map((post) => {
-    const statusConfig = {
-      PUBLISHED: { class: 'status--success', label: 'Published' },
-      DRAFT: { class: 'status--warning', label: 'Draft' },
-      SCHEDULED: { class: 'status--info', label: 'Scheduled' },
-      ARCHIVED: { class: 'status--neutral', label: 'Archived' },
-    };
-    const config = statusConfig[post.status] || statusConfig['DRAFT'];
-    const date = new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-
-    return `
-      <tr class="table__tr">
-        <td class="table__td">
-          <span class="table__label">Title</span>
-          <div class="table__title">
-            <a href="/admin/posts/${post.id}/edit">${escapeHtmlHelper(post.title)}</a>
-          </div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Category</span>
-          ${post.category ? `<span class="text-grey-700">${post.category.title}</span>` : '<span class="text-grey-500">Uncategorized</span>'}
-        </td>
-        <td class="table__td">
-          <span class="table__label">Status</span>
-          <span class="status ${config.class}">
-            <span class="status__dot"></span>
-            ${config.label}
-          </span>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Date</span>
-          ${date}
-        </td>
-        <td class="table__td table__td--actions">
-          <div class="flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]">
-            <a href="/admin/posts/${post.id}/edit" class="btn btn--ghost row-action row-action--edit">
-              <i data-lucide="pencil" class="h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]"></i>
-              <span class="lg:hidden">Edit</span>
-            </a>
-            <button 
-              type="button"
-              class="btn btn--ghost row-action row-action--delete"
-              data-post-id="${post.id}"
-              data-post-title="${escapeHtmlHelper(post.title)}"
-              onclick="openDeleteModal(this)"
-            >
-              <i data-lucide="trash-2" class="h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]"></i>
-              <span class="lg:hidden">Delete</span>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
-
-  // Build pagination for the fragment
-  const paginationFragment = totalPages > 1 ? fragmentPaginationHtml({ page, totalPages, filters }) : '';
-
-  return `
-    <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Title</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody class="table__tbody">
-        ${rows}
-      </tbody>
-    </table>
-    ${paginationFragment}
-  `;
-}
-
-// Pagination helper for fragments (mirrors the template's paginationHtml)
-function fragmentPaginationHtml({ page, totalPages, filters }) {
-  const params = new URLSearchParams();
-  if (filters?.status) params.set('status', filters.status);
-  if (filters?.categoryId) params.set('category', filters.categoryId);
-  if (filters?.search) params.set('search', filters.search);
-
-  const baseQuery = params.toString();
-  const queryPrefix = baseQuery ? `&${baseQuery}` : '';
-
-  let links = '';
-
-  // Previous button
-  const prevDisabled = page <= 1 ? 'pagination__item--disabled' : '';
-  const prevHref = page > 1 ? `/admin/posts?page=${page - 1}${queryPrefix}` : '#';
-  links += `<a href="${prevHref}" class="pagination__item ${prevDisabled}"><i data-lucide="chevron-left"></i></a>`;
-
-  // Page numbers
-  let pageNumbers = [];
-  const maxVisible = 5;
-
-  if (totalPages <= maxVisible) {
-    pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-  } else if (page <= 3) {
-    pageNumbers = [1, 2, 3, 4, '...', totalPages];
-  } else if (page >= totalPages - 2) {
-    pageNumbers = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-  } else {
-    pageNumbers = [1, '...', page - 1, page, page + 1, '...', totalPages];
-  }
-
-  pageNumbers.forEach((p) => {
-    if (p === '...') {
-      links += '<span class="pagination__ellipsis">...</span>';
-    } else {
-      const active = p === page ? 'pagination__item--active' : '';
-      links += `<a href="/admin/posts?page=${p}${queryPrefix}" class="pagination__item ${active}">${p}</a>`;
-    }
-  });
-
-  // Next button
-  const nextDisabled = page >= totalPages ? 'pagination__item--disabled' : '';
-  const nextHref = page < totalPages ? `/admin/posts?page=${page + 1}${queryPrefix}` : '#';
-  links += `<a href="${nextHref}" class="pagination__item ${nextDisabled}"><i data-lucide="chevron-right"></i></a>`;
-
-  return `
-    <footer class="page-footer">
-      <div class="pagination">
-        ${links}
-      </div>
-    </footer>
-  `;
-}
-
-function escapeHtmlHelper(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-// Helper functions for fragments
-function errorFragment({ message }) {
-  return `
-    <div class="alert alert--error alert--mb" role="alert">
-      <i data-lucide="alert-circle" class="alert__icon"></i>
-      <span class="alert__message">${message}</span>
-    </div>
-  `;
-}
-
-function successFragment({ message }) {
-  return `
-    <div class="alert alert--success alert--mb" role="alert">
-      <i data-lucide="check-circle" class="alert__icon"></i>
-      <span class="alert__message">${message}</span>
-    </div>
-  `;
-}
-
-function successToast({ message }) {
-  return `
-    <div class="alert alert--success alert--mb" role="alert">
-      <i data-lucide="check-circle" class="alert__icon"></i>
-      <span class="alert__message">${message}</span>
-    </div>
-  `;
 }
 
 // Export singleton

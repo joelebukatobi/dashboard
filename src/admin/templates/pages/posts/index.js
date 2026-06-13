@@ -1,6 +1,12 @@
 // src/admin/templates/pages/posts/index.js
 // Barrel export for posts module
 
-export { postsListPage } from './list.js';
-export { postNewPage } from './new.js';
-export { postEditPage } from './edit.js';
+export {
+  postsListContent,
+  postsListModals,
+  postsListMeta,
+  postsTableFragment,
+} from './list.js';
+export { postNewContent, postNewMeta } from './new.js';
+export { postEditContent, postEditMeta } from './edit.js';
+export { postCommentsContent, postCommentsModals, postCommentsMeta, renderCommentPartial } from './comments.js';

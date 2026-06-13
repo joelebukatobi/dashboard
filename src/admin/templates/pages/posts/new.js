@@ -1,14 +1,10 @@
 // src/admin/templates/pages/posts/new.js
 // New Post Page - Exact structure from new-post.html
 
-import { mainLayout } from '../../layouts/main.js';
-
 /**
- * New Post Page Template
- * Create new blog post
- * Structure matches new-post.html exactly
+ * New Post page inner content (layout applied via fastify-html addLayout).
  */
-export function postNewPage({ categories, tags, user }) {
+export function postNewContent({ categories, tags, user }) {
   const content = `
     <div class="content content-main">
       <!-- Page Header -->
@@ -532,16 +528,18 @@ export function postNewPage({ categories, tags, user }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function postNewMeta() {
+  return {
     title: 'New Post',
     description: 'Create a new blog post',
-    content,
-    user,
     activeRoute: '/admin/posts',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Blog Posts', url: '/admin/posts' },
       { label: 'New Post', url: '/admin/posts/new' },
     ],
-  });
+  };
 }
