@@ -1,17 +1,12 @@
 // src/admin/templates/pages/subscribers/edit.js
 // Edit Subscriber Page - Form to edit a subscriber
 
-import { mainLayout } from '../../layouts/main.js';
 import { escapeHtml } from '../../utils/helpers.js';
 
 /**
- * Edit Subscriber Page Template
- * @param {Object} params - Template parameters
- * @param {Object} params.user - Current user
- * @param {Object} params.subscriber - Subscriber to edit
- * @param {string} params.error - Optional error message
+ * Edit Subscriber page inner content (layout applied via fastify-html addLayout).
  */
-export function editSubscriberPage({ user, subscriber, error }) {
+export function editSubscriberContent({ user, subscriber, error }) {
   const content = `
     <div class="subscribers">
       <div class="content">
@@ -86,16 +81,18 @@ export function editSubscriberPage({ user, subscriber, error }) {
     </div>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function editSubscriberMeta({ subscriber }) {
+  return {
     title: 'Edit Subscriber',
     description: 'Update subscriber details',
-    content,
-    user,
     activeRoute: '/admin/subscribers',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Subscribers', url: '/admin/subscribers' },
-      { label: 'Edit Subscriber', url: `/admin/subscribers/${subscriber.id}/edit` }
-    ]
-  });
+      { label: 'Edit Subscriber', url: `/admin/subscribers/${subscriber.id}/edit` },
+    ],
+  };
 }

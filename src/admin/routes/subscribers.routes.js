@@ -3,43 +3,41 @@
 
 import { subscribersController } from '../controllers/subscribers.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
+import { createSubscriberSchema, updateSubscriberSchema } from '../schemas/subscriber.schema.js';
+import { resourceIdSchema, subscribersListQuerySchema } from '../schemas/common.schema.js';
 
-/**
- * Register subscribers routes
- * @param {FastifyInstance} fastify - Fastify instance
- * @param {Object} opts - Route options
- */
+const auth = requireAuthRedirect('/admin/auth/login');
+
 export default async function subscribersRoutes(fastify, opts) {
-  // All subscriber routes require authentication
-  fastify.addHook('preHandler', requireAuthRedirect('/admin/auth/login'));
+  fastify.addHook('preHandler', auth);
 
-  // GET /admin/subscribers - List all subscribers
   fastify.get('/', {
+    preHandler: validateQuery(subscribersListQuerySchema),
     handler: subscribersController.list.bind(subscribersController),
   });
 
-  // GET /admin/subscribers/new - Show add subscriber form
   fastify.get('/new', {
     handler: subscribersController.new.bind(subscribersController),
   });
 
-  // POST /admin/subscribers - Create a new subscriber
   fastify.post('/', {
+    preHandler: validateBody(createSubscriberSchema),
     handler: subscribersController.create.bind(subscribersController),
   });
 
-  // GET /admin/subscribers/:id/edit - Show edit subscriber form
   fastify.get('/:id/edit', {
+    preHandler: validateParams(resourceIdSchema),
     handler: subscribersController.edit.bind(subscribersController),
   });
 
-  // PUT /admin/subscribers/:id - Update a subscriber
   fastify.put('/:id', {
+    preHandler: [validateParams(resourceIdSchema), validateBody(updateSubscriberSchema)],
     handler: subscribersController.update.bind(subscribersController),
   });
 
-  // DELETE /admin/subscribers/:id - Delete a subscriber
   fastify.delete('/:id', {
+    preHandler: validateParams(resourceIdSchema),
     handler: subscribersController.delete.bind(subscribersController),
   });
 }
