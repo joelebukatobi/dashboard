@@ -1,13 +1,10 @@
 // src/admin/templates/pages/tags/new.js
 // New Tag Page
 
-import { mainLayout } from '../../layouts/main.js';
-
 /**
- * New Tag Page Template
- * Create new tag
+ * New Tag page inner content (layout applied via fastify-html addLayout).
  */
-export function tagNewPage({ user, errors = {} }) {
+export function tagNewContent({ user, errors = {} }) {
   const content = `
     <div class="tags">
       <div class="content">
@@ -115,16 +112,18 @@ export function tagNewPage({ user, errors = {} }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function tagNewMeta() {
+  return {
     title: 'New Tag',
     description: 'Create a new tag',
-    content,
-    user,
     activeRoute: '/admin/tags',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Tags', url: '/admin/tags' },
-      { label: 'New Tag', url: '/admin/tags/new' }
-    ]
-  });
+      { label: 'New Tag', url: '/admin/tags/new' },
+    ],
+  };
 }

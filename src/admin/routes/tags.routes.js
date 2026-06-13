@@ -3,52 +3,45 @@
 
 import { tagsController } from '../controllers/tags.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
+import { createTagSchema, updateTagSchema } from '../schemas/tag.schema.js';
+import { listQuerySchema, resourceIdSchema, slugQuerySchema } from '../schemas/common.schema.js';
 
-/**
- * Tags Routes
- * @param {FastifyInstance} fastify - Fastify instance
- * @param {Object} opts - Route options
- */
+const auth = requireAuthRedirect('/admin/auth/login');
+
 export default async function tagsRoutes(fastify, opts) {
-  // GET /admin/tags - List all tags
   fastify.get('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateQuery(listQuerySchema)],
     handler: tagsController.list.bind(tagsController),
   });
 
-  // GET /admin/tags/new - Show new tag form
   fastify.get('/new', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: tagsController.showNewForm.bind(tagsController),
   });
 
-  // POST /admin/tags - Create new tag
   fastify.post('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateBody(createTagSchema)],
     handler: tagsController.create.bind(tagsController),
   });
 
-  // GET /admin/tags/:id/edit - Show edit tag form
   fastify.get('/:id/edit', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: tagsController.showEditForm.bind(tagsController),
   });
 
-  // PUT /admin/tags/:id - Update tag
   fastify.put('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema), validateBody(updateTagSchema)],
     handler: tagsController.update.bind(tagsController),
   });
 
-  // DELETE /admin/tags/:id - Delete tag
   fastify.delete('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: tagsController.delete.bind(tagsController),
   });
 
-  // GET /admin/tags/check-slug - Check slug availability
   fastify.get('/check-slug', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateQuery(slugQuerySchema)],
     handler: tagsController.checkSlug.bind(tagsController),
   });
 }
