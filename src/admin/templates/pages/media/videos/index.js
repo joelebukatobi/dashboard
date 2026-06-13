@@ -1,5 +1,11 @@
-// Videos templates barrel export
+// src/admin/templates/pages/media/videos/index.js
+// Barrel exports for videos templates
 
-export { videosListPage } from './list.js';
-export { videosNewPage } from './new.js';
-export { videosEditPage } from './edit.js';
+export {
+  videosListContent,
+  videosListModals,
+  videosListMeta,
+  videosGridFragment,
+} from './list.js';
+export { videosNewContent, videosNewMeta } from './new.js';
+export { videosEditContent, videosEditModals, videosEditMeta } from './edit.js';

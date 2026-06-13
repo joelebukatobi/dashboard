@@ -3,46 +3,40 @@
 
 import { videosController } from '../controllers/videos.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
+import { updateMediaSchema } from '../schemas/media.schema.js';
+import { listQuerySchema, resourceIdSchema } from '../schemas/common.schema.js';
 
-/**
- * Register video routes
- * @param {FastifyInstance} fastify - Fastify instance
- * @param {Object} opts - Route options
- */
+const auth = requireAuthRedirect('/admin/auth/login');
+
 export default async function videosRoutes(fastify, opts) {
-  // GET /admin/media/videos - List all videos
   fastify.get('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateQuery(listQuerySchema)],
     handler: videosController.list.bind(videosController),
   });
 
-  // GET /admin/media/videos/new - Show new video form
   fastify.get('/new', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: videosController.showNewForm.bind(videosController),
   });
 
-  // POST /admin/media/videos - Upload video
   fastify.post('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: videosController.upload.bind(videosController),
   });
 
-  // GET /admin/media/videos/:id/edit - Show edit form
   fastify.get('/:id/edit', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: videosController.showEditForm.bind(videosController),
   });
 
-  // PUT /admin/media/videos/:id - Update video
   fastify.put('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema), validateBody(updateMediaSchema)],
     handler: videosController.update.bind(videosController),
   });
 
-  // DELETE /admin/media/videos/:id - Delete video
   fastify.delete('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: videosController.delete.bind(videosController),
   });
 }

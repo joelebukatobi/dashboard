@@ -1,22 +1,14 @@
 // Edit video page template
 
-import { mainLayout } from '../../../layouts/main.js';
 import { escapeHtml } from '../../../utils/helpers.js';
 
 /**
- * Generate video edit page
- * @param {Object} options - Page options
- * @param {Object} options.user - Current user
- * @param {Object} options.video - Video data
- * @param {Array} options.posts - Posts for attachment dropdown
- * @param {Array} options.albums - Albums for dropdown
- * @returns {string} - HTML string
+ * Edit video page inner content (layout applied via fastify-html addLayout).
  */
-export function videosEditPage({ user, video, posts, albums = [] }) {
-  const content = `
+export function videosEditContent({ user, video, posts, albums = [] }) {
+  return `
     <div class="media">
       <div class="content">
-        <!-- Page Header -->
         <div class="page-header">
           <div class="page-header__left">
             <h1 class="page-header__title">Edit Video</h1>
@@ -25,25 +17,20 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
           <div class="page-header__toast-container"></div>
         </div>
 
-        <!-- Edit Form Layout -->
         <div class="media-layout media-layout--start">
-          <!-- Left: Video Preview -->
           <div class="media-layout__content media-layout__content--start">
             <div class="upload-zone upload-zone--preview upload-zone--full video-preview-container">
-              <!-- Background video (blurred backdrop) -->
-              <video 
+              <video
                 id="videoBg"
-                class="video-preview-bg" 
+                class="video-preview-bg"
                 src="${video.path}"
-                muted 
-                loop 
+                muted
+                loop
                 playsinline
               ></video>
-              
-              <!-- Main video (foreground) -->
-              <video 
+              <video
                 id="videoMain"
-                class="upload-zone__preview video-preview-main" 
+                class="upload-zone__preview video-preview-main"
                 src="${video.path}"
                 controls
               >
@@ -52,11 +39,10 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
             </div>
           </div>
 
-          <!-- Right: Form -->
           <div class="media-layout__sidebar">
             <div class="card card__panel">
               <div class="card__body">
-                <form 
+                <form
                   id="editForm"
                   class="form"
                   hx-put="/admin/media/videos/${video.id}"
@@ -65,27 +51,25 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
                 >
                   <div id="form-response"></div>
                   <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
-                  
-                  <!-- File Name -->
+
                   <div class="form__group">
                     <label class="label label--required" for="fileName">File Name</label>
-                    <input 
-                      type="text" 
-                      name="title" 
-                      id="fileName" 
+                    <input
+                      type="text"
+                      name="title"
+                      id="fileName"
                       class="input"
                       value="${escapeHtml(video.title || '')}"
                       placeholder="Enter file name"
-                      required 
+                      required
                     />
                   </div>
 
-                  <!-- Alt Text -->
                   <div class="form__group">
                     <label class="label" for="altText">Alt Text</label>
-                    <input 
-                      type="text" 
-                      name="altText" 
+                    <input
+                      type="text"
+                      name="altText"
                       id="altText"
                       class="input"
                       value="${escapeHtml(video.altText || '')}"
@@ -94,7 +78,6 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
                     <p class="form-feedback form-feedback--hint">Describe the video for screen readers</p>
                   </div>
 
-                  <!-- Video Info -->
                   <div class="form__group">
                     <label class="label">Video Information</label>
                     <div class="card card__panel media-info-card">
@@ -107,11 +90,10 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
                     </div>
                   </div>
 
-                  <!-- Album -->
                   <div class="form__group">
                     <label class="label" for="albumId">Album (Optional)</label>
-                    <select 
-                      name="albumId" 
+                    <select
+                      name="albumId"
                       id="albumId"
                       class="form__select-native"
                       data-hs-select='{
@@ -125,17 +107,16 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
                       }'
                     >
                       <option value="">None</option>
-                      ${albums.map(album => `
+                      ${albums.map((album) => `
                         <option value="${album.id}" ${video.albumId === album.id ? 'selected' : ''}>${escapeHtml(album.title)}</option>
                       `).join('')}
                     </select>
                   </div>
 
-                  <!-- Attach to Post -->
                   <div class="form__group">
                     <label class="label" for="postId">Attach to Post (Optional)</label>
-                    <select 
-                      name="postId" 
+                    <select
+                      name="postId"
                       id="postId"
                       class="form__select-native"
                       data-hs-select='{
@@ -149,7 +130,7 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
                       }'
                     >
                       <option value="">None</option>
-                      ${posts.map(post => `
+                      ${posts.map((post) => `
                         <option value="${post.id}">${escapeHtml(post.title)}</option>
                       `).join('')}
                     </select>
@@ -163,8 +144,8 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
                     Save
                   </button>
                   <a href="/admin/media/videos" class="btn btn--outline btn--cancel">Cancel</a>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     class="btn btn--danger btn--outline"
                     onclick="openDeleteModal(event)"
                   >
@@ -179,7 +160,38 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const mainVideo = document.getElementById('videoMain');
+        const bgVideo = document.getElementById('videoBg');
+
+        if (!mainVideo || !bgVideo) return;
+
+        mainVideo.addEventListener('play', function() {
+          bgVideo.play();
+        });
+
+        mainVideo.addEventListener('pause', function() {
+          bgVideo.pause();
+        });
+
+        mainVideo.addEventListener('seeking', function() {
+          bgVideo.currentTime = mainVideo.currentTime;
+        });
+
+        mainVideo.addEventListener('timeupdate', function() {
+          if (Math.abs(bgVideo.currentTime - mainVideo.currentTime) > 0.5) {
+            bgVideo.currentTime = mainVideo.currentTime;
+          }
+        });
+      });
+    </script>
+  `;
+}
+
+/** Delete confirmation modal for video edit page */
+export function videosEditModals({ user, video }) {
+  return `
     <div id="deleteModal" class="modal" role="dialog" tabindex="-1">
       <div class="modal__backdrop" onclick="closeDeleteModal()"></div>
       <div class="modal__panel">
@@ -233,45 +245,14 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
           closeDeleteModal();
         }
       });
-
-      // Sync video playback between main and background
-      document.addEventListener('DOMContentLoaded', function() {
-        const mainVideo = document.getElementById('videoMain');
-        const bgVideo = document.getElementById('videoBg');
-        
-        if (!mainVideo || !bgVideo) return;
-        
-        // When main video plays, play background video
-        mainVideo.addEventListener('play', function() {
-          bgVideo.play();
-        });
-        
-        // When main video pauses, pause background video
-        mainVideo.addEventListener('pause', function() {
-          bgVideo.pause();
-        });
-        
-        // Sync time when main video seeks
-        mainVideo.addEventListener('seeking', function() {
-          bgVideo.currentTime = mainVideo.currentTime;
-        });
-        
-        // Keep background video in sync during playback
-        mainVideo.addEventListener('timeupdate', function() {
-          // Only sync if drift is significant (> 0.5 seconds)
-          if (Math.abs(bgVideo.currentTime - mainVideo.currentTime) > 0.5) {
-            bgVideo.currentTime = mainVideo.currentTime;
-          }
-        });
-      });
     </script>
   `;
+}
 
-  return mainLayout({
+export function videosEditMeta({ user, video }) {
+  return {
     title: 'Edit Video',
     description: `Editing ${video.originalName}`,
-    content,
-    user,
     activeRoute: '/admin/media/videos',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
@@ -279,5 +260,6 @@ export function videosEditPage({ user, video, posts, albums = [] }) {
       { label: 'Videos', url: '/admin/media/videos' },
       { label: video.title || 'Edit Video', url: `/admin/media/videos/${video.id}/edit` },
     ],
-  });
+    modals: videosEditModals({ user, video }),
+  };
 }
