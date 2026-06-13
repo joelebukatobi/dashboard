@@ -6,6 +6,11 @@ import { activityService } from '../../services/activity.service.js';
 import { analyticsService } from '../../services/analytics.service.js';
 import { subscribersService } from '../../services/subscribers.service.js';
 import { commentsService } from '../../services/comments.service.js';
+import {
+  renderAdminPage,
+  renderFragment,
+  errorAlert,
+} from '../render.js';
 
 /**
  * Format date for dashboard display
@@ -113,11 +118,13 @@ class DashboardController {
       const trafficData = await analyticsService.getTrafficData({ days });
 
       // Import dashboard page template
-      const { dashboardPage } = await import('../templates/pages/dashboard.js');
+      const { dashboardContent, dashboardMeta } = await import('../templates/pages/dashboard.js');
 
-      // Render dashboard page with initial chart data
-      return reply.type('text/html').send(
-        dashboardPage({
+      return renderAdminPage(
+        request,
+        reply,
+        dashboardMeta({ user }),
+        dashboardContent({
           user,
           stats,
           activity,
@@ -130,11 +137,9 @@ class DashboardController {
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(
-        errorFragment({
-          message: 'Failed to load dashboard. Please try again.',
-        }),
-      );
+      return renderFragment(reply, errorAlert({
+        message: 'Failed to load dashboard. Please try again.',
+      }));
     }
   }
 
@@ -156,15 +161,13 @@ class DashboardController {
         totalSubscribers,
       };
 
-      return reply.type('text/html').send(statsFragment(stats));
+      return renderFragment(reply, statsFragment(stats));
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(
-        errorFragment({
-          message: 'Failed to load statistics.',
-        }),
-      );
+      return renderFragment(reply, errorAlert({
+        message: 'Failed to load statistics.',
+      }));
     }
   }
 
@@ -178,15 +181,13 @@ class DashboardController {
       const activityData = await activityService.getRecent({ limit: 10, days: 7 });
       const activity = activityData.map((item) => formatActivityItem(item));
 
-      return reply.type('text/html').send(activityFragment(activity));
+      return renderFragment(reply, activityFragment(activity));
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(
-        errorFragment({
-          message: 'Failed to load activity.',
-        }),
-      );
+      return renderFragment(reply, errorAlert({
+        message: 'Failed to load activity.',
+      }));
     }
   }
 
@@ -208,15 +209,13 @@ class DashboardController {
         };
       });
 
-      return reply.type('text/html').send(topPostsFragment(topPosts));
+      return renderFragment(reply, topPostsFragment(topPosts));
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(
-        errorFragment({
-          message: 'Failed to load top posts.',
-        }),
-      );
+      return renderFragment(reply, errorAlert({
+        message: 'Failed to load top posts.',
+      }));
     }
   }
 
@@ -246,20 +245,16 @@ class DashboardController {
       reply.header('Pragma', 'no-cache');
       reply.header('Expires', '0');
       
-      return reply.type('text/html').send(
-        chartFragment({
-          range,
-          data: trafficData,
-        }),
-      );
+      return renderFragment(reply, chartFragment({
+        range,
+        data: trafficData,
+      }));
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(
-        errorFragment({
-          message: 'Failed to load traffic data.',
-        }),
-      );
+      return renderFragment(reply, errorAlert({
+        message: 'Failed to load traffic data.',
+      }));
     }
   }
 }
@@ -310,16 +305,6 @@ function formatTimeAgo(dateString) {
     month: 'short',
     day: 'numeric',
   });
-}
-
-// Helper function for error fragment
-function errorFragment({ message }) {
-  return `
-    <div class="alert alert--error" role="alert">
-      <i data-lucide="alert-circle" class="alert__icon"></i>
-      <span class="alert__message">${message}</span>
-    </div>
-  `;
 }
 
 // Helper function for chart fragment - Preline ApexCharts
