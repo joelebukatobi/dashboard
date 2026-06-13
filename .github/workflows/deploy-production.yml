@@ -120,7 +120,6 @@ jobs:
             **/node_modules/**
             **/.env*
             **/.github/**
-            docs/**
             **/.DS_Store
             **/tmp/**
             **/.vscode/**
@@ -189,10 +188,10 @@ jobs:
 
             # NOTE: NO SEEDING IN PRODUCTION - Use setup wizard instead.
             # To set up the site, SSH into the server and run:
-            #   cd ${{ secrets.DEPLOY_PATH }} && node scripts/generate-setup-token.js
+            #   cd ${{ secrets.DEPLOY_PATH }} && node scripts/cli.js setup-token
             # Then share the generated URL with the client for first-time setup.
 
-            echo "✅ Deployment complete. Run 'node scripts/generate-setup-token.js' to generate setup URL."
+            echo "✅ Deployment complete. Run 'node scripts/cli.js setup-token' to generate setup URL."
 
             mkdir -p tmp
             date > tmp/restart.txt
