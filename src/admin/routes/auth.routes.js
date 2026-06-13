@@ -2,19 +2,23 @@
 import { authController } from '../controllers/auth.controller.js';
 import { authenticate, optionalAuth } from '../../middleware/authenticate.js';
 import { requireAdmin } from '../../middleware/authorize.js';
-import { loginPage } from '../templates/pages/login.js';
-import { resetPasswordPage } from '../templates/pages/reset-password.js';
+import { loginContent, loginMeta } from '../templates/pages/login.js';
+import { resetPasswordContent, resetPasswordMeta } from '../templates/pages/reset-password.js';
+import { renderAdminPage } from '../render.js';
+import { validateBody } from '../middleware/validate.js';
+import { loginSchema } from '../../utils/validators.js';
+import { forgotPasswordSchema, resetPasswordSchema } from '../schemas/auth.schema.js';
+import { errorAlert } from '../render.js';
 
-/**
- * Authentication Routes
- * Defines all auth-related endpoints
- */
+function authFormValidationFail(request, reply, message) {
+  reply.code(400);
+  return reply.html`!${errorAlert({ message })}`;
+}
+
 export default async function authRoutes(fastify) {
-  
-  // POST /admin/auth/login
-  // Public - no auth required
   fastify.post('/login', {
-    handler: authController.login.bind(authController)
+    preHandler: validateBody(loginSchema),
+    handler: authController.login.bind(authController),
   });
   
   // GET /admin/auth/login
@@ -32,18 +36,7 @@ export default async function authRoutes(fastify) {
         }
       }
       
-      // Get any error or success message from query params
-      const { error, reset, setup } = request.query;
-      let success = '';
-      
-      if (reset === 'success') {
-        success = 'Password reset successfully. Please sign in.';
-      } else if (setup === 'success') {
-        success = 'Setup complete! Your admin account has been created. Please sign in.';
-      }
-      
-      // Serve login page
-      return reply.type('text/html').send(loginPage({ error, success }));
+      return renderAdminPage(request, reply, loginMeta({}), loginContent());
     }
   });
   
@@ -64,13 +57,15 @@ export default async function authRoutes(fastify) {
   // POST /admin/auth/forgot-password
   // Public - request password reset
   fastify.post('/forgot-password', {
-    handler: authController.forgotPassword.bind(authController)
+    preHandler: validateBody(forgotPasswordSchema, { onFail: authFormValidationFail }),
+    handler: authController.forgotPassword.bind(authController),
   });
   
   // POST /admin/auth/reset-password
   // Public - reset password with token
   fastify.post('/reset-password', {
-    handler: authController.resetPassword.bind(authController)
+    preHandler: validateBody(resetPasswordSchema, { onFail: authFormValidationFail }),
+    handler: authController.resetPassword.bind(authController),
   });
   
   // GET /admin/auth/reset-password
@@ -83,8 +78,7 @@ export default async function authRoutes(fastify) {
         return reply.redirect('/admin/auth/login');
       }
       
-      // Serve reset password page
-      return reply.type('text/html').send(resetPasswordPage({ token, error }));
+      return renderAdminPage(request, reply, resetPasswordMeta({}), resetPasswordContent({ token, error }));
     }
   });
 }
