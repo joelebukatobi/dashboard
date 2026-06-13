@@ -1,14 +1,12 @@
 // src/admin/templates/pages/tags/edit.js
 // Edit Tag Page
 
-import { mainLayout } from '../../layouts/main.js';
 import { escapeHtml } from '../../utils/helpers.js';
 
 /**
- * Edit Tag Page Template
- * Edit existing tag
+ * Edit Tag page inner content (layout applied via fastify-html addLayout).
  */
-export function tagEditPage({ tag, user, errors = {} }) {
+export function tagEditContent({ tag, user, errors = {} }) {
   const content = `
     <div class="tags">
       <div class="content">
@@ -102,16 +100,18 @@ export function tagEditPage({ tag, user, errors = {} }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function tagEditMeta({ tag }) {
+  return {
     title: 'Edit Tag',
     description: 'Edit tag',
-    content,
-    user,
     activeRoute: '/admin/tags',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Tags', url: '/admin/tags' },
-      { label: escapeHtml(tag.name), url: `/admin/tags/${tag.id}/edit` }
-    ]
-  });
+      { label: tag.name, url: `/admin/tags/${tag.id}/edit` },
+    ],
+  };
 }
