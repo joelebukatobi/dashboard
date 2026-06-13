@@ -1,13 +1,10 @@
 // src/admin/templates/pages/users/new.js
 // New User Page - Mirrors edit layout with placeholder avatar
 
-import { mainLayout } from '../../layouts/main.js';
-
 /**
- * New User Page Template
- * Create new user or send invitation
+ * New User page inner content (layout applied via fastify-html addLayout).
  */
-export function usersNewPage({ user, errors = {} }) {
+export function usersNewContent({ user, errors = {} }) {
   const content = `
     <div class="users">
       <div class="content">
@@ -181,16 +178,18 @@ export function usersNewPage({ user, errors = {} }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function userNewMeta() {
+  return {
     title: 'Add User',
     description: 'Invite a new team member',
-    content,
-    user,
     activeRoute: '/admin/users',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Users', url: '/admin/users' },
-      { label: 'Add User', url: '/admin/users/new' }
-    ]
-  });
+      { label: 'Add User', url: '/admin/users/new' },
+    ],
+  };
 }

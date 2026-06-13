@@ -1,14 +1,12 @@
 // src/admin/templates/pages/users/edit.js
 // Edit User Page - Two column layout with avatar upload
 
-import { mainLayout } from '../../layouts/main.js';
 import { escapeHtml, formatDate, formatRelativeTime, getInitials } from '../../utils/helpers.js';
 
 /**
- * Edit User Page Template
- * Two column layout: Left (form + avatar), Right (profile card with stats)
+ * Edit User page inner content (layout applied via fastify-html addLayout).
  */
-export function usersEditPage({ editUser, user, userStats = {}, errors = {} }) {
+export function usersEditContent({ editUser, user, userStats = {}, errors = {} }) {
   // Check if editing self
   const isSelf = user?.id === editUser?.id;
   // Check if this is the last admin
@@ -253,18 +251,20 @@ export function usersEditPage({ editUser, user, userStats = {}, errors = {} }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function userEditMeta({ editUser }) {
+  return {
     title: 'Edit User',
     description: 'Manage user details and permissions',
-    content,
-    user,
     activeRoute: '/admin/users',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Users', url: '/admin/users' },
-      { label: `${editUser.firstName} ${editUser.lastName}`, url: `/admin/users/${editUser.id}/edit` }
-    ]
-  });
+      { label: `${editUser.firstName} ${editUser.lastName}`, url: `/admin/users/${editUser.id}/edit` },
+    ],
+  };
 }
 
 /**

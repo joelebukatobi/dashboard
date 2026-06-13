@@ -1,6 +1,11 @@
 // src/admin/templates/pages/users/index.js
 // Barrel export for users module
 
-export { usersListPage } from './list.js';
-export { usersNewPage } from './new.js';
-export { usersEditPage } from './edit.js';
+export {
+  usersListContent,
+  usersListModals,
+  usersListMeta,
+  usersTableFragment,
+} from './list.js';
+export { usersNewContent, userNewMeta } from './new.js';
+export { usersEditContent, userEditMeta } from './edit.js';
