@@ -1,15 +1,10 @@
 // src/admin/templates/pages/subscribers/new.js
 // New Subscriber Page - Form to add a subscriber
 
-import { mainLayout } from '../../layouts/main.js';
-
 /**
- * New Subscriber Page Template
- * @param {Object} params - Template parameters
- * @param {Object} params.user - Current user
- * @param {string} params.error - Optional error message
+ * New Subscriber page inner content (layout applied via fastify-html addLayout).
  */
-export function newSubscriberPage({ user, error }) {
+export function newSubscriberContent({ user, error }) {
   const content = `
     <div class="subscribers">
       <div class="content">
@@ -80,16 +75,18 @@ export function newSubscriberPage({ user, error }) {
     </div>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function newSubscriberMeta() {
+  return {
     title: 'Add Subscriber',
     description: 'Add a new subscriber to your newsletter',
-    content,
-    user,
     activeRoute: '/admin/subscribers',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Subscribers', url: '/admin/subscribers' },
-      { label: 'Add Subscriber', url: '/admin/subscribers/new' }
-    ]
-  });
+      { label: 'Add Subscriber', url: '/admin/subscribers/new' },
+    ],
+  };
 }

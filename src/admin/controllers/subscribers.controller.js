@@ -2,10 +2,13 @@
 // Subscribers Controller - Handles HTTP requests for subscribers
 
 import { subscribersService } from '../../services/subscribers.service.js';
-import { subscribersListPage, renderSubscriberRow } from '../templates/pages/subscribers/list.js';
-import { newSubscriberPage } from '../templates/pages/subscribers/new.js';
-import { editSubscriberPage } from '../templates/pages/subscribers/edit.js';
-import { successToast, errorToast } from '../templates/partials/alerts.js';
+import {
+  renderAdminPage,
+  renderFragment,
+  renderEmpty,
+  errorAlert,
+  setHtmxTrigger,
+} from '../render.js';
 
 /**
  * Subscribers Controller
@@ -40,26 +43,28 @@ class SubscribersController {
         sortOrder
       });
 
-      // Check if HTMX request for partial update
-      const isHtmx = request.headers['hx-request'] === 'true';
+      const {
+        subscribersListContent,
+        subscribersListMeta,
+        subscribersTableFragment,
+      } = await import('../templates/pages/subscribers/index.js');
 
-      if (isHtmx) {
-        // Return table fragment matching what's inside #subscribers-table-container
-        return reply
-          .type('text/html')
-          .send(subscribersTableFragment({
-            subscribers: result.subscribers,
-            pagination: {
-              page: result.page,
-              totalPages: result.totalPages,
-            },
-            filters: { status, search },
-          }));
+      if (request.headers['hx-request'] === 'true') {
+        return renderFragment(reply, subscribersTableFragment({
+          subscribers: result.subscribers,
+          pagination: {
+            page: result.page,
+            totalPages: result.totalPages,
+          },
+          filters: { status, search },
+        }));
       }
 
-      // Render full page
-      return reply.type('text/html').send(
-        subscribersListPage({
+      return renderAdminPage(
+        request,
+        reply,
+        subscribersListMeta({ user: request.user }),
+        subscribersListContent({
           user,
           subscribers: result.subscribers,
           pagination: {
@@ -69,19 +74,12 @@ class SubscribersController {
           },
           filters: { status, search },
           toast
-        })
+        }),
       );
     } catch (error) {
       request.log.error(error);
-      return reply.type('text/html').send(
-        subscribersListPage({
-          user: request.user,
-          subscribers: [],
-          pagination: { page: 1, totalPages: 1, total: 0 },
-          filters: {},
-          error: 'Failed to load subscribers'
-        })
-      );
+      reply.code(500);
+      return renderFragment(reply, errorAlert({ message: 'Failed to load subscribers.' }));
     }
   }
 
@@ -91,14 +89,18 @@ class SubscribersController {
    */
   async new(request, reply) {
     try {
-      const user = request.user;
-      
-      return reply.type('text/html').send(
-        newSubscriberPage({ user })
+      const { newSubscriberContent, newSubscriberMeta } = await import('../templates/pages/subscribers/index.js');
+
+      return renderAdminPage(
+        request,
+        reply,
+        newSubscriberMeta(),
+        newSubscriberContent({ user: request.user }),
       );
     } catch (error) {
       request.log.error(error);
-      return reply.redirect('/admin/subscribers?error=failed');
+      reply.code(500);
+      return renderFragment(reply, errorAlert({ message: 'Failed to load form.' }));
     }
   }
 
@@ -108,21 +110,27 @@ class SubscribersController {
    */
   async edit(request, reply) {
     try {
-      const user = request.user;
       const { id } = request.params;
 
       // Get subscriber by ID
       const subscriber = await subscribersService.getSubscriberById(id);
       if (!subscriber) {
-        return reply.redirect('/admin/subscribers?error=notfound');
+        reply.code(404);
+        return renderFragment(reply, errorAlert({ message: 'Subscriber not found.' }));
       }
 
-      return reply.type('text/html').send(
-        editSubscriberPage({ user, subscriber })
+      const { editSubscriberContent, editSubscriberMeta } = await import('../templates/pages/subscribers/index.js');
+
+      return renderAdminPage(
+        request,
+        reply,
+        editSubscriberMeta({ subscriber }),
+        editSubscriberContent({ user: request.user, subscriber }),
       );
     } catch (error) {
       request.log.error(error);
-      return reply.redirect('/admin/subscribers?error=failed');
+      reply.code(500);
+      return renderFragment(reply, errorAlert({ message: 'Failed to load subscriber.' }));
     }
   }
 
@@ -134,20 +142,11 @@ class SubscribersController {
     try {
       const { email, status } = request.body;
 
-      if (!email) {
-        reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: 'Email is required.'
-        }));
-      }
-
       // Check if email already exists
       const existing = await subscribersService.getSubscriberByEmail(email);
       if (existing) {
         reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: 'A subscriber with this email already exists.'
-        }));
+        return renderFragment(reply, errorAlert({ message: 'A subscriber with this email already exists.' }));
       }
 
       // Create subscriber
@@ -159,23 +158,20 @@ class SubscribersController {
       const isHtmx = request.headers['hx-request'] === 'true';
 
       if (isHtmx) {
-        return reply
-          .code(201)
-          .type('text/html')
-          .header('HX-Trigger', JSON.stringify({
-            'toast': { message: 'Subscriber added successfully.', type: 'success' },
-            'subscriber-created': { id: subscriber.id }
-          }))
-          .send(this.renderSubscriberRow(subscriber, request.user));
+        const { renderSubscriberRow } = await import('../templates/pages/subscribers/index.js');
+        reply.code(201);
+        setHtmxTrigger(reply, {
+          toast: { message: 'Subscriber added successfully.', type: 'success' },
+          'subscriber-created': { id: subscriber.id },
+        });
+        return renderFragment(reply, renderSubscriberRow(subscriber));
       }
 
       return reply.redirect('/admin/subscribers?toast=created');
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
-        message: 'Failed to add subscriber.'
-      }));
+      return renderFragment(reply, errorAlert({ message: 'Failed to add subscriber.' }));
     }
   }
 
@@ -192,9 +188,7 @@ class SubscribersController {
       const existing = await subscribersService.getSubscriberById(id);
       if (!existing) {
         reply.code(404);
-        return reply.type('text/html').send(errorToast({
-          message: 'Subscriber not found.'
-        }));
+        return renderFragment(reply, errorAlert({ message: 'Subscriber not found.' }));
       }
 
       // If email is being changed, check for duplicates
@@ -202,9 +196,7 @@ class SubscribersController {
         const duplicate = await subscribersService.getSubscriberByEmail(email);
         if (duplicate) {
           reply.code(400);
-          return reply.type('text/html').send(errorToast({
-            message: 'A subscriber with this email already exists.'
-          }));
+          return renderFragment(reply, errorAlert({ message: 'A subscriber with this email already exists.' }));
         }
       }
 
@@ -217,21 +209,18 @@ class SubscribersController {
       const isHtmx = request.headers['hx-request'] === 'true';
 
       if (isHtmx) {
-        return reply
-          .type('text/html')
-          .header('HX-Trigger', JSON.stringify({
-            'toast': { message: 'Subscriber updated successfully.', type: 'success' }
-          }))
-          .send(this.renderSubscriberRow(subscriber, request.user));
+        const { renderSubscriberRow } = await import('../templates/pages/subscribers/index.js');
+        setHtmxTrigger(reply, {
+          toast: { message: 'Subscriber updated successfully.', type: 'success' },
+        });
+        return renderFragment(reply, renderSubscriberRow(subscriber));
       }
 
       return reply.redirect('/admin/subscribers?toast=updated');
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
-        message: 'Failed to update subscriber.'
-      }));
+      return renderFragment(reply, errorAlert({ message: 'Failed to update subscriber.' }));
     }
   }
 
@@ -247,9 +236,7 @@ class SubscribersController {
       const existing = await subscribersService.getSubscriberById(id);
       if (!existing) {
         reply.code(404);
-        return reply.type('text/html').send(errorToast({
-          message: 'Subscriber not found.'
-        }));
+        return renderFragment(reply, errorAlert({ message: 'Subscriber not found.' }));
       }
 
       // Delete subscriber
@@ -258,72 +245,20 @@ class SubscribersController {
       const isHtmx = request.headers['hx-request'] === 'true';
 
       if (isHtmx) {
-        return reply
-          .type('text/html')
-          .header('HX-Trigger', JSON.stringify({
-            'toast': { message: 'Subscriber deleted successfully.', type: 'success' },
-            'subscriberDeleted': { id: id }
-          }))
-          .send('');
+        setHtmxTrigger(reply, {
+          toast: { message: 'Subscriber deleted successfully.', type: 'success' },
+          subscriberDeleted: { id },
+        });
+        return renderEmpty(reply);
       }
 
       return reply.redirect('/admin/subscribers?toast=deleted');
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
-        message: 'Failed to delete subscriber.'
-      }));
+      return renderFragment(reply, errorAlert({ message: 'Failed to delete subscriber.' }));
     }
   }
-
-  /**
-   * Render a single subscriber row for HTMX updates
-   */
-  renderSubscriberRow(subscriber, user) {
-    return renderSubscriberRow(subscriber, user);
-  }
-
-  /**
-   * Render multiple subscriber rows for HTMX updates
-   */
-  renderSubscriberRows(subscribers, user) {
-    return subscribers.map(sub => renderSubscriberRow(sub, user)).join('');
-  }
-}
-
-/**
- * Generate subscribers table HTML fragment for HTMX updates
- * Matches what's inside #subscribers-table-container in list.js
- */
-function subscribersTableFragment({ subscribers, pagination, filters }) {
-  if (!subscribers || subscribers.length === 0) {
-    return `
-      <div class="empty">
-        <h3>No Subscribers Yet</h3>
-        <p>You don't have any subscribers yet. Click "Add Subscriber" to add one manually.</p>
-      </div>
-    `;
-  }
-
-  const rows = subscribers.map(subscriber => renderSubscriberRow(subscriber)).join('');
-
-  return `
-    <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Email</th>
-          <th>Status</th>
-          <th>Confirmed</th>
-          <th>Subscribed</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody class="table__tbody">
-        ${rows}
-      </tbody>
-    </table>
-  `;
 }
 
 export const subscribersController = new SubscribersController();

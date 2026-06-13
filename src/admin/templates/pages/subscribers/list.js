@@ -1,39 +1,23 @@
 // src/admin/templates/pages/subscribers/list.js
 // Subscribers List Page - Refactored with list-toolbar partial
 
-import { mainLayout } from '../../layouts/main.js';
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
-import { escapeHtml, formatRelativeTime, SUBSCRIBER_STATUS_LABELS } from '../../utils/helpers.js';
+import { escapeHtml, formatRelativeTime, SUBSCRIBER_STATUS_LABELS, paginationHtml, toastQueryScript } from '../../utils/helpers.js';
 
 
 
 /**
- * Subscribers List Page Template
- * Display all subscribers with filters and pagination
+ * Subscribers list page inner content (layout applied via fastify-html addLayout).
  */
-export function subscribersListPage({ subscribers, pagination, filters, user, toast }) {
+export function subscribersListContent({ subscribers, pagination, filters, user, toast }) {
   const { page, totalPages } = pagination;
 
-  // Build toast script
-  const toastScript = toast ? `
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const toastMessages = {
-          created: 'Subscriber added successfully!',
-          updated: 'Subscriber updated successfully!',
-          deleted: 'Subscriber deleted successfully!'
-        };
-        const message = toastMessages['${toast}'] || '${toast}';
-        document.body.dispatchEvent(new CustomEvent('htmx:toast', {
-          detail: { message: message, type: 'success' }
-        }));
-        const url = new URL(window.location);
-        url.searchParams.delete('toast');
-        window.history.replaceState({}, '', url);
-      });
-    </script>
-  ` : '';
+  const toastScript = toastQueryScript(toast, {
+    created: 'Subscriber added successfully!',
+    updated: 'Subscriber updated successfully!',
+    deleted: 'Subscriber deleted successfully!',
+  });
 
   // Build filters array for toolbar
   const toolbarFilters = [
@@ -48,18 +32,6 @@ export function subscribersListPage({ subscribers, pagination, filters, user, to
       ],
     },
   ];
-
-  // Initialize delete modal with custom config for subscribers
-  const deleteModal = new DeleteModal({
-    entityName: 'Subscriber',
-    entityLabel: 'email',
-    deleteUrlPath: '/admin/subscribers',
-    targetSelector: 'closest tr',
-    swapMode: 'outerHTML swap:300ms',
-    csrfToken: user?.csrfToken || '',
-    title: 'Delete Subscriber?',
-    message: '<span id="deleteEntityName"></span> will be deleted as a subscriber'
-  });
 
   const content = `
     <div class="subscribers">
@@ -92,24 +64,78 @@ export function subscribersListPage({ subscribers, pagination, filters, user, to
           }
         </div>
 
-        ${subscribers.length > 0 && totalPages > 1 ? paginationHtml({ page, totalPages, filters }) : ''}
+        ${subscribers.length > 0 && totalPages > 1 ? paginationHtml({ basePath: '/admin/subscribers', page, totalPages, filters, filterKeys: ['status', 'search'] }) : ''}
       </div>
     </div>
 
     ${toastScript}
   `;
 
-  return mainLayout({
+  return content;
+}
+
+/** Delete modal HTML for subscribers list page */
+export function subscribersListModals({ user }) {
+  const deleteModal = new DeleteModal({
+    entityName: 'Subscriber',
+    entityLabel: 'email',
+    deleteUrlPath: '/admin/subscribers',
+    targetSelector: 'closest tr',
+    swapMode: 'outerHTML swap:300ms',
+    csrfToken: user?.csrfToken || '',
+    title: 'Delete Subscriber?',
+    message: '<span id="deleteEntityName"></span> will be deleted as a subscriber'
+  });
+
+  return deleteModal.render();
+}
+
+/** Page metadata for subscribers list */
+export function subscribersListMeta({ user }) {
+  return {
     title: 'Subscribers',
     description: 'Manage newsletter subscribers',
-    content: content + deleteModal.render() + toastScript,
-    user,
     activeRoute: '/admin/subscribers',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
-      { label: 'Subscribers', url: '/admin/subscribers' }
-    ]
-  });
+      { label: 'Subscribers', url: '/admin/subscribers' },
+    ],
+    modals: subscribersListModals({ user }),
+  };
+}
+
+/**
+ * Generate subscribers table HTML fragment for HTMX updates
+ * Matches what's inside #subscribers-table-container in list.js
+ */
+export function subscribersTableFragment({ subscribers, pagination, filters }) {
+  if (!subscribers || subscribers.length === 0) {
+    return `
+      <div class="empty">
+        <h3>No Subscribers Yet</h3>
+        <p>You don't have any subscribers yet. Click "Add Subscriber" to add one manually.</p>
+      </div>
+    `;
+  }
+
+  const rows = subscribers.map(subscriber => renderSubscriberRow(subscriber)).join('');
+
+  return `
+    <table class="table">
+      <thead class="table__thead">
+        <tr>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Confirmed</th>
+          <th>Subscribed</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody class="table__tbody">
+        ${rows}
+      </tbody>
+    </table>
+  `;
 }
 
 /**
@@ -187,64 +213,6 @@ export function renderSubscriberRow(subscriber) {
         </div>
       </td>
     </tr>
-  `;
-}
-
-/**
- * Pagination HTML - matches Posts structure
- */
-function paginationHtml({ page, totalPages, filters }) {
-  // Build query prefix for filters
-  const queryPrefix = new URLSearchParams();
-  if (filters.status) queryPrefix.set('status', filters.status);
-  if (filters.search) queryPrefix.set('search', filters.search);
-  const queryString = queryPrefix.toString();
-  const queryPrefixWithAmpersand = queryString ? '&' + queryString : '';
-
-  // Previous button - always shows, disabled on page 1
-  const prevDisabled = page <= 1 ? 'pagination__item--disabled' : '';
-  const prevHref = page > 1 ? `/admin/subscribers?page=${page - 1}${queryPrefixWithAmpersand}` : '#';
-
-  // Next button - always shows, disabled on last page
-  const nextDisabled = page >= totalPages ? 'pagination__item--disabled' : '';
-  const nextHref = page < totalPages ? `/admin/subscribers?page=${page + 1}${queryPrefixWithAmpersand}` : '#';
-
-  // Page numbers logic (matching Posts pattern)
-  let pageNumbers = [];
-  const maxVisible = 5;
-
-  if (totalPages <= maxVisible) {
-    pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
-  } else if (page <= 3) {
-    pageNumbers = [1, 2, 3, 4, '...', totalPages];
-  } else if (page >= totalPages - 2) {
-    pageNumbers = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-  } else {
-    pageNumbers = [1, '...', page - 1, page, page + 1, '...', totalPages];
-  }
-
-  let pageLinks = '';
-  pageNumbers.forEach((p) => {
-    if (p === '...') {
-      pageLinks += '<span class="pagination__ellipsis">...</span>';
-    } else {
-      const activeClass = p === page ? 'pagination__item--active' : '';
-      pageLinks += `<a href="/admin/subscribers?page=${p}${queryPrefixWithAmpersand}" class="pagination__item ${activeClass}">${p}</a>`;
-    }
-  });
-
-  return `
-    <footer class="page-footer">
-      <div class="pagination">
-        <a href="${prevHref}" class="pagination__item ${prevDisabled}">
-          <i data-lucide="chevron-left"></i>
-        </a>
-        ${pageLinks}
-        <a href="${nextHref}" class="pagination__item ${nextDisabled}">
-          <i data-lucide="chevron-right"></i>
-        </a>
-      </div>
-    </footer>
   `;
 }
 
