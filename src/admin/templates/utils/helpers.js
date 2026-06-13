@@ -159,3 +159,103 @@ export const SUBSCRIBER_STATUS_LABELS = {
   'UNSUBSCRIBED': 'Unsubscribed',
   'BOUNCED': 'Bounced',
 };
+
+// ============================================================================
+// List page shared markup
+// ============================================================================
+
+/**
+ * Build admin list pagination footer markup.
+ * @param {Object} options
+ * @param {string} options.basePath - e.g. '/admin/categories'
+ * @param {number} options.page
+ * @param {number} options.totalPages
+ * @param {Record<string, string|undefined|null>} [options.filters]
+ * @param {Array<string|{ filter: string, param: string }>} [options.filterKeys]
+ * @returns {string}
+ */
+export function paginationHtml({ basePath, page, totalPages, filters = {}, filterKeys = ['search'] }) {
+  const params = new URLSearchParams();
+
+  for (const key of filterKeys) {
+    if (typeof key === 'string') {
+      if (filters?.[key]) params.set(key, filters[key]);
+    } else if (filters?.[key.filter]) {
+      params.set(key.param, filters[key.filter]);
+    }
+  }
+
+  const baseQuery = params.toString();
+  const queryPrefix = baseQuery ? `&${baseQuery}` : '';
+
+  let links = '';
+
+  const prevDisabled = page <= 1 ? 'pagination__item--disabled' : '';
+  const prevHref = page > 1 ? `${basePath}?page=${page - 1}${queryPrefix}` : '#';
+  links += `<a href="${prevHref}" class="pagination__item ${prevDisabled}"><i data-lucide="chevron-left"></i></a>`;
+
+  let pageNumbers = [];
+  const maxVisible = 5;
+
+  if (totalPages <= maxVisible) {
+    pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+  } else if (page <= 3) {
+    pageNumbers = [1, 2, 3, 4, '...', totalPages];
+  } else if (page >= totalPages - 2) {
+    pageNumbers = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+  } else {
+    pageNumbers = [1, '...', page - 1, page, page + 1, '...', totalPages];
+  }
+
+  pageNumbers.forEach((p) => {
+    if (p === '...') {
+      links += '<span class="pagination__ellipsis">...</span>';
+    } else {
+      const active = p === page ? 'pagination__item--active' : '';
+      links += `<a href="${basePath}?page=${p}${queryPrefix}" class="pagination__item ${active}">${p}</a>`;
+    }
+  });
+
+  const nextDisabled = page >= totalPages ? 'pagination__item--disabled' : '';
+  const nextHref = page < totalPages ? `${basePath}?page=${page + 1}${queryPrefix}` : '#';
+  links += `<a href="${nextHref}" class="pagination__item ${nextDisabled}"><i data-lucide="chevron-right"></i></a>`;
+
+  return `
+    <footer class="page-footer">
+      <div class="pagination">
+        ${links}
+      </div>
+    </footer>
+  `;
+}
+
+/**
+ * Inline script that shows a toast from a ?toast= query param.
+ * @param {string|undefined|null} toast
+ * @param {Record<string, string>} messages
+ * @returns {string}
+ */
+export function toastQueryScript(toast, messages = {}) {
+  if (!toast) return '';
+
+  const messageMap = Object.entries(messages)
+    .map(([key, message]) => `          ${JSON.stringify(key)}: ${JSON.stringify(message)}`)
+    .join(',\n');
+
+  return `
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const toastMessages = {
+${messageMap}
+        };
+        const message = toastMessages[${JSON.stringify(toast)}] || ${JSON.stringify(toast)};
+        document.body.dispatchEvent(new CustomEvent('htmx:toast', {
+          detail: { message: message, type: 'success' }
+        }));
+        const url = new URL(window.location);
+        url.searchParams.delete('toast');
+        window.history.replaceState({}, '', url);
+      });
+    </script>
+  `;
+}
