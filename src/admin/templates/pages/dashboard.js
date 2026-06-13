@@ -1,10 +1,8 @@
 // src/admin/templates/pages/dashboard.js
 // Dashboard page template
 
-import { mainLayout } from '../layouts/main.js';
-
 /**
- * Dashboard Page Template
+ * Dashboard page inner content (layout applied via fastify-html addLayout).
  * Displays quick stats, traffic chart, recent activity, and top posts
  *
  * @param {Object} options
@@ -17,9 +15,9 @@ import { mainLayout } from '../layouts/main.js';
  * @param {Array} options.activity - Recent activity items
  * @param {Array} options.recentPosts - Recent posts list
  * @param {Array} options.topPosts - Top performing posts
- * @returns {string} Complete HTML page
+ * @returns {string} Inner HTML for the dashboard content area
  */
-export function dashboardPage({ user, stats = {}, activity = [], recentPosts = [], topPosts = [], range = '30d', trafficChart = '' }) {
+export function dashboardContent({ user, stats = {}, activity = [], recentPosts = [], topPosts = [], range = '30d', trafficChart = '' }) {
   const {
     totalPosts = 0,
     totalViews = '0',
@@ -251,13 +249,22 @@ export function dashboardPage({ user, stats = {}, activity = [], recentPosts = [
   </div>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+/**
+ * Dashboard page metadata for fastify-html addLayout.
+ *
+ * @param {Object} [_options]
+ * @param {Object} [_options.user] - Current user data
+ * @returns {{ title: string, description: string, activeRoute: string }}
+ */
+export function dashboardMeta({ user: _user } = {}) {
+  return {
     title: 'Dashboard',
     description: 'BlogCMS Dashboard - Overview',
-    content,
-    user,
-    activeRoute: '/admin'
-  });
+    activeRoute: '/admin',
+  };
 }
 
 // Helper function for activity items
