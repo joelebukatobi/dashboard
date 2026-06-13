@@ -1,7 +1,7 @@
 // src/admin/controllers/auth.controller.js
 import { authService } from '../../services/auth.service.js';
-import { validate, loginSchema } from '../../utils/validators.js';
-import { validatePasswordStrength, checkRateLimit, clearRateLimit } from '../../utils/security.js';
+import { checkRateLimit, clearRateLimit } from '../../utils/security.js';
+import { errorAlert, successAlert } from '../render.js';
 
 // In-memory rate limit store (use Redis in production)
 const loginAttempts = new Map();
@@ -25,21 +25,10 @@ class AuthController {
       const rateLimit = checkRateLimit(loginAttempts, clientIp, 5, 15 * 60 * 1000);
       if (rateLimit.blocked) {
         reply.code(429);
-        return reply.type('text/html').send(errorToast({
-          message: 'Too many login attempts. Please try again in 15 minutes.'
-        }));
+        return reply.html`${'Too many login attempts. Please try again in 15 minutes.'}`;
       }
       
-      // Validate request body
-      const validation = validate(loginSchema, request.body);
-      if (!validation.success) {
-        reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: validation.errors.join(', ')
-        }));
-      }
-      
-      const { email, password, rememberMe } = validation.data;
+      const { email, password, rememberMe } = request.body;
       
       // Validate credentials
       const result = await authService.validateCredentials(email, password);
@@ -59,7 +48,7 @@ class AuthController {
         };
         
         const message = errorMessages[result.errorType] || 'Invalid credentials';
-        return reply.type('text/html').send(message);
+        return reply.html`${message}`;
       }
       
       // Clear rate limit on successful login
@@ -89,16 +78,14 @@ class AuthController {
       
       // Return success with redirect
       reply.header('HX-Redirect', '/admin');
-      return reply.type('text/html').send(successToast({
+      return reply.html`!${successAlert({
         message: 'Login successful! Redirecting...'
-      }));
+      })}`;
       
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
-        message: 'An unexpected error occurred. Please try again.'
-      }));
+      return reply.html`${'An unexpected error occurred. Please try again.'}`;
     }
   }
 
@@ -130,16 +117,16 @@ class AuthController {
       
       // Redirect to login
       reply.header('HX-Redirect', '/admin/auth/login');
-      return reply.type('text/html').send(successToast({
+      return reply.html`!${successAlert({
         message: 'Logged out successfully'
-      }));
+      })}`;
       
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
+      return reply.html`!${errorAlert({
         message: 'Error during logout'
-      }));
+      })}`;
     }
   }
 
@@ -173,13 +160,6 @@ class AuthController {
     try {
       const { email } = request.body;
       
-      if (!email) {
-        reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: 'Email is required'
-        }));
-      }
-      
       // Find user
       const user = await authService.findUserByEmail(email);
       
@@ -192,16 +172,16 @@ class AuthController {
         request.log.info(`Password reset token for ${email}: ${token}`);
       }
       
-      return reply.type('text/html').send(successToast({
+      return reply.html`!${successAlert({
         message: 'If an account exists with this email, you will receive reset instructions.'
-      }));
+      })}`;
       
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
+      return reply.html`!${errorAlert({
         message: 'An error occurred. Please try again.'
-      }));
+      })}`;
     }
   }
 
@@ -211,65 +191,34 @@ class AuthController {
    */
   async resetPassword(request, reply) {
     try {
-      const { token, password, confirmPassword } = request.body;
-      
-      // Validate passwords match
-      if (password !== confirmPassword) {
-        reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: 'Passwords do not match'
-        }));
-      }
-      
-      // Validate password strength
-      const passwordCheck = validatePasswordStrength(password);
-      if (!passwordCheck.valid) {
-        reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: passwordCheck.errors.join('. ')
-        }));
-      }
+      const { token, password } = request.body;
       
       // Validate token
       const resetData = await authService.validatePasswordResetToken(token);
       
       if (!resetData) {
         reply.code(400);
-        return reply.type('text/html').send(errorToast({
+        return reply.html`!${errorAlert({
           message: 'This reset link is invalid or has expired.'
-        }));
+        })}`;
       }
       
       // Reset password
       await authService.resetPassword(resetData.user.id, password);
       
       reply.header('HX-Redirect', '/admin/auth/login?reset=success');
-      return reply.type('text/html').send(successToast({
+      return reply.html`!${successAlert({
         message: 'Password reset successful. Please login with your new password.'
-      }));
+      })}`;
       
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
+      return reply.html`!${errorAlert({
         message: 'An error occurred. Please try again.'
-      }));
+      })}`;
     }
   }
-}
-
-// Helper functions for HTMX responses
-function errorToast({ message }) {
-  return message;
-}
-
-function successToast({ message }) {
-  return `
-    <div class="alert alert--success alert--mb" role="alert">
-      <i data-lucide="check-circle" class="alert__icon"></i>
-      <span class="alert__message">${message}</span>
-    </div>
-  `;
 }
 
 // Export singleton
