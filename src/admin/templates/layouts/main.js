@@ -22,7 +22,11 @@ import { header } from '../partials/header.js';
  * @param {string} [options.activeRoute] - Currently active route for sidebar highlighting
  * @returns {string} Complete HTML page
  */
-export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboard', content, user, activeRoute = '/', breadcrumbs = [], modals = '' }) {
+/**
+ * Dashboard shell HTML (sidebar + header + scripts).
+ * Used by mainLayout (legacy) and fastify-html addLayout.
+ */
+export function buildDashboardShell({ title = 'Dashboard', description = 'BlogCMS Dashboard', content, user, activeRoute = '/', breadcrumbs = [], modals = '' }) {
   return `<!doctype html>
 <html lang="en" class="scroll-smooth">
   <head>
@@ -32,7 +36,7 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
     <meta name="description" content="${description}" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/dist/images/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

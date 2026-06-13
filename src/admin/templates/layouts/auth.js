@@ -11,7 +11,11 @@
  * @param {string} options.body - Main content to render in the form panel
  * @returns {string} Complete HTML page
  */
-export function authLayout({ title = 'Sign In', description = 'Sign in to your account', body }) {
+/**
+ * Auth shell HTML (login split layout + scripts).
+ * Used by authLayout (legacy) and fastify-html addLayout.
+ */
+export function buildAuthShell({ title = 'Sign In', description = 'Sign in to your account', body }) {
   return `<!doctype html>
 <html lang="en" class="scroll-smooth">
   <head>
@@ -21,7 +25,7 @@ export function authLayout({ title = 'Sign In', description = 'Sign in to your a
     <meta name="description" content="${description}" />
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/dist/images/favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
