@@ -99,3 +99,7 @@ public/vendor/
 /*.png
 admin-*.yml
 home-page-snapshot.txt
+_backups/
+
+# Compiled assets
+dist/
