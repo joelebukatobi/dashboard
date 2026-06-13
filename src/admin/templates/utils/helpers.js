@@ -14,6 +14,18 @@ export function getInitials(firstName, lastName) {
 }
 
 /**
+ * Get initials from a full name by splitting on spaces
+ * @param {string} name - Full name (e.g., "Sarah Miller")
+ * @returns {string} - Initials (e.g., "SM")
+ */
+export function getNameInitials(name) {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || '';
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/**
  * Escape HTML to prevent XSS
  * @param {string} text - Text to escape
  * @returns {string} - Escaped HTML

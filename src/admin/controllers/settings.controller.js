@@ -136,8 +136,7 @@ class SettingsController {
         }));
       }
 
-      // TODO: Implement logo upload similar to avatar upload
-      // For now, return success
+      // Logo upload placeholder
       return reply.type('text/html').send(successToast({
         message: 'Logo upload not yet implemented.',
       }));

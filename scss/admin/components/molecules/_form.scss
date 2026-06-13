@@ -62,6 +62,23 @@
     &--tight {
       @apply mb-0 mt-6;
     }
+
+    &--last {
+      @apply mb-0;
+    }
+
+    // Force label-first ordering regardless of DOM manipulation (Preline/HTMX)
+    &--ordered {
+      @apply flex flex-col;
+
+      .label {
+        @apply order-1;
+      }
+
+      > *:not(.label) {
+        @apply order-2;
+      }
+    }
   }
 
   // Input wrapper for icons/addons (positioning only)
@@ -69,7 +86,19 @@
     @apply relative flex items-center;
 
     .input__icon {
-      @apply absolute top-1/2 -translate-y-1/2;
+      @apply absolute top-1/2 -translate-y-1/2 text-grey-400 pointer-events-none;
+
+      &--right {
+        @apply right-[1.2rem];
+      }
+
+      &--left {
+        @apply left-[1.2rem];
+      }
+    }
+
+    .input {
+      @apply pr-[3.6rem];
     }
   }
 
@@ -79,15 +108,66 @@
 
     &--2col {
       @apply grid-cols-1 md:grid-cols-2;
+
+      > .form__group {
+        @apply mb-0;
+      }
     }
 
     &--3col {
       @apply grid-cols-1 md:grid-cols-3;
+
+      > .form__group {
+        @apply mb-0;
+      }
+    }
+
+    &--sidebar {
+      @apply grid-cols-1 lg:grid-cols-[1fr_2fr] gap-[3.2rem];
+
+      > .form__group {
+        @apply flex flex-col mb-0;
+
+        .form__photo {
+          @apply flex-1 min-h-0;
+        }
+      }
     }
   }
 
   &__stack {
     @apply flex flex-col gap-[1.2rem];
+  }
+
+  &__photo {
+    @apply relative w-full aspect-square overflow-hidden cursor-pointer rounded-md;
+
+    img {
+      @apply w-full h-full object-cover rounded-md;
+    }
+  }
+
+  &__photo-placeholder {
+    @apply w-full h-full bg-grey-200 flex items-center justify-center;
+    @apply text-grey-500 text-[4.8rem] font-sans font-semibold uppercase rounded-md;
+  }
+
+  &__photo-overlay {
+    @apply absolute inset-0 bg-black/50 flex flex-col items-center justify-center;
+    @apply gap-[0.8rem] text-white opacity-0 transition-opacity duration-200 rounded-md;
+    @apply pointer-events-none;
+
+    span {
+      @apply text-[1.4rem] font-sans;
+
+      &:last-child {
+        @apply text-[1.2rem] text-white/70 font-sans;
+      }
+    }
+  }
+
+  &__photo:hover &__photo-overlay {
+    @apply opacity-100;
   }
 
   &__divider {
@@ -194,7 +274,7 @@
   }
 
   &__field-group {
-    @apply flex items-center gap-[1.6rem];
+    @apply flex flex-wrap items-center gap-[1.6rem];
   }
 
   &__avatar-group {

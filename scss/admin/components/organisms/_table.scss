@@ -203,6 +203,19 @@
     @apply flex items-center gap-[1.2rem];
   }
 
+  // Avatar in table cells
+  &__avatar {
+    @apply flex-shrink-0;
+
+    &-img {
+      @apply w-[4rem] h-[4rem] rounded-full object-cover;
+    }
+
+    &-placeholder {
+      @apply w-[4rem] h-[4rem] rounded-full bg-maroon flex items-center justify-center text-white text-[1.4rem] font-forum font-semibold uppercase;
+    }
+  }
+
   // Comments link in table
   &__comments-link {
     @apply inline-flex items-center gap-[0.6rem];

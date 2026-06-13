@@ -91,4 +91,40 @@
 // Footer - action buttons
 .modal__footer {
   @apply flex flex-col gap-3 p-6 pt-2;
+
+  // Row layout variant (for modals with horizontal button pairs)
+  &--row {
+    @apply flex-row flex-wrap items-center gap-[1.6rem] p-[1.6rem];
+
+    // Each button takes half the available space
+    .btn {
+      @apply flex-1;
+    }
+  }
+}
+
+// Panel size modifiers
+.modal__panel {
+  &--large {
+    @apply max-w-[60rem];
+  }
+}
+
+.modal__body {
+  @apply flex-1 overflow-auto p-6;
+}
+
+.modal__close {
+  @apply absolute top-4 right-4;
+  @apply w-8 h-8 flex items-center justify-center;
+  @apply rounded-lg text-grey-400 hover:text-grey-600 hover:bg-grey-100;
+  @apply transition-colors;
+
+  .dark & {
+    @apply hover:text-grey-200 hover:bg-grey-700;
+  }
+
+  svg, i {
+    @apply w-5 h-5;
+  }
 }

@@ -20,7 +20,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Build outputs
-dist/
 build/
 .build/
 *.tsbuildinfo
@@ -71,6 +70,11 @@ cookies.txt
 .opencode/
 .playwright-mcp/
 .tmp/
+.cursor/
+
+# AI assistant prompts
+dashboard-prompt.json
+session*.json
 
 # Session exports from AI assistants
 session*.json
@@ -81,5 +85,17 @@ docs/
 # Generated media uploads/cache
 public/uploads/images/image-*
 public/uploads/images/thumbs/
+public/uploads/images/pexels-*
 public/uploads/posts/post-*
+public/uploads/events/
+public/uploads/board-members/
 public/uploads/videos/thumbs/thumb-*
+public/uploads/videos/*.mp4
+
+# Built vendor bundles
+public/vendor/
+
+# Screenshots and test artifacts
+/*.png
+admin-*.yml
+home-page-snapshot.txt

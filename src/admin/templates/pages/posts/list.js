@@ -71,15 +71,17 @@ export function postsListPage({ posts, total, page, totalPages, categories, filt
 
         <!-- Data Filter -->
         ${listToolbar({
+          searchUrl: '/admin/posts',
+          searchTarget: '#posts-table-container',
           searchPlaceholder: 'Search posts...',
           searchValue: filters.search || '',
           filters: toolbarFilters,
           hasAddButton: true,
           addButtonUrl: '/admin/posts/new',
-          addButtonText: posts.length === 0 ? 'Create First Post' : 'New Post',
+          addButtonText: 'New Post',
         })}
 
-        <div class="posts__table-content">
+        <div id="posts-table-container" class="posts__table-content">
         ${
           posts.length === 0
             ? emptyState()

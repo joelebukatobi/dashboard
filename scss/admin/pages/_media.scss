@@ -84,11 +84,22 @@
 
   &__sidebar {
     @apply w-full lg:w-[32rem] flex-shrink-0;
+
+    .card__panel {
+      .card__body {
+        @apply p-0;
+      }
+
+      .card__footer {
+        @apply px-0 py-[1.6rem];
+      }
+    }
   }
 }
 
 // Upload zone styling
 .upload-zone {
+  @apply relative;
   @apply flex-1;
   @apply flex flex-col items-center justify-center;
   @apply min-h-[40rem];
@@ -319,3 +330,169 @@
     }
   }
 }
+
+// ============================================================================
+// Video Preview Component with Blurred Background
+// (Used on video edit page)
+// ============================================================================
+
+.video-preview-container {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-grey-900);
+  min-height: 40rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // Background video (blurred backdrop)
+  .video-preview-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(10px) brightness(0.7);
+    transform: scale(1.2);
+    z-index: 1;
+  }
+
+  // Main video (foreground)
+  .video-preview-main {
+    position: relative;
+    z-index: 2;
+    max-height: 500px;
+    width: auto;
+    max-width: 100%;
+    display: block;
+  }
+}
+
+// ============================================================================
+// Image Preview Component with Blurred Background
+// (Used on image new/edit pages)
+// ============================================================================
+
+.image-preview-container {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-grey-900);
+  min-height: 40rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // Background image (blurred backdrop)
+  .image-preview-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(20px) brightness(0.7);
+    transform: scale(1.2);
+    z-index: 1;
+  }
+
+  // Main image (foreground)
+  .image-preview-main {
+    position: relative;
+    z-index: 2;
+    max-height: 500px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+  }
+}
+
+// Mobile: Disable blurred backgrounds, keep simple layout
+@media (max-width: 768px) {
+  .video-preview-container {
+    min-height: auto;
+    background: transparent;
+
+    .video-preview-bg {
+      display: none;
+    }
+
+    .video-preview-main {
+      max-height: 300px;
+      position: static;
+    }
+  }
+
+  .image-preview-container {
+    min-height: auto;
+    background: transparent;
+
+    .image-preview-bg {
+      display: none;
+    }
+
+    .image-preview-main {
+      max-height: 300px;
+      position: static;
+    }
+  }
+}
+
+// ============================================================================
+// Batch Upload Styles
+// ============================================================================
+
+.batch-upload-zone {
+  position: relative;
+  min-height: 20rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-grey-300);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-grey-50);
+  margin-bottom: 2rem;
+  transition: all 0.2s ease;
+
+  &--dragover {
+    border-color: var(--color-blue-500);
+    background-color: var(--color-blue-50);
+  }
+
+  &--has-files {
+    min-height: 8rem;
+    border-style: solid;
+    border-color: var(--color-grey-200);
+  }
+
+  .upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-grey-500);
+
+    p:first-of-type {
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    p:last-of-type {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.batch-album-section {
+  margin-bottom: 2rem;
+  max-width: 400px;
+}
+
+.batch-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+

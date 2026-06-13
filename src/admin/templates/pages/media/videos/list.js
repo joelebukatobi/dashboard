@@ -59,16 +59,17 @@ export function videosListPage({ user, videos, pagination, stats, filters, toast
 
         <!-- Data Filter -->
         ${listToolbar({
+          searchUrl: '/admin/media/videos',
+          searchTarget: '#videos-table-container',
           searchPlaceholder: 'Search videos...',
           searchValue: filters.search || '',
           filters: [],
           hasAddButton: true,
           addButtonUrl: '/admin/media/videos/new',
-          addButtonText: 'New Video',
+          addButtonText: 'Upload Video',
         })}
 
-        <!-- Media Grid -->
-        <div class="media-grid">
+        <div id="videos-table-container" class="media-grid">
           ${videos && videos.length > 0 ? videos.map((video) => {
             const extension = video.filename.split('.').pop().toUpperCase();
             return `

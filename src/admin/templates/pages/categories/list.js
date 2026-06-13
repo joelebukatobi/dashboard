@@ -60,6 +60,8 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
 
         <!-- Data Filter -->
         ${listToolbar({
+          searchUrl: '/admin/categories',
+          searchTarget: '#categories-table-container',
           searchPlaceholder: 'Search categories...',
           searchValue: filters.search || '',
           filters: [],
@@ -68,7 +70,7 @@ export function categoriesListPage({ categories, total, page, totalPages, filter
           addButtonText: categories.length === 0 ? 'Create First Category' : 'New Category',
         })}
 
-        <div class="categories__table-content">
+        <div id="categories-table-container" class="categories__table-content">
         ${
           categories.length === 0
             ? emptyState()

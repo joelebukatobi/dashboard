@@ -126,6 +126,14 @@ export function sidebar({ activeRoute = '/', user } = {}) {
                 <span class="sidebar__item-text">Videos</span>
               </a>
             </li>
+            <li>
+              <a href="/admin/media/albums" class="sidebar__item ${isActive('/admin/media/albums')}">
+                <span class="sidebar__item-icon">
+                  <i data-lucide="folder-open"></i>
+                </span>
+                <span class="sidebar__item-text">Albums</span>
+              </a>
+            </li>
           </ul>
         </div>
 

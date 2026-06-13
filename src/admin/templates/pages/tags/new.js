@@ -39,7 +39,7 @@ export function tagNewPage({ user, errors = {} }) {
             <div class="form__row form__row--2col">
               <!-- Name -->
               <div class="form__group ${errors.name ? 'form__group--error' : ''}">
-                <label class="label label--required">Name</label>
+                <label class="label label--required" for="tagName">Name</label>
                 <input
                   type="text"
                   class="input"
@@ -52,7 +52,7 @@ export function tagNewPage({ user, errors = {} }) {
               </div>
               <!-- Slug -->
               <div class="form__group ${errors.slug ? 'form__group--error' : ''}">
-                <label class="label">Slug</label>
+                <label class="label" for="tagSlug">Slug</label>
                 <input
                   type="text"
                   class="input"
@@ -67,7 +67,7 @@ export function tagNewPage({ user, errors = {} }) {
 
             <!-- Description -->
             <div class="form__group">
-              <label class="label">Description</label>
+              <label class="label" for="tagDescription">Description</label>
               <textarea
                 class="textarea"
                 id="tagDescription"
@@ -86,7 +86,7 @@ export function tagNewPage({ user, errors = {} }) {
               <i data-lucide="plus"></i>
               Create Tag
             </button>
-            <a href="/admin/tags" class="btn btn--ghost btn--cancel">Cancel</a>
+            <a href="/admin/tags" class="btn btn--outline btn--cancel">Cancel</a>
           </div>
         </div>
       </div>

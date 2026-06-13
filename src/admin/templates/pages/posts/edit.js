@@ -37,7 +37,7 @@ export function postEditPage({ categories, tags, post, user }) {
           >
             <!-- Featured Image -->
             <div class="form__group">
-              <label class="label">Featured Image</label>
+              <label class="label" for="imageInput">Featured Image</label>
               <div class="image-upload">
                 <div class="image-upload__preview has-image" id="imagePreview">
                   <img src="${post.featuredImageUrl || '/public/uploads/images/featured-posts.jpg'}" alt="Featured image preview" id="previewImg" />
@@ -56,7 +56,7 @@ export function postEditPage({ categories, tags, post, user }) {
             <div class="form__row form__row--2col">
               <!-- Title -->
               <div class="form__group">
-                <label class="label label--required">Post Title</label>
+                <label class="label label--required" for="postTitle">Post Title</label>
                 <input
                   type="text"
                   class="input"
@@ -70,7 +70,7 @@ export function postEditPage({ categories, tags, post, user }) {
 
               <!-- Slug -->
               <div class="form__group">
-                <label class="label">Slug</label>
+                <label class="label" for="postSlug">Slug</label>
                 <input
                   type="text"
                   class="input"
@@ -87,7 +87,7 @@ export function postEditPage({ categories, tags, post, user }) {
             <div class="form__row form__row--3col">
               <!-- Author -->
               <div class="form__group">
-                <label class="label label--required">Author</label>
+                <label class="label label--required" for="postAuthor">Author</label>
                 <select
                   name="authorId"
                   id="postAuthor"
@@ -105,7 +105,7 @@ export function postEditPage({ categories, tags, post, user }) {
 
               <!-- Category -->
               <div class="form__group">
-                <label class="label label--required">Category</label>
+                <label class="label label--required" for="postCategory">Category</label>
                 <select
                   name="categoryId"
                   id="postCategory"
@@ -126,7 +126,7 @@ export function postEditPage({ categories, tags, post, user }) {
 
               <!-- Tags -->
               <div class="form__group">
-                <label class="label">Tags</label>
+                <label class="label" for="postTags">Tags</label>
                 <select
                   name="tagIds"
                   id="postTags"
@@ -148,9 +148,10 @@ export function postEditPage({ categories, tags, post, user }) {
 
             <!-- Short Description -->
             <div class="form__group">
-              <label class="label">Short Description</label>
+              <label class="label" for="postExcerpt">Short Description</label>
               <textarea
                 class="textarea"
+                id="postExcerpt"
                 name="excerpt"
                 rows="3"
                 placeholder="Brief summary of the post (optional)"
@@ -159,7 +160,7 @@ export function postEditPage({ categories, tags, post, user }) {
 
             <!-- Content (Rich Text Editor) -->
             <div class="form__group">
-              <label class="label label--required">Content</label>
+              <label class="label label--required" for="editor">Content</label>
               <div id="editor" class="post-editor"></div>
               <input type="hidden" name="content" id="contentInput" value="${escapeHtml(post.content)}" />
             </div>
@@ -170,12 +171,12 @@ export function postEditPage({ categories, tags, post, user }) {
         <div class="card__footer">
           <div class="form__field-group">
             <button type="button" class="btn btn--primary" onclick="submitForm('PUBLISHED')">
-              ${post.status === 'PUBLISHED' ? 'Update Post' : 'Publish Post'}
+              Save
             </button>
             <button type="button" class="btn btn--outline-primary" onclick="submitForm('DRAFT')">
               Save Draft
             </button>
-            <a href="/admin/posts" class="btn btn--ghost btn--cancel">Cancel</a>
+            <a href="/admin/posts" class="btn btn--outline btn--cancel">Cancel</a>
           </div>
         </div>
       </div>

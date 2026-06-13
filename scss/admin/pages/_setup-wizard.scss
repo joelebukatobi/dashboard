@@ -21,35 +21,4 @@
   }
 }
 
-// Remove double margin when form__group is inside form__row
-.form__row {
-  .form__group {
-    @apply mb-0;
-  }
-}
 
-// Form hint text (e.g., password requirements)
-.form__hint {
-  @apply block mt-[0.8rem] text-body-sm text-grey-500;
-
-  .dark & {
-    @apply text-grey-400;
-  }
-}
-
-// Inline checkbox with aligned text (no background)
-.checkbox-inline {
-  @apply flex items-center gap-[0.8rem];
-
-  .checkbox {
-    @apply flex-shrink-0;
-  }
-
-  &__text {
-    @apply text-body-sm text-grey-500;
-
-    .dark & {
-      @apply text-grey-400;
-    }
-  }
-}

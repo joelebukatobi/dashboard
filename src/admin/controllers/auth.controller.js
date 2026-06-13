@@ -188,8 +188,7 @@ class AuthController {
         // Create reset token
         const token = await authService.createPasswordResetToken(user.id);
         
-        // TODO: Send email with reset link
-        // In development, just log it
+        // Password reset email placeholder
         request.log.info(`Password reset token for ${email}: ${token}`);
       }
       

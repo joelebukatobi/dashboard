@@ -19,9 +19,8 @@ export function newSubscriberPage({ user, error }) {
             <h1 class="page-header__title">Add Subscriber</h1>
             <p class="page-header__subtitle">Add a new subscriber to your newsletter</p>
           </div>
+          <div class="page-header__toast-container"></div>
         </div>
-
-        ${error ? `<div class="alert alert--error alert--mb">${error}</div>` : ''}
 
         <!-- Form -->
         <div class="card">
@@ -35,18 +34,6 @@ export function newSubscriberPage({ user, error }) {
               <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
 
               <div class="form__group">
-                <label class="label label--required" for="name">Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  class="input"
-                  placeholder="John Doe"
-                  required
-                />
-              </div>
-
-              <div class="form__group">
                 <label class="label label--required" for="email">Email</label>
                 <input
                   type="email"
@@ -58,7 +45,7 @@ export function newSubscriberPage({ user, error }) {
                 />
               </div>
 
-              <div class="form__group">
+              <div class="form__group form__group--ordered">
                 <label class="label" for="status">Status</label>
                 <select
                   id="status"
@@ -82,9 +69,10 @@ export function newSubscriberPage({ user, error }) {
           <div class="card__footer">
             <div class="form__field-group">
               <button type="submit" form="newSubscriberForm" class="btn btn--primary">
+                <i data-lucide="plus"></i>
                 Add Subscriber
               </button>
-              <a href="/admin/subscribers" class="btn btn--ghost btn--cancel">Cancel</a>
+              <a href="/admin/subscribers" class="btn btn--outline btn--cancel">Cancel</a>
             </div>
           </div>
         </div>

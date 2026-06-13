@@ -1,12 +1,13 @@
 // src/admin/templates/partials/list-toolbar.js
 // Reusable list toolbar component for all list pages
-// This is a CREATE-ONLY file - not integrated yet for testing
 
 /**
  * List Toolbar Partial
  * Provides consistent toolbar layout across all list pages
  *
  * @param {Object} options
+ * @param {string} options.searchUrl - URL for search requests (e.g. /admin/tags)
+ * @param {string} options.searchTarget - HTMX target selector (e.g. #tags-table-container)
  * @param {string} options.searchPlaceholder - Placeholder text for search input
  * @param {string} options.searchValue - Current search value
  * @param {Array} options.filters - Array of filter dropdowns
@@ -16,12 +17,15 @@
  * @returns {string} HTML string
  */
 export function listToolbar({
+  searchUrl = '',
+  searchTarget = '#table-container',
   searchPlaceholder = 'Search...',
   searchValue = '',
   filters = [],
   hasAddButton = false,
   addButtonUrl = '#',
   addButtonText = 'Add New',
+  extraButtons = '',
 }) {
   const filtersHtml = filters
     .map(
@@ -62,18 +66,20 @@ export function listToolbar({
         <i data-lucide="search" class="list-toolbar__search-icon"></i>
         <input
           type="text"
+          name="search"
           class="list-toolbar__search-input"
           placeholder="${searchPlaceholder}"
           value="${searchValue}"
-          hx-get=""
+          hx-get="${searchUrl}"
           hx-trigger="keyup changed delay:300ms"
-          hx-target="#table-container"
+          hx-target="${searchTarget}"
           hx-push-url="true"
         />
       </div>
       <div class="list-toolbar__filters">
         ${filtersHtml}
         ${addButtonHtml}
+        ${extraButtons}
       </div>
     </div>
   `;
@@ -84,6 +90,8 @@ export function listToolbar({
  * For pages without filters (simple search + add)
  */
 export function listToolbarMinimal({
+  searchUrl = '',
+  searchTarget = '#table-container',
   searchPlaceholder = 'Search...',
   searchValue = '',
   hasAddButton = false,
@@ -105,12 +113,13 @@ export function listToolbarMinimal({
         <i data-lucide="search" class="list-toolbar__search-icon"></i>
         <input
           type="text"
+          name="search"
           class="list-toolbar__search-input"
           placeholder="${searchPlaceholder}"
           value="${searchValue}"
-          hx-get=""
+          hx-get="${searchUrl}"
           hx-trigger="keyup changed delay:300ms"
-          hx-target="#table-container"
+          hx-target="${searchTarget}"
           hx-push-url="true"
         />
       </div>

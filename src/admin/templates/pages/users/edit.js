@@ -86,7 +86,7 @@ export function usersEditPage({ editUser, user, userStats = {}, errors = {} }) {
                   <!-- First Name & Last Name Row -->
                   <div class="form__row form__row--2col">
                     <div class="form__group ${errors.firstName ? 'form__group--error' : ''}">
-                      <label class="label label--required">First Name</label>
+                      <label class="label label--required" for="userFirstName">First Name</label>
                       <input
                         type="text"
                         class="input"
@@ -98,7 +98,7 @@ export function usersEditPage({ editUser, user, userStats = {}, errors = {} }) {
                       ${errors.firstName ? `<p class="form-feedback form-feedback--error">${errors.firstName}</p>` : ''}
                     </div>
                     <div class="form__group ${errors.lastName ? 'form__group--error' : ''}">
-                      <label class="label label--required">Last Name</label>
+                      <label class="label label--required" for="userLastName">Last Name</label>
                       <input
                         type="text"
                         class="input"
@@ -114,7 +114,7 @@ export function usersEditPage({ editUser, user, userStats = {}, errors = {} }) {
                   <!-- Email & Role Row -->
                   <div class="form__row form__row--2col">
                     <div class="form__group ${errors.email ? 'form__group--error' : ''}">
-                      <label class="label label--required">Email Address</label>
+                      <label class="label label--required" for="userEmail">Email Address</label>
                       <input
                         type="email"
                         class="input"
@@ -127,10 +127,11 @@ export function usersEditPage({ editUser, user, userStats = {}, errors = {} }) {
                     </div>
 
                     <div class="form__group ${errors.role ? 'form__group--error' : ''}">
-                      <label class="label label--required">Role</label>
+                      <label class="label label--required" for="userRole">Role</label>
                       <input 
                         type="text" 
                         class="input" 
+                        id="userRole"
                         value="${editUser.role === 'ADMIN' ? 'Admin - Full System Access' : editUser.role === 'EDITOR' ? 'Editor - Can Publish and Manage All Content' : editUser.role === 'AUTHOR' ? 'Author - Can Create and Edit Own Posts' : 'Viewer - Read-Only Access'}" 
                       disabled 
                     />
@@ -195,9 +196,9 @@ export function usersEditPage({ editUser, user, userStats = {}, errors = {} }) {
               <div class="card__footer">
                 <div class="form__field-group">
                   <button type="button" class="btn btn--primary" onclick="submitForm()">
-                    Save Changes
+                    Save
                   </button>
-                  <a href="/admin/users" class="btn btn--ghost btn--cancel">Cancel</a>
+                  <a href="/admin/users" class="btn btn--outline btn--cancel">Cancel</a>
                 </div>
               </div>
             </div>

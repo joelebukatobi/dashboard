@@ -60,6 +60,8 @@ export function tagsListPage({ tags, total, page, totalPages, filters, user, toa
 
         <!-- Data Filter -->
         ${listToolbar({
+          searchUrl: '/admin/tags',
+          searchTarget: '#tags-table-container',
           searchPlaceholder: 'Search tags...',
           searchValue: filters.search || '',
           filters: [],
@@ -68,7 +70,7 @@ export function tagsListPage({ tags, total, page, totalPages, filters, user, toa
           addButtonText: tags.length === 0 ? 'Create First Tag' : 'New Tag',
         })}
 
-        <div class="tags__table-content">
+        <div id="tags-table-container" class="tags__table-content">
         ${
           tags.length === 0
             ? emptyState()

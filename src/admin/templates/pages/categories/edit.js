@@ -41,7 +41,7 @@ export function categoryEditPage({ category, user, errors = {} }) {
             <div class="form__row form__row--2col">
               <!-- Title -->
               <div class="form__group ${errors.title ? 'form__group--error' : ''}">
-                <label class="label label--required">Title</label>
+                <label class="label label--required" for="categoryTitle">Title</label>
                 <input
                   type="text"
                   class="input"
@@ -54,7 +54,7 @@ export function categoryEditPage({ category, user, errors = {} }) {
               </div>
               <!-- Slug -->
               <div class="form__group ${errors.slug ? 'form__group--error' : ''}">
-                <label class="label">Slug</label>
+                <label class="label" for="categorySlug">Slug</label>
                 <input
                   type="text"
                   class="input"
@@ -70,7 +70,7 @@ export function categoryEditPage({ category, user, errors = {} }) {
 
             <!-- Description -->
             <div class="form__group">
-              <label class="label">Description</label>
+              <label class="label" for="categoryDescription">Description</label>
               <textarea
                 class="textarea"
                 id="categoryDescription"
@@ -85,9 +85,9 @@ export function categoryEditPage({ category, user, errors = {} }) {
         <div class="card__footer">
           <div class="form__field-group">
             <button type="button" class="btn btn--primary" onclick="submitForm()">
-              Update Category
+              Save
             </button>
-            <a href="/admin/categories" class="btn btn--ghost btn--cancel">Cancel</a>
+            <a href="/admin/categories" class="btn btn--outline btn--cancel">Cancel</a>
           </div>
         </div>
       </div>
