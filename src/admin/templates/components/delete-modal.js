@@ -96,11 +96,13 @@ export class DeleteModal {
       `;
     }
 
+    const dataPrefix = entityName.toLowerCase().replace(/\s+/g, '-');
+
     return `
       <script>
         function openDeleteModal(button) {
-          const entityId = button.getAttribute('data-${entityName.toLowerCase()}-id');
-          const entityDisplayName = button.getAttribute('data-${entityName.toLowerCase()}-${entityLabel}');
+          const entityId = button.getAttribute('data-${dataPrefix}-id');
+          const entityDisplayName = button.getAttribute('data-${dataPrefix}-${entityLabel}');
           const modal = document.getElementById('deleteModal');
           const form = document.getElementById('delete${entityName}Form');
           form.setAttribute('hx-delete', '${this.config.deleteUrlPath}/' + entityId);

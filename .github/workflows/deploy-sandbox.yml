@@ -5,12 +5,6 @@ on:
     branches:
       - dev
   workflow_dispatch:
-    inputs:
-      run_seed:
-        description: Run seed script after migrations
-        required: false
-        default: false
-        type: boolean
 
 concurrency:
   group: deploy-sandbox
@@ -25,10 +19,10 @@ jobs:
       CPANEL_FTP_USER: ${{ secrets.CPANEL_FTP_USER }}
       CPANEL_FTP_PASSWORD: ${{ secrets.CPANEL_FTP_PASSWORD }}
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-      CPANEL_SSH_HOST: ${{ secrets.CPANEL_HOST }}
-      CPANEL_SSH_USER: ${{ secrets.CPANEL_USER }}
+      CPANEL_SSH_HOST: ${{ secrets.CPANEL_FTP_HOST }}
+      CPANEL_SSH_USER: ${{ secrets.CPANEL_FTP_USER }}
       CPANEL_SSH_KEY: ${{ secrets.CPANEL_SSH_KEY }}
-      CPANEL_SSH_PORT: ${{ secrets.CPANEL_PORT }}
+      CPANEL_SSH_PORT: 22
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout
@@ -40,11 +34,10 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Validate build
+      - name: Build frontend assets
         run: |
           npm ci --no-audit --no-fund
           npm run build:css
-          echo "✅ Build validation complete - CSS will be built on server"
 
       - name: Validate required deploy secrets
         run: |
@@ -121,6 +114,7 @@ jobs:
           server-dir: ${{ steps.paths.outputs.ftp_dir }}
           state-name: .ftp-deploy-sync-state-v2.json
           exclude: |
+            **/public/uploads/**
             **/.git*/**
             **/.git*
             **/node_modules/**
@@ -131,6 +125,7 @@ jobs:
             **/tmp/**
             **/.vscode/**
             **/.idea/**
+            **/.build/**
 
       - name: Install production dependencies and restart app
         if: steps.ssh_check.outputs.enabled == 'true'
@@ -171,18 +166,13 @@ jobs:
               PREVIOUS_LOCK_HASH="$(cat "$LOCK_HASH_FILE")"
             fi
 
-            if [ ! -d node_modules ] || [ "$CURRENT_LOCK_HASH" != "$PREVIOUS_LOCK_HASH" ] || [ ! -f node_modules/.bin/sass ]; then
-              echo "Installing dependencies (including dev for build tools)"
-              npm ci --no-audit --no-fund
+            if [ ! -d node_modules ] || [ "$CURRENT_LOCK_HASH" != "$PREVIOUS_LOCK_HASH" ]; then
+              echo "Installing production dependencies"
+              npm ci --omit=dev --no-audit --no-fund
               printf '%s\n' "$CURRENT_LOCK_HASH" > "$LOCK_HASH_FILE"
             else
               echo "Skipping dependency install (lockfile unchanged)"
             fi
-
-            # Build CSS on server (ensures fresh compiled assets)
-            echo "Building CSS assets..."
-            npm run build:css
-            echo "✅ CSS build complete"
 
             if [ -z "$DATABASE_URL" ]; then
               echo "DATABASE_URL secret is required for migrations"
@@ -197,16 +187,6 @@ jobs:
             echo "Database migrations: OK"
 
             # NOTE: Database seeding is disabled. Use setup wizard instead.
-            # To set up the site, SSH into the server and run:
-            #   cd ${{ secrets.DEPLOY_PATH }} && node scripts/generate-setup-token.js
-            # Then share the generated URL with the client.
-            #
-            # if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.run_seed }}" = "true" ]; then
-            #   echo "Running database seed script..."
-            #   node ./scripts/seed.js
-            # else
-            #   echo "Skipping seed script"
-            # fi
 
             echo "✅ Deployment complete. Run 'node scripts/generate-setup-token.js' to generate setup URL."
 
@@ -234,19 +214,19 @@ jobs:
           set -e
           echo "Waiting for app to start..."
           sleep 10
-          
-          SANDBOX_URL="${{ secrets.SANDBOX_URL || 'https://sandbox.joelebukatobi.dev' }}"
-          echo "Checking health at: $SANDBOX_URL"
-          
+
+          HEALTH_URL="${{ secrets.SANDBOX_URL || 'https://sandbox.joelebukatobi.dev' }}/health"
+          echo "Checking health at: $HEALTH_URL"
+
           # Retry up to 3 times with 5 second intervals
           for i in 1 2 3; do
-            if curl -sf "$SANDBOX_URL" > /dev/null; then
+            if curl -sf "$HEALTH_URL" > /dev/null; then
               echo "✅ Health check passed - app is responding"
               exit 0
             fi
             echo "Attempt $i failed, retrying in 5s..."
             sleep 5
           done
-          
+
           echo "❌ Health check failed - app is not responding"
           exit 1

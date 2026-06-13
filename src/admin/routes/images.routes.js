@@ -28,6 +28,18 @@ export default async function imagesRoutes(fastify, opts) {
     handler: imagesController.upload.bind(imagesController),
   });
 
+  // GET /admin/media/images/batch - Show batch upload form
+  fastify.get('/batch', {
+    preHandler: requireAuthRedirect('/admin/auth/login'),
+    handler: imagesController.showBatchForm.bind(imagesController),
+  });
+
+  // POST /admin/media/images/batch - Batch upload images
+  fastify.post('/batch', {
+    preHandler: requireAuthRedirect('/admin/auth/login'),
+    handler: imagesController.batchUpload.bind(imagesController),
+  });
+
   // GET /admin/media/images/:id/edit - Show edit form
   fastify.get('/:id/edit', {
     preHandler: requireAuthRedirect('/admin/auth/login'),

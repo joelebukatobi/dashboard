@@ -8,16 +8,16 @@ import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyHtml from 'fastify-html';
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { checkSetupStatus } from './middleware/setup-check.js';
+import { ensureDatabaseUrl } from '../env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load environment variables
-dotenv.config({ path: '.env.development' });
+// Load environment variables (process.env, .env.local, .env.development, .env, cPanel)
+ensureDatabaseUrl({ scriptName: 'server', exitOnError: false });
 
 export default async function app(fastify, opts) {
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -52,8 +52,8 @@ export default async function app(fastify, opts) {
   await fastify.register(fastifyFormbody);
   await fastify.register(fastifyMultipart, {
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB
-      files: 1,
+      fileSize: 50 * 1024 * 1024, // 50MB
+      files: 20,
     }
   });
   // CORS - disabled in development, configured for production
@@ -96,10 +96,24 @@ export default async function app(fastify, opts) {
     decorateReply: false,
   });
 
+  // Serve uploads directory (user avatars, media files)
+  await fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '../public', 'uploads'),
+    prefix: '/uploads/',
+    decorateReply: false,
+  });
+
   // Serve dist/ directory (compiled CSS/JS)
   await fastify.register(fastifyStatic, {
     root: path.join(__dirname, '../dist'),
     prefix: '/dist/',
+    decorateReply: false,
+  });
+
+  // Serve node_modules/htmx.org for HTMX
+  await fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '../node_modules/htmx.org/dist'),
+    prefix: '/vendor/htmx/',
     decorateReply: false,
   });
 
@@ -110,10 +124,24 @@ export default async function app(fastify, opts) {
     decorateReply: false,
   });
 
+  // Serve fslightbox
+  await fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '../node_modules/fslightbox'),
+    prefix: '/vendor/fslightbox/',
+    decorateReply: false,
+  });
+
   // Serve ApexCharts
   await fastify.register(fastifyStatic, {
     root: path.join(__dirname, '../node_modules/apexcharts/dist'),
     prefix: '/vendor/apexcharts/',
+    decorateReply: false,
+  });
+
+  // Serve Cropper.js
+  await fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '../node_modules/cropperjs/dist'),
+    prefix: '/vendor/cropperjs/',
     decorateReply: false,
   });
 
@@ -136,15 +164,19 @@ export default async function app(fastify, opts) {
    await fastify.register(import('./admin/routes/tags.routes.js'), { prefix: '/admin/tags' });
      await fastify.register(import('./admin/routes/users.routes.js'), { prefix: '/admin/users' });
      await fastify.register(import('./admin/routes/subscribers.routes.js'), { prefix: '/admin/subscribers' });
-    await fastify.register(import('./admin/routes/images.routes.js'), { prefix: '/admin/media/images' });
-   await fastify.register(import('./admin/routes/videos.routes.js'), { prefix: '/admin/media/videos' });
-    await fastify.register(import('./admin/routes/settings.routes.js'), { prefix: '/admin/settings' });
+     await fastify.register(import('./admin/routes/images.routes.js'), { prefix: '/admin/media/images' });
+     await fastify.register(import('./admin/routes/videos.routes.js'), { prefix: '/admin/media/videos' });
+     await fastify.register(import('./admin/routes/albums.routes.js'), { prefix: '/admin/media/albums' });
+     await fastify.register(import('./admin/routes/settings.routes.js'), { prefix: '/admin/settings' });
 
   // Register public API routes (v1)
   await fastify.register(import('./admin/routes/api/posts.routes.js'), { prefix: '/api/v1/posts' });
   await fastify.register(import('./admin/routes/api/categories.routes.js'), { prefix: '/api/v1/categories' });
   await fastify.register(import('./admin/routes/api/tags.routes.js'), { prefix: '/api/v1/tags' });
   await fastify.register(import('./admin/routes/api/comments.routes.js'), { prefix: '/api/v1' });
+   await fastify.register(import('./admin/routes/api/images.routes.js'), { prefix: '/api/v1/images' });
+   await fastify.register(import('./admin/routes/api/videos.routes.js'), { prefix: '/api/v1/videos' });
+   await fastify.register(import('./admin/routes/api/subscribers.routes.js'), { prefix: '/api/v1' });
 
   // Register public app routes
   await fastify.register(import('./app/routes/home.routes.js'));

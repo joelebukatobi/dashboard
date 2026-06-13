@@ -26,8 +26,15 @@
     {
       "idx": 3,
       "version": "5",
-      "when": 1776176500393,
-      "tag": "0003_add_setup_tokens",
+      "when": 1778889607000,
+      "tag": "0003_add_custom_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1779115916122,
+      "tag": "0004_drop_subscriber_name",
       "breakpoints": true
     }
   ]

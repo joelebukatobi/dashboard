@@ -2,6 +2,7 @@
 // Videos controller - handles video HTTP requests
 
 import { videosService } from '../../services/videos.service.js';
+import { albumsService } from '../../services/albums.service.js';
 import { successToast, errorToast } from '../templates/partials/alerts.js';
 
 /**
@@ -101,8 +102,9 @@ class VideosController {
     try {
       const user = request.user;
 
-      // Get all posts for attachment dropdown
+      // Get all posts and albums for dropdowns
       const posts = await videosService.getAllPostsForAttachment();
+      const albums = await albumsService.getAllForDropdown();
 
       // Import new video template
       const { videosNewPage } = await import('../templates/pages/media/videos/index.js');
@@ -111,6 +113,7 @@ class VideosController {
         videosNewPage({
           user,
           posts,
+          albums,
         })
       );
     } catch (error) {
@@ -129,37 +132,79 @@ class VideosController {
   async upload(request, reply) {
     try {
       const user = request.user;
-      
-      // Get all parts (file and fields)
-      const parts = request.parts();
+      request.log.info('Starting video upload');
+
+      // Check if request has multipart content type
+      const contentType = request.headers['content-type'];
+      if (!contentType || !contentType.includes('multipart/form-data')) {
+        request.log.warn(`Invalid content type: ${contentType}`);
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'Invalid request format. Expected multipart/form-data.',
+        }));
+      }
+
+      // Get all parts (file and fields) with timeout
+      let parts;
+      try {
+        parts = request.parts();
+      } catch (parseError) {
+        request.log.error('Failed to initialize multipart parser:', parseError);
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'Failed to parse upload request. Please try again.',
+        }));
+      }
+
       let file = null;
       let postId = null;
       let title = null;
       let altText = null;
-      
+      let albumId = null;
+      let partCount = 0;
+
+      // IMPORTANT: @fastify/multipart v8 requires file streams to be consumed
+      // inside the for await loop. If not consumed, busboy waits forever.
       for await (const part of parts) {
+        partCount++;
+        request.log.info(`Processing part ${partCount}: type=${part.type}, fieldname=${part.fieldname}`);
         if (part.type === 'file') {
-          file = part;
+          // Consume file buffer here - REQUIRED for busboy to continue
+          const buffer = await part.toBuffer();
+          request.log.info(`File received: ${part.filename}, mimetype: ${part.mimetype}, size: ${buffer.length}`);
+          file = {
+            filename: part.filename,
+            mimetype: part.mimetype,
+            toBuffer: async () => buffer,
+          };
         } else if (part.type === 'field') {
           const value = await part.value;
+          request.log.info(`Field received: ${part.fieldname} = ${value}`);
           if (part.fieldname === 'postId') postId = value;
           if (part.fieldname === 'title') title = value;
           if (part.fieldname === 'altText') altText = value;
+          if (part.fieldname === 'albumId') albumId = value;
         }
       }
-      
+
+      request.log.info(`Finished processing ${partCount} parts`);
+
       if (!file) {
+        request.log.warn(`No file found in request after parsing ${partCount} parts`);
         reply.code(400);
         return reply.type('text/html').send(errorToast({
-          message: 'No video file provided.',
+          message: 'No video file provided. Please select a file to upload.',
         }));
       }
 
+      request.log.info('Starting video service upload');
       // Upload and process video
       const video = await videosService.upload(file, {
         title: title || file.filename,
         altText: altText || '',
+        albumId: albumId || null,
       }, user.id);
+      request.log.info(`Video uploaded successfully: ${video.id}`);
 
       // Attach to post if postId provided
       if (postId) {
@@ -171,7 +216,7 @@ class VideosController {
       reply.header('HX-Trigger', JSON.stringify({ "htmx:toast": { message: 'Video uploaded successfully!', type: 'success' } }));
       return reply.type('text/html').send('');
     } catch (error) {
-      request.log.error(error);
+      request.log.error('Upload error:', error);
       reply.code(400);
       return reply.type('text/html').send(errorToast({
         message: error.message || 'Failed to upload video.',
@@ -197,8 +242,9 @@ class VideosController {
         }));
       }
 
-      // Get all posts for attachment dropdown
+      // Get all posts and albums for dropdowns
       const posts = await videosService.getAllPostsForAttachment();
+      const albums = await albumsService.getAllForDropdown();
 
       // Import edit video template
       const { videosEditPage } = await import('../templates/pages/media/videos/index.js');
@@ -213,6 +259,7 @@ class VideosController {
             durationFormatted: videosService.formatDuration(video.duration),
           },
           posts,
+          albums,
         })
       );
     } catch (error) {
@@ -247,6 +294,7 @@ class VideosController {
       await videosService.update(id, {
         title,
         altText,
+        albumId: request.body.albumId,
       });
 
       // Return success with toast
@@ -312,37 +360,35 @@ function videosGridFragment({ videos, pagination }) {
     const sizeFormatted = formatFileSize(video.size);
     const extension = video.filename.split('.').pop().toUpperCase();
     const durationFormatted = videosService.formatDuration(video.duration);
-    
+    const imgPath = (video.thumbnailPath || video.path).startsWith('/public')
+      ? (video.thumbnailPath || video.path)
+      : '/public' + (video.thumbnailPath || video.path);
+
     return `
-      <div class="media-card group">
-        ${video.tag ? `<span class="media-card__tag">${video.tag}</span>` : ''}
+      <a href="/admin/media/videos/${video.id}/edit" class="media-card">
         <div class="media-card__thumbnail">
           <img
-            src="${video.thumbnailPath || video.path}"
+            src="${imgPath}"
             alt="${video.altText || video.title}"
-            loading="lazy"
           />
           <div class="media-card__thumbnail-badge">${durationFormatted}</div>
-          <div class="media-card__actions">
-            <a href="/admin/media/videos/${video.id}/edit" class="media-card__action-btn" title="Edit">
-              <i data-lucide="pencil" class="size-4"></i>
-            </a>
-            <button 
-              class="media-card__action-btn media-card__action-btn--delete" 
-              title="Delete"
+          <div class="media-card__details">
+            <h3>${video.originalName}</h3>
+            <span>${sizeFormatted} • ${extension}</span>
+          </div>
+          <div class="media-card__actions-overlay">
+            <button
+              type="button"
+              class="media-card__action-btn"
               data-video-id="${video.id}"
               data-video-name="${video.originalName}"
-              onclick="openDeleteModal(this)"
+              onclick="event.preventDefault(); event.stopPropagation(); openDeleteModal(this)"
             >
-              <i data-lucide="trash-2" class="size-4"></i>
+              <i data-lucide="trash-2"></i>
             </button>
           </div>
         </div>
-        <div class="media-card__details">
-          <h3 class="media-card__title">${video.originalName}</h3>
-          <span class="media-card__meta">${sizeFormatted} • ${extension}</span>
-        </div>
-      </div>
+      </a>
     `;
   }).join('');
 
@@ -358,12 +404,7 @@ function videosGridFragment({ videos, pagination }) {
     `;
   }
 
-  return `
-    <div class="media-grid">
-      ${cards}
-    </div>
-    ${paginationHtml}
-  `;
+  return cards;
 }
 
 export const videosController = new VideosController();

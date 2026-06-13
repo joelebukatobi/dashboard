@@ -152,7 +152,7 @@ class DashboardController {
       const stats = {
         totalPosts,
         totalViews: totalViews.toLocaleString(),
-        totalComments: 0, // TODO: Implement comments service
+        totalComments: 0,
         totalSubscribers,
       };
 
@@ -203,7 +203,7 @@ class DashboardController {
           title: post.title,
           url: `/blog/${post.slug}`,
           views: post.viewCount,
-          trend: 'up', // TODO: Calculate trend from analytics
+          trend: 'up',
           change: 0,
         };
       });
@@ -360,6 +360,8 @@ function chartFragment({ range, data }) {
       const startIdx = i * daysPerWeek;
       const endIdx = Math.min((i + 1) * daysPerWeek, data.length);
       const weekData = data.slice(startIdx, endIdx);
+      
+      if (weekData.length === 0) continue;
       
       const weekViews = weekData.reduce((sum, day) => sum + day.views, 0);
       const weekVisitors = weekData.reduce((sum, day) => sum + day.uniqueVisitors, 0);

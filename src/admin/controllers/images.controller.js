@@ -3,6 +3,7 @@
 
 import { imagesService } from '../../services/images.service.js';
 import { postsService } from '../../services/posts.service.js';
+import { albumsService } from '../../services/albums.service.js';
 import { successToast, errorToast } from '../templates/partials/alerts.js';
 
 /**
@@ -103,6 +104,7 @@ class ImagesController {
 
       // Get all posts for attachment dropdown
       const posts = await imagesService.getAllPostsForAttachment();
+      const albums = await albumsService.getAllForDropdown();
 
       // Import new image template
       const { imagesNewPage } = await import('../templates/pages/media/images/index.js');
@@ -111,6 +113,7 @@ class ImagesController {
         imagesNewPage({
           user,
           posts,
+          albums,
         })
       );
     } catch (error) {
@@ -133,37 +136,90 @@ class ImagesController {
   async upload(request, reply) {
     try {
       const user = request.user;
+      request.log.info('Starting image upload');
       
-      // Get all parts (file and fields)
-      const parts = request.parts();
+      // Check if request has multipart content type
+      const contentType = request.headers['content-type'];
+      const contentLength = request.headers['content-length'];
+      request.log.info(`Request headers - Content-Type: ${contentType}, Content-Length: ${contentLength}`);
+      
+      if (!contentType || !contentType.includes('multipart/form-data')) {
+        request.log.warn(`Invalid content type: ${contentType}`);
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'Invalid request format. Expected multipart/form-data.',
+        }));
+      }
+      
+      if (!contentLength || parseInt(contentLength) === 0) {
+        request.log.warn('Content-Length is 0 or missing');
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'No file data received. Please select a file to upload.',
+        }));
+      }
+      
+      // Get all parts (file and fields) with timeout
+      let parts;
+      try {
+        parts = request.parts();
+      } catch (parseError) {
+        request.log.error('Failed to initialize multipart parser:', parseError);
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'Failed to parse upload request. Please try again.',
+        }));
+      }
+      
       let file = null;
       let postId = null;
       let title = null;
       let altText = null;
+      let albumId = null;
+      let partCount = 0;
       
+      // IMPORTANT: @fastify/multipart v8 requires file streams to be consumed
+      // inside the for await loop. If not consumed, busboy waits forever.
       for await (const part of parts) {
+        partCount++;
+        request.log.info(`Processing part ${partCount}: type=${part.type}, fieldname=${part.fieldname}`);
         if (part.type === 'file') {
-          file = part;
+          // Consume file buffer here - REQUIRED for busboy to continue
+          const buffer = await part.toBuffer();
+          request.log.info(`File received: ${part.filename}, mimetype: ${part.mimetype}, size: ${buffer.length}`);
+          file = {
+            filename: part.filename,
+            mimetype: part.mimetype,
+            toBuffer: async () => buffer,
+          };
         } else if (part.type === 'field') {
           const value = await part.value;
+          request.log.info(`Field received: ${part.fieldname} = ${value}`);
           if (part.fieldname === 'postId') postId = value;
           if (part.fieldname === 'title') title = value;
           if (part.fieldname === 'altText') altText = value;
+          if (part.fieldname === 'albumId') albumId = value;
         }
       }
       
+      request.log.info(`Finished processing ${partCount} parts`);
+      
       if (!file) {
+        request.log.warn(`No file found in request after parsing ${partCount} parts`);
         reply.code(400);
         return reply.type('text/html').send(errorToast({
-          message: 'No image file provided.',
+          message: 'No image file provided. Please select a file to upload.',
         }));
       }
 
+      request.log.info('Starting image service upload');
       // Upload and process image
       const image = await imagesService.upload(file, {
         title: title || file.filename,
         altText: altText || '',
+        albumId: albumId || null,
       }, user.id);
+      request.log.info(`Image uploaded successfully: ${image.id}`);
 
       // Attach to post if postId provided
       if (postId) {
@@ -175,7 +231,7 @@ class ImagesController {
       reply.header('HX-Trigger', JSON.stringify({ "htmx:toast": { message: 'Image uploaded successfully!', type: 'success' } }));
       return reply.type('text/html').send('');
     } catch (error) {
-      request.log.error(error);
+      request.log.error('Upload error:', error);
       reply.code(400);
       return reply.type('text/html').send(errorToast({
         message: error.message || 'Failed to upload image.',
@@ -201,8 +257,9 @@ class ImagesController {
         }));
       }
 
-      // Get all posts for attachment dropdown
+      // Get all posts and albums for dropdowns
       const posts = await imagesService.getAllPostsForAttachment();
+      const albums = await albumsService.getAllForDropdown();
 
       // Import edit image template
       const { imagesEditPage } = await import('../templates/pages/media/images/index.js');
@@ -216,6 +273,7 @@ class ImagesController {
             dateFormatted: formatDate(image.createdAt),
           },
           posts,
+          albums,
         })
       );
     } catch (error) {
@@ -250,6 +308,7 @@ class ImagesController {
       await imagesService.update(id, {
         title,
         altText,
+        albumId: request.body.albumId,
       });
 
       // Return success with toast
@@ -298,6 +357,150 @@ class ImagesController {
       }));
     }
   }
+
+  /**
+   * GET /admin/media/images/batch
+   * Show batch upload form
+   */
+  async showBatchForm(request, reply) {
+    try {
+      const user = request.user;
+
+      // Get albums for dropdown
+      const albums = await albumsService.getAllForDropdown();
+
+      // Import batch template
+      const { imagesBatchPage } = await import('../templates/pages/media/images/batch.js');
+
+      return reply.type('text/html').send(
+        imagesBatchPage({
+          user,
+          albums,
+        })
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(500);
+      return reply.type('text/html').send(errorToast({
+        message: 'Failed to load batch upload form.',
+      }));
+    }
+  }
+
+  /**
+   * POST /admin/media/images/batch
+   * Batch upload images
+   */
+  async batchUpload(request, reply) {
+    try {
+      const user = request.user;
+      request.log.info('Starting batch image upload');
+
+      // Check content type
+      const contentType = request.headers['content-type'];
+      request.log.info(`Content-Type: ${contentType}`);
+      
+      if (!contentType || !contentType.includes('multipart/form-data')) {
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'Invalid request format. Expected multipart/form-data.',
+        }));
+      }
+
+      // Get all parts
+      let parts;
+      try {
+        parts = request.parts();
+        request.log.info('Multipart parser initialized successfully');
+      } catch (parseError) {
+        request.log.error('Failed to initialize multipart parser:', parseError);
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'Failed to parse upload request. Please try again.',
+        }));
+      }
+
+      const files = [];
+      let albumId = null;
+      let partCount = 0;
+
+      // Parse all parts
+      try {
+        for await (const part of parts) {
+          partCount++;
+          request.log.info(`Processing part ${partCount}: type=${part.type}, fieldname=${part.fieldname}`);
+          
+          if (part.type === 'file') {
+            request.log.info(`Reading file buffer for: ${part.filename}`);
+            const buffer = await part.toBuffer();
+            files.push({
+              filename: part.filename,
+              mimetype: part.mimetype,
+              toBuffer: async () => buffer,
+            });
+            request.log.info(`File received: ${part.filename}, mimetype: ${part.mimetype}, size: ${buffer.length}`);
+          } else if (part.type === 'field') {
+            const value = await part.value;
+            request.log.info(`Field received: ${part.fieldname} = ${value}`);
+            if (part.fieldname === 'albumId') albumId = value;
+          }
+        }
+      } catch (parseLoopError) {
+        request.log.error({ err: parseLoopError, stack: parseLoopError.stack }, 'Error during multipart parsing loop: ' + parseLoopError.message);
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: `Error parsing upload: ${parseLoopError.message || 'Unknown error'}`,
+        }));
+      }
+
+      request.log.info(`Finished processing ${partCount} parts, ${files.length} files`);
+
+      if (files.length === 0) {
+        reply.code(400);
+        return reply.type('text/html').send(errorToast({
+          message: 'No image files provided. Please select files to upload.',
+        }));
+      }
+
+      // Batch upload
+      request.log.info('Starting batch upload service');
+      const results = await imagesService.batchUpload(files, {
+        albumId: albumId || null,
+      }, user.id);
+
+      const successful = results.filter(r => r.success);
+      const failed = results.filter(r => !r.success);
+
+      request.log.info(`Batch upload complete: ${successful.length} successful, ${failed.length} failed`);
+
+      // Build message
+      let message;
+      if (failed.length === 0) {
+        message = `Successfully uploaded ${successful.length} image${successful.length !== 1 ? 's' : ''}`;
+      } else {
+        message = `Uploaded ${successful.length} of ${files.length} images. ${failed.length} failed.`;
+      }
+
+      // Return success with redirect and toast
+      reply.header('HX-Redirect', `/admin/media/images?toast=${encodeURIComponent(message)}`);
+      return reply.type('text/html').send('');
+    } catch (error) {
+      request.log.error('Batch upload error:', error);
+      
+      // Handle specific file size error
+      if (error.code === 'FST_REQ_FILE_TOO_LARGE') {
+        reply.code(413);
+        return reply.type('text/html').send(errorToast({
+          message: 'One or more files exceed the 50MB size limit. Please compress your images or upload smaller files.',
+        }));
+      }
+      
+      reply.code(400);
+      return reply.type('text/html').send(errorToast({
+        message: error.message || 'Failed to upload images.',
+      }));
+    }
+  }
 }
 
 // Helper function for images grid fragment (HTMX)
@@ -314,36 +517,34 @@ function imagesGridFragment({ images, pagination }) {
   const cards = images.map((image) => {
     const sizeFormatted = formatFileSize(image.size);
     const extension = image.filename.split('.').pop().toUpperCase();
-    
+    const imgPath = (image.thumbnailPath || image.path).startsWith('/public')
+      ? (image.thumbnailPath || image.path)
+      : '/public' + (image.thumbnailPath || image.path);
+
     return `
-      <div class="media-card group">
-        ${image.tag ? `<span class="media-card__tag">${image.tag}</span>` : ''}
+      <a href="/admin/media/images/${image.id}/edit" class="media-card">
         <div class="media-card__thumbnail">
           <img
-            src="${image.thumbnailPath || image.path}"
+            src="${imgPath}"
             alt="${image.altText || image.title}"
-            loading="lazy"
           />
-          <div class="media-card__actions">
-            <a href="/admin/media/images/${image.id}/edit" class="media-card__action-btn" title="Edit">
-              <i data-lucide="pencil" class="size-4"></i>
-            </a>
-            <button 
-              class="media-card__action-btn media-card__action-btn--delete" 
-              title="Delete"
+          <div class="media-card__details">
+            <h3>${image.originalName}</h3>
+            <span>${sizeFormatted} • ${extension}</span>
+          </div>
+          <div class="media-card__actions-overlay">
+            <button
+              type="button"
+              class="media-card__action-btn"
               data-image-id="${image.id}"
               data-image-name="${image.originalName}"
-              onclick="openDeleteModal(this)"
+              onclick="event.preventDefault(); event.stopPropagation(); openDeleteModal(this)"
             >
-              <i data-lucide="trash-2" class="size-4"></i>
+              <i data-lucide="trash-2"></i>
             </button>
           </div>
         </div>
-        <div class="media-card__details">
-          <h3 class="media-card__title">${image.originalName}</h3>
-          <span class="media-card__meta">${sizeFormatted} • ${extension}</span>
-        </div>
-      </div>
+      </a>
     `;
   }).join('');
 
@@ -359,12 +560,7 @@ function imagesGridFragment({ images, pagination }) {
     `;
   }
 
-  return `
-    <div class="media-grid">
-      ${cards}
-    </div>
-    ${paginationHtml}
-  `;
+  return cards;
 }
 
 export const imagesController = new ImagesController();

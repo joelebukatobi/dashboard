@@ -1,8 +1,8 @@
 // src/services/images.service.js
 // Images service for managing media library
 
-import { db, mediaItems, posts } from '../db/index.js';
-import { eq, like, desc, asc, sql, and } from 'drizzle-orm';
+import { db, mediaItems, posts, albums } from '../db/index.js';
+import { eq, like, desc, asc, sql, and, isNull } from 'drizzle-orm';
 import { promises as fs } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
@@ -180,7 +180,24 @@ class ImagesService {
         path: `/public/uploads/images/${filename}`,
         thumbnailPath: `/public/uploads/images/thumbs/${thumbFilename}`,
         uploadedBy: userId,
+        albumId: metadata.albumId || null,
       });
+
+    // Auto-assign as album cover if this is the first image in the album
+    if (metadata.albumId) {
+      const [album] = await db
+        .select()
+        .from(albums)
+        .where(eq(albums.id, metadata.albumId))
+        .limit(1);
+
+      if (album && !album.coverImageId) {
+        await db
+          .update(albums)
+          .set({ coverImageId: mediaId })
+          .where(eq(albums.id, metadata.albumId));
+      }
+    }
 
     const [imageRecord] = await db
       .select()
@@ -203,13 +220,18 @@ class ImagesService {
       throw new Error('Image not found');
     }
 
+    const updateData = {
+      title: data.title,
+      altText: data.altText,
+      updatedAt: new Date(),
+    };
+    if (data.albumId !== undefined) {
+      updateData.albumId = data.albumId || null;
+    }
+
     await db
       .update(mediaItems)
-      .set({
-        title: data.title,
-        altText: data.altText,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(mediaItems.id, id));
 
     const [image] = await db
@@ -233,9 +255,9 @@ class ImagesService {
     }
 
     // Delete files
-    const filepath = path.join(process.cwd(), 'public', image.path);
+    const filepath = path.join(process.cwd(), image.path.replace(/^\//, ''));
     const thumbpath = image.thumbnailPath 
-      ? path.join(process.cwd(), 'public', image.thumbnailPath)
+      ? path.join(process.cwd(), image.thumbnailPath.replace(/^\//, ''))
       : null;
 
     await fs.unlink(filepath).catch(() => {});
@@ -319,6 +341,41 @@ class ImagesService {
         updatedAt: new Date(),
       })
       .where(eq(posts.id, postId));
+  }
+
+  /**
+   * Batch upload multiple images
+   * @param {Array<Object>} files - Array of file objects
+   * @param {Object} metadata - Shared metadata (albumId)
+   * @param {string} userId - Uploading user ID
+   * @returns {Promise<Array>} - Results array with success/failure status
+   */
+  async batchUpload(files, metadata, userId) {
+    const results = [];
+
+    for (const file of files) {
+      try {
+        const image = await this.upload(file, {
+          title: file.filename,
+          altText: '',
+          albumId: metadata.albumId || null,
+        }, userId);
+
+        results.push({
+          success: true,
+          filename: file.filename,
+          image,
+        });
+      } catch (error) {
+        results.push({
+          success: false,
+          filename: file.filename,
+          error: error.message,
+        });
+      }
+    }
+
+    return results;
   }
 }
 

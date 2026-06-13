@@ -11,7 +11,8 @@ export async function checkSetupStatus(fastify) {
     if (request.url.startsWith('/dist/') || 
         request.url.startsWith('/vendor/') ||
         request.url.startsWith('/public/') ||
-        request.url.startsWith('/api/')) {
+        request.url.startsWith('/api/') ||
+        request.url.startsWith('/health')) {
       return;
     }
 

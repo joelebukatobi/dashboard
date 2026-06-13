@@ -52,6 +52,7 @@ class UsersController {
           page: parseInt(page, 10) || 1,
           totalPages,
           limit,
+          filters: { role, status, search },
         }));
       }
 
@@ -540,73 +541,207 @@ class UsersController {
 
 /**
  * Generate users table HTML fragment for HTMX updates
+ * Matches the structure in users/list.js exactly
  */
-function usersTableFragment({ users, total, page, totalPages, limit }) {
-  // This will be replaced when we create the actual templates
-  // For now, return a simple table
-  const rows = users.map(user => `
-    <tr class="table__tr">
+function usersTableFragment({ users, total, page, totalPages, limit, filters = {} }) {
+  if (!users || users.length === 0) {
+    return `
+      <div class="empty">
+        <h3>No users found</h3>
+        <p>Get started by inviting your first team member to collaborate on your blog.</p>
+      </div>
+    `;
+  }
+
+  const USER_ROLE_LABELS = {
+    ADMIN: 'Admin',
+    EDITOR: 'Editor',
+    AUTHOR: 'Author',
+    VIEWER: 'Viewer',
+  };
+
+  function formatDate(date) {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  }
+
+  function formatRelativeTime(date) {
+    if (!date) return 'Never';
+    const now = new Date();
+    const then = new Date(date);
+    const diffMs = now - then;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+
+    if (diffDay > 30) return formatDate(date);
+    if (diffDay > 0) return `${diffDay}d ago`;
+    if (diffHour > 0) return `${diffHour}h ago`;
+    if (diffMin > 0) return `${diffMin}m ago`;
+    return 'Just now';
+  }
+
+  function getStatusClass(status) {
+    const classes = {
+      ACTIVE: 'success',
+      INVITED: 'warning',
+      SUSPENDED: 'neutral',
+    };
+    return classes[status] || 'neutral';
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  const rows = users.map((u) => `
+    <tr class="table__tr ${u.status === 'SUSPENDED' ? 'table__tr--muted' : ''}">
       <td class="table__td">
         <span class="table__label">User</span>
-        <div class="flex items-center gap-3">
-          ${user.avatarUrl 
-            ? `<img src="${user.avatarUrl}" alt="${user.firstName}" class="w-10 h-10 rounded-full object-cover" />`
-            : `<div class="avatar avatar--placeholder"><i data-lucide="user" class="size-5 text-grey-400"></i></div>`
-          }
-          <div>
-            <div class="table__title">
-              <a href="/admin/users/${user.id}/edit">${user.firstName} ${user.lastName}</a>
-            </div>
-            <span class="table__subtitle">${user.email}</span>
-          </div>
+        <div class="table__title">
+          <a href="/admin/users/${u.id}/edit">${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}</a>
         </div>
       </td>
       <td class="table__td">
         <span class="table__label">Role</span>
-        <span class="badge badge--${getRoleBadgeClass(user.role)}">${user.role}</span>
+        <span class="text-grey-900 dark:text-grey-100">${USER_ROLE_LABELS[u.role] || u.role}</span>
       </td>
       <td class="table__td">
         <span class="table__label">Status</span>
-        <span class="status status--${getStatusClass(user.status)}">
-          <span class="status__dot"></span>
-          ${user.status}
-        </span>
+        <span class="badge badge--${getStatusClass(u.status)}">${u.status}</span>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Date Joined</span>
+        ${formatDate(u.createdAt)}
+      </td>
+      <td class="table__td">
+        <span class="table__label">Last Active</span>
+        ${u.lastActiveAt ? formatRelativeTime(u.lastActiveAt) : 'Never'}
       </td>
       <td class="table__td table__td--actions">
-        <div class="btn-group__actions">
-          <a href="/admin/users/${user.id}/edit" class="btn--action btn--action--edit">
-            <i data-lucide="pencil"></i>
-            <span class="btn--action__text">Edit</span>
-          </a>
+        <div class="row-actions">
+          ${u.status === 'INVITED'
+            ? `<button
+                type="button"
+                class="btn btn--ghost row-action row-action--resend"
+                hx-post="/admin/users/${u.id}/resend-invite"
+                hx-target="#users-table-container"
+                hx-swap="outerHTML"
+                title="Resend Invite"
+              >
+                <i data-lucide="send"></i>
+                <span>Resend</span>
+              </button>`
+            : u.status === 'SUSPENDED'
+              ? `<button
+                  type="button"
+                  class="btn btn--ghost row-action row-action--activate"
+                  hx-post="/admin/users/${u.id}/activate"
+                  hx-target="#users-table-container"
+                  hx-swap="outerHTML"
+                  title="Activate"
+                >
+                  <i data-lucide="user-check"></i>
+                  <span>Activate</span>
+                </button>`
+              : `<a href="/admin/users/${u.id}/edit" class="btn btn--ghost row-action row-action--edit">
+                  <i data-lucide="pencil"></i>
+                  <span>Edit</span>
+                </a>`
+          }
+          <button
+            type="button"
+            class="btn btn--ghost row-action row-action--delete"
+            data-user-id="${u.id}"
+            data-user-name="${escapeHtml(u.firstName + ' ' + u.lastName)}"
+            data-user-role="${u.role}"
+            onclick="openDeleteModal(this)"
+          >
+            <i data-lucide="trash-2"></i>
+            <span>Delete</span>
+          </button>
         </div>
       </td>
     </tr>
   `).join('');
 
+  // Build pagination
+  let paginationHtml = '';
+  if (totalPages > 1) {
+    const params = new URLSearchParams();
+    if (filters?.search) params.set('search', filters.search);
+    if (filters?.role) params.set('role', filters.role);
+    if (filters?.status) params.set('status', filters.status);
+    const baseQuery = params.toString();
+    const queryPrefix = baseQuery ? `&${baseQuery}` : '';
+
+    let links = '';
+    const prevDisabled = page <= 1 ? 'pagination__item--disabled' : '';
+    const prevHref = page > 1 ? `/admin/users?page=${page - 1}${queryPrefix}` : '#';
+    links += `<a href="${prevHref}" class="pagination__item ${prevDisabled}"><i data-lucide="chevron-left"></i></a>`;
+
+    let pageNumbers = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+    } else if (page <= 3) {
+      pageNumbers = [1, 2, 3, 4, '...', totalPages];
+    } else if (page >= totalPages - 2) {
+      pageNumbers = [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    } else {
+      pageNumbers = [1, '...', page - 1, page, page + 1, '...', totalPages];
+    }
+
+    pageNumbers.forEach((p) => {
+      if (p === '...') {
+        links += '<span class="pagination__ellipsis">...</span>';
+      } else {
+        const active = p === page ? 'pagination__item--active' : '';
+        links += `<a href="/admin/users?page=${p}${queryPrefix}" class="pagination__item ${active}">${p}</a>`;
+      }
+    });
+
+    const nextDisabled = page >= totalPages ? 'pagination__item--disabled' : '';
+    const nextHref = page < totalPages ? `/admin/users?page=${page + 1}${queryPrefix}` : '#';
+    links += `<a href="${nextHref}" class="pagination__item ${nextDisabled}"><i data-lucide="chevron-right"></i></a>`;
+
+    paginationHtml = `
+      <footer class="page-footer">
+        <div class="pagination">${links}</div>
+      </footer>
+    `;
+  }
+
   return `
-    <tbody class="table__tbody" id="users-table-body">
-      ${rows}
-    </tbody>
+    <div class="table">
+      <table class="table__table">
+        <thead class="table__thead">
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Date Joined</th>
+            <th>Last Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table__tbody">
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+    ${paginationHtml}
   `;
-}
-
-function getRoleBadgeClass(role) {
-  const classes = {
-    'ADMIN': 'primary',
-    'EDITOR': 'purple',
-    'AUTHOR': 'info',
-    'VIEWER': 'warning'
-  };
-  return classes[role] || 'default';
-}
-
-function getStatusClass(status) {
-  const classes = {
-    'ACTIVE': 'success',
-    'INVITED': 'warning',
-    'SUSPENDED': 'danger'
-  };
-  return classes[status] || 'default';
 }
 
 export const usersController = new UsersController();

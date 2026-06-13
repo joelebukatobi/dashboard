@@ -40,19 +40,6 @@ export function editSubscriberPage({ user, subscriber, error }) {
               <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
 
               <div class="form__group">
-                <label class="label label--required" for="name">Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  class="input"
-                  placeholder="John Doe"
-                  value="${escapeHtml(subscriber.name || '')}"
-                  required
-                />
-              </div>
-
-              <div class="form__group">
                 <label class="label label--required" for="email">Email</label>
                 <input
                   type="email"
@@ -65,7 +52,7 @@ export function editSubscriberPage({ user, subscriber, error }) {
                 />
               </div>
 
-              <div class="form__group">
+              <div class="form__group form__group--ordered">
                 <label class="label" for="status">Status</label>
                 <select
                   id="status"
@@ -89,9 +76,9 @@ export function editSubscriberPage({ user, subscriber, error }) {
           <div class="card__footer">
             <div class="form__field-group">
               <button type="submit" form="editSubscriberForm" class="btn btn--primary">
-                Save Changes
+                Save
               </button>
-              <a href="/admin/subscribers" class="btn btn--ghost btn--cancel">Cancel</a>
+              <a href="/admin/subscribers" class="btn btn--outline btn--cancel">Cancel</a>
             </div>
           </div>
         </div>

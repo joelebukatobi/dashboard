@@ -155,16 +155,16 @@ export default function setupWizard({ step, token, expiresIn, error, errors = {}
 
         <div class="form__group form__group--checkbox">
           <label class="label" for="demoData">Load demo data</label>
-          <div class="checkbox-inline">
-            <input 
-              type="checkbox" 
-              id="demoData" 
-              name="demoData" 
+          <label class="form__checkbox-wrapper" for="demoData">
+            <input
+              type="checkbox"
+              id="demoData"
+              name="demoData"
               class="checkbox"
               ${values.demoData ? 'checked' : ''}
             />
-            <span class="checkbox-inline__text">Includes sample posts, categories, and tags to help you get started</span>
-          </div>
+            <span>Includes sample posts, categories, and tags to help you get started</span>
+          </label>
         </div>
 
         <button type="submit" class="btn btn--primary btn--xl btn--full">

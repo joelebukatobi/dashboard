@@ -282,9 +282,39 @@ export const mediaItems = mysqlTable('media_items', {
   thumbnailPath: varchar('thumbnail_path', { length: 500 }),
   hash: varchar('hash', { length: 64 }),
   uploadedBy: idColumn('uploaded_by').notNull().references(() => users.id),
+  albumId: idColumn('album_id').references(() => albums.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// ============================================
+// ALBUMS
+// ============================================
+
+export const albums = mysqlTable('albums', {
+  id: idColumn().primaryKey(),
+  title: varchar('title', { length: 200 }).notNull(),
+  slug: varchar('slug', { length: 200 }).notNull().unique(),
+  description: text('description'),
+  coverImageId: idColumn('cover_image_id').references(() => mediaItems.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const albumsRelations = relations(albums, ({ one, many }) => ({
+  coverImage: one(mediaItems, {
+    fields: [albums.coverImageId],
+    references: [mediaItems.id],
+  }),
+  mediaItems: many(mediaItems),
+}));
+
+export const mediaItemsRelations = relations(mediaItems, ({ one }) => ({
+  album: one(albums, {
+    fields: [mediaItems.albumId],
+    references: [albums.id],
+  }),
+}));
 
 // ============================================
 // SETTINGS
@@ -365,7 +395,6 @@ export const dailyPageViews = mysqlTable(
 export const subscribers = mysqlTable('subscribers', {
   id: idColumn().primaryKey(),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  name: varchar('name', { length: 100 }),
   status: mysqlEnum('status', subscriberStatusEnum).default('ACTIVE').notNull(),
   confirmedAt: timestamp('confirmed_at'),
   unsubscribedAt: timestamp('unsubscribed_at'),

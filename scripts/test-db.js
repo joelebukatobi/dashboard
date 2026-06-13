@@ -1,6 +1,6 @@
 // scripts/test-db.js
 // Simple database connection test
-import { ensureDatabaseUrl } from './lib/load-env.js';
+import { ensureDatabaseUrl } from '../env.js';
 import mysql from 'mysql2/promise';
 
 // Load DATABASE_URL from available sources

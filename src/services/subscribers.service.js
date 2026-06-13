@@ -44,7 +44,7 @@ class SubscribersService {
     if (search) {
       const searchTerm = `%${search}%`;
       whereConditions.push(
-        sql`(${subscribers.name} LIKE ${searchTerm} OR ${subscribers.email} LIKE ${searchTerm})`
+        sql`${subscribers.email} LIKE ${searchTerm}`
       );
     }
 
@@ -129,7 +129,7 @@ class SubscribersService {
     try {
       await db.insert(activities).values({
         type: 'SUBSCRIBER_CREATED',
-        description: `${data.name || data.email} subscribed to the newsletter`,
+        description: `${data.email} subscribed to the newsletter`,
         userId: null,
         entityId: subscriber.id,
         entityType: 'SUBSCRIBER',

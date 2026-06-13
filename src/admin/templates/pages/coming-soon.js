@@ -15,7 +15,7 @@ export default function comingSoon() {
     <meta name="description" content="This site is being configured" />
 
     <!-- Favicon -->
-    <link rel="icon" href="/dist/favicon.svg" type="image/x-icon" />
+    <link rel="icon" type="image/png" href="/dist/images/favicon.png" />
 
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

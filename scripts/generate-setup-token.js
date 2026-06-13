@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import { setupTokens } from '../src/db/schema.js';
 import { eq } from 'drizzle-orm';
-import { ensureDatabaseUrl, loadCpanelDomain } from './lib/load-env.js';
+import { ensureDatabaseUrl, loadCpanelDomain } from '../env.js';
 
 // Load DATABASE_URL from available sources
 ensureDatabaseUrl({ scriptName: 'generate-setup-token.js' });

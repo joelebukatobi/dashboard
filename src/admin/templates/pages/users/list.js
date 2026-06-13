@@ -85,6 +85,8 @@ export function usersListPage({ users, pagination, counts, filters, user, toast 
 
         <!-- Data Filter -->
         ${listToolbar({
+          searchUrl: '/admin/users',
+          searchTarget: '#users-table-container',
           searchPlaceholder: 'Search users...',
           searchValue: filters.search || '',
           filters: toolbarFilters,

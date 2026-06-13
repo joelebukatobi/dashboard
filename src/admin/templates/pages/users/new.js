@@ -69,7 +69,7 @@ export function usersNewPage({ user, errors = {} }) {
                   <!-- First Name & Last Name Row -->
                   <div class="form__row form__row--2col">
                     <div class="form__group ${errors.firstName ? 'form__group--error' : ''}">
-                      <label class="label label--required">First Name</label>
+                      <label class="label label--required" for="userFirstName">First Name</label>
                       <input
                         type="text"
                         class="input"
@@ -81,7 +81,7 @@ export function usersNewPage({ user, errors = {} }) {
                       ${errors.firstName ? `<p class="form-feedback form-feedback--error">${errors.firstName}</p>` : ''}
                     </div>
                     <div class="form__group ${errors.lastName ? 'form__group--error' : ''}">
-                      <label class="label label--required">Last Name</label>
+                      <label class="label label--required" for="userLastName">Last Name</label>
                       <input
                         type="text"
                         class="input"
@@ -97,7 +97,7 @@ export function usersNewPage({ user, errors = {} }) {
                   <!-- Email & Role Row -->
                   <div class="form__row form__row--2col">
                     <div class="form__group ${errors.email ? 'form__group--error' : ''}">
-                      <label class="label label--required">Email Address</label>
+                      <label class="label label--required" for="userEmail">Email Address</label>
                       <input
                         type="email"
                         class="input"
@@ -110,7 +110,7 @@ export function usersNewPage({ user, errors = {} }) {
                     </div>
 
                     <div class="form__group ${errors.role ? 'form__group--error' : ''}">
-                      <label class="label label--required">Role</label>
+                      <label class="label label--required" for="userRole">Role</label>
                       <select
                         name="role"
                         id="userRole"
@@ -141,7 +141,7 @@ export function usersNewPage({ user, errors = {} }) {
 
                   <!-- Invite Options -->
                   <div class="form__group">
-                    <label class="form__checkbox-wrapper">
+                    <label class="form__checkbox-wrapper" for="sendInvite">
                       <input
                         type="checkbox"
                         class="form__checkbox"
@@ -164,7 +164,7 @@ export function usersNewPage({ user, errors = {} }) {
                   <button type="button" class="btn btn--primary" onclick="submitForm()">
                     Add User
                   </button>
-                  <a href="/admin/users" class="btn btn--ghost btn--cancel">Cancel</a>
+                  <a href="/admin/users" class="btn btn--outline btn--cancel">Cancel</a>
                 </div>
               </div>
             </div>

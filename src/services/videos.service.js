@@ -220,6 +220,7 @@ class VideosService {
         path: `/public/uploads/videos/${filename}`,
         thumbnailPath: `/public/uploads/videos/thumbs/${thumbFilename}`,
         uploadedBy: userId,
+        albumId: metadata.albumId || null,
       });
 
     const [videoRecord] = await db
@@ -243,13 +244,18 @@ class VideosService {
       throw new Error('Video not found');
     }
 
+    const updateData = {
+      title: data.title,
+      altText: data.altText,
+      updatedAt: new Date(),
+    };
+    if (data.albumId !== undefined) {
+      updateData.albumId = data.albumId || null;
+    }
+
     await db
       .update(mediaItems)
-      .set({
-        title: data.title,
-        altText: data.altText,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(mediaItems.id, id));
 
     const [video] = await db
@@ -273,9 +279,9 @@ class VideosService {
     }
 
     // Delete files
-    const filepath = path.join(process.cwd(), 'public', video.path);
-    const thumbpath = video.thumbnailPath 
-      ? path.join(process.cwd(), 'public', video.thumbnailPath)
+    const filepath = path.join(process.cwd(), video.path.replace(/^\//, ''));
+    const thumbpath = video.thumbnailPath
+      ? path.join(process.cwd(), video.thumbnailPath.replace(/^\//, ''))
       : null;
 
     await fs.unlink(filepath).catch(() => {});

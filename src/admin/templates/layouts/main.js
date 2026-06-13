@@ -32,7 +32,7 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
     <meta name="description" content="${description}" />
 
     <!-- Favicon -->
-    <link rel="icon" href="/dist/favicon.svg" type="image/x-icon" />
+    <link rel="icon" type="image/png" href="/dist/images/favicon.png" />
 
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -51,7 +51,7 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 
     <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <script src="/vendor/htmx/htmx.min.js"></script>
   </head>
   <body>
     <!-- Admin Namespace Wrapper -->
@@ -82,7 +82,7 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
     <link rel="stylesheet" href="/vendor/apexcharts/apexcharts.css">
     <script src="/vendor/apexcharts/apexcharts.min.js"></script>
 
-    <!-- Preline UI JS -->
+    <!-- Preline UI JS (includes vanilla-calendar-pro bundled) -->
     <script src="/vendor/preline/preline.js"></script>
 
     <!-- Dashboard JavaScript -->
@@ -252,7 +252,7 @@ export function mainLayout({ title = 'Dashboard', description = 'BlogCMS Dashboa
             new HSSelect(el);
           });
         }
-        
+
         // Charts that need initialization will have inline scripts that run automatically
         // This event ensures any global cleanup/setup happens after swap
       });

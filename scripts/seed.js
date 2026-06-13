@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { readdirSync, statSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import sharp from 'sharp';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -42,6 +43,7 @@ async function seed() {
 
   // Dynamic imports after env is loaded
   const { db, users, categories, tags, settings, posts, postTags, comments, mediaItems, subscribers, activities } = await import('../src/db/index.js');
+  const { albums } = await import('../src/db/schema.js');
   const { eq, sql } = await import('drizzle-orm');
   const { default: bcrypt } = await import('bcryptjs');
 
@@ -61,6 +63,7 @@ async function seed() {
       console.log('🗑️  Clearing existing data...');
       if (dialect === 'mysql') {
         await db.execute(sql`SET FOREIGN_KEY_CHECKS = 0`);
+        await db.execute(sql`TRUNCATE TABLE albums`);
         await db.execute(sql`TRUNCATE TABLE activities`);
         await db.execute(sql`TRUNCATE TABLE analytics_events`);
         await db.execute(sql`TRUNCATE TABLE comments`);
@@ -317,6 +320,61 @@ async function seed() {
         console.log('⚠️  No videos directory found or error reading videos:', err.message, '\n');
       }
     }
+
+    // ============================================
+    // 6B. ALBUMS - Create albums and assign media
+    // ============================================
+    console.log('📚 Creating albums and assigning media...');
+    const albumData = [
+      { title: 'Featured Shots', slug: 'featured-shots', description: 'Highlight images from recent posts' },
+      { title: 'Team Photos', slug: 'team-photos', description: 'People and behind-the-scenes moments' },
+      { title: 'Events Archive', slug: 'events-archive', description: 'Photos organized by event' },
+      { title: 'Product Gallery', slug: 'product-gallery', description: 'Product and showcase imagery' },
+      { title: 'Travel Log', slug: 'travel-log', description: 'Location and travel photography' },
+      { title: 'Workshop Series', slug: 'workshop-series', description: 'Workshop and session photos' },
+      { title: 'Community', slug: 'community', description: 'Community and social gatherings' },
+    ];
+
+    const albumIds = [];
+    for (const a of albumData) {
+      const albumId = crypto.randomUUID();
+      await db.insert(albums).values({
+        id: albumId,
+        title: a.title,
+        slug: a.slug,
+        description: a.description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      albumIds.push(albumId);
+    }
+    console.log(`✅ ${albumData.length} albums created\n`);
+
+    // Assign images to albums (round-robin)
+    const allImages = await db
+      .select({ id: mediaItems.id })
+      .from(mediaItems)
+      .where(eq(mediaItems.type, 'IMAGE'))
+      .limit(albumIds.length * 6);
+
+    let albumCount = 0;
+    let coverSet = 0;
+    for (let i = 0; i < allImages.length; i++) {
+      const albumIndex = i % albumIds.length;
+      await db.update(mediaItems)
+        .set({ albumId: albumIds[albumIndex] })
+        .where(eq(mediaItems.id, allImages[i].id));
+      albumCount++;
+
+      // Set first image of each album as cover
+      if (i < albumIds.length) {
+        await db.update(albums)
+          .set({ coverImageId: allImages[i].id })
+          .where(eq(albums.id, albumIds[albumIndex]));
+        coverSet++;
+      }
+    }
+    console.log(`✅ ${albumCount} images assigned to albums, ${coverSet} covers set\n`);
 
     // ============================================
     // 7. POSTS
