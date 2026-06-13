@@ -3,12 +3,22 @@
 
 import { eq, and, isNull, gt } from 'drizzle-orm';
 import crypto from 'crypto';
-import setupWizard from '../admin/templates/pages/setup-wizard.js';
+import { setTemplateMeta } from '../admin/render.js';
+import { setupWizardContent, setupWizardMeta } from '../admin/templates/pages/setup-wizard.js';
+
+function renderSetupError(request, reply, error) {
+  setTemplateMeta(request, setupWizardMeta({ step: 'error' }));
+  return reply.html`!${setupWizardContent({
+    step: 'error',
+    error,
+    token: null,
+    expiresIn: null,
+  })}`;
+}
 
 export async function validateSetupToken(request, reply) {
   const token = request.query.token;
 
-  // No token provided - redirect to homepage
   if (!token) {
     return reply.redirect('/');
   }
@@ -16,10 +26,8 @@ export async function validateSetupToken(request, reply) {
   try {
     const { db, setupTokens } = await import('../db/index.js');
 
-    // Hash the token for comparison
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-    // Find valid token: matches hash, not used, not expired
     const [setupToken] = await db
       .select()
       .from(setupTokens)
@@ -27,13 +35,12 @@ export async function validateSetupToken(request, reply) {
         and(
           eq(setupTokens.tokenHash, tokenHash),
           isNull(setupTokens.usedAt),
-          gt(setupTokens.expiresAt, new Date())
-        )
+          gt(setupTokens.expiresAt, new Date()),
+        ),
       )
       .limit(1);
 
     if (!setupToken) {
-      // Check if token exists but is used
       const [usedToken] = await db
         .select()
         .from(setupTokens)
@@ -41,42 +48,23 @@ export async function validateSetupToken(request, reply) {
         .limit(1);
 
       if (usedToken?.usedAt) {
-        return reply.type('text/html').send(setupWizard({
-          error: 'Setup has already been completed. Please log in.',
-          step: 'error',
-          token: null,
-          expiresIn: null
-        }));
+        return renderSetupError(request, reply, 'Setup has already been completed. Please log in.');
       }
 
-      // Token invalid or expired
-      return reply.type('text/html').send(setupWizard({
-        error: 'Invalid or expired setup token. Please request a new one.',
-        step: 'error',
-        token: null,
-        expiresIn: null
-      }));
+      return renderSetupError(request, reply, 'Invalid or expired setup token. Please request a new one.');
     }
 
-    // Calculate time remaining
     const expiresAt = new Date(setupToken.expiresAt);
     const now = new Date();
-    const expiresIn = Math.max(0, Math.floor((expiresAt - now) / 1000)); // seconds
+    const expiresIn = Math.max(0, Math.floor((expiresAt - now) / 1000));
 
-    // Attach token info to request
     request.setupToken = {
       id: setupToken.id,
       plainToken: token,
-      expiresIn
+      expiresIn,
     };
-
   } catch (error) {
     request.log.error('Token validation error:', error);
-    return reply.type('text/html').send(setupWizard({
-      error: 'An error occurred. Please try again.',
-      step: 'error',
-      token: null,
-      expiresIn: null
-    }));
+    return renderSetupError(request, reply, 'An error occurred. Please try again.');
   }
 }

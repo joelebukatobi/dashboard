@@ -3,7 +3,8 @@
 // Redirects to "Coming Soon" page or setup wizard as appropriate
 
 import { sql } from 'drizzle-orm';
-import comingSoon from '../admin/templates/pages/coming-soon.js';
+import { buildComingSoonShell } from '../app/templates/layouts/app.js';
+import { comingSoonContent } from '../admin/templates/pages/coming-soon.js';
 
 export async function checkSetupStatus(fastify) {
   fastify.addHook('onRequest', async (request, reply) => {
@@ -12,7 +13,10 @@ export async function checkSetupStatus(fastify) {
         request.url.startsWith('/vendor/') ||
         request.url.startsWith('/public/') ||
         request.url.startsWith('/api/') ||
-        request.url.startsWith('/health')) {
+        request.url.startsWith('/health') ||
+        request.url.startsWith('/admin/auth/') ||
+        request.url === '/favicon.ico' ||
+        request.url === '/favicon.svg') {
       return;
     }
 
@@ -31,7 +35,7 @@ export async function checkSetupStatus(fastify) {
       if (userCount === 0) {
         // No admin configured - show coming soon page for homepage
         if (request.url === '/' || request.url === '') {
-          return reply.type('text/html').send(comingSoon());
+          return reply.html`!${buildComingSoonShell({ content: comingSoonContent() })}`;
         }
         // All other routes redirect to homepage
         return reply.redirect('/');
