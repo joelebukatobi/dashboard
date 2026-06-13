@@ -1,34 +1,17 @@
 // src/admin/templates/pages/posts/comments.js
 // Post Comments Page - View and manage comments for a post
 
-import { mainLayout } from '../../layouts/main.js';
-import { getInitials, formatRelativeTime } from '../../utils/helpers.js';
+import { getInitials, formatRelativeTime, escapeHtml, toastQueryScript } from '../../utils/helpers.js';
 
 /**
- * Post Comments Page Template
- * Shows all comments for a specific post with nested replies
+ * Post comments page inner content (layout applied via fastify-html addLayout).
  */
-export function postCommentsPage({ user, post, comments, pagination, toast }) {
-  // Build toast script if toast param is present
-  const toastScript = toast ? `
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const toastMessages = {
-          replied: 'Reply posted successfully!',
-          deleted: 'Comment deleted successfully!',
-          updated: 'Comment updated successfully!',
-        };
-        const message = toastMessages['${toast}'] || '${toast}';
-        document.body.dispatchEvent(new CustomEvent('htmx:toast', {
-          detail: { message: message, type: 'success' }
-        }));
-        // Clean up URL (remove toast param)
-        const url = new URL(window.location);
-        url.searchParams.delete('toast');
-        window.history.replaceState({}, '', url);
-      });
-    </script>
-  ` : '';
+export function postCommentsContent({ user, post, comments, pagination, toast }) {
+  const toastScript = toastQueryScript(toast, {
+    replied: 'Reply posted successfully!',
+    deleted: 'Comment deleted successfully!',
+    updated: 'Comment updated successfully!',
+  });
 
   const content = `
     <div class="posts">
@@ -154,8 +137,26 @@ export function postCommentsPage({ user, post, comments, pagination, toast }) {
     </script>
   `;
 
-  // Delete Modal
-  const modal = `
+  return content + toastScript;
+}
+
+/** Page metadata for post comments */
+export function postCommentsMeta({ post, user }) {
+  return {
+    title: `Comments - ${post.title}`,
+    description: 'Manage post comments',
+    activeRoute: '/admin/posts',
+    breadcrumbs: [
+      { label: 'Dashboard', url: '/admin' },
+      { label: 'Posts', url: '/admin/posts' },
+      { label: 'Comments', url: `/admin/posts/${post.id}/comments` },
+    ],
+    modals: postCommentsModals({ user }),
+  };
+}
+
+export function postCommentsModals({ user }) {
+  return `
     <!-- Delete Confirmation Modal -->
     <div id="deleteCommentModal" class="modal modal--high" role="dialog" tabindex="-1" aria-labelledby="deleteCommentModalLabel">
       <div class="modal__backdrop" onclick="closeDeleteModal()"></div>
@@ -181,20 +182,6 @@ export function postCommentsPage({ user, post, comments, pagination, toast }) {
       </div>
     </div>
   `;
-
-  return mainLayout({
-    title: `Comments - ${post.title}`,
-    description: 'Manage post comments',
-    content: content + toastScript,
-    modals: modal,
-    user,
-    activeRoute: '/admin/posts',
-    breadcrumbs: [
-      { label: 'Dashboard', url: '/admin' },
-      { label: 'Posts', url: '/admin/posts' },
-      { label: 'Comments', url: `/admin/posts/${post.id}/comments` },
-    ],
-  });
 }
 
 /**
@@ -370,15 +357,3 @@ function paginationHtml(pagination, postId) {
   `;
 }
 
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}

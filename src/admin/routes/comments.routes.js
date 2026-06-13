@@ -3,33 +3,32 @@
 
 import { commentsController } from '../controllers/comments.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
+import { replyCommentSchema, updateCommentSchema } from '../schemas/comment.schema.js';
+import { commentParamsSchema, commentsListQuerySchema, postIdParamSchema } from '../schemas/common.schema.js';
 
-/**
- * Register comments routes
- * @param {FastifyInstance} fastify - Fastify instance
- * @param {Object} opts - Route options
- */
+const auth = requireAuthRedirect('/admin/auth/login');
+
 export default async function commentsRoutes(fastify, opts) {
-  // All comment routes require authentication
-  fastify.addHook('preHandler', requireAuthRedirect('/admin/auth/login'));
+  fastify.addHook('preHandler', auth);
 
-  // GET /admin/posts/:postId/comments - Show comments for a post
   fastify.get('/', {
+    preHandler: [validateParams(postIdParamSchema), validateQuery(commentsListQuerySchema)],
     handler: commentsController.showComments.bind(commentsController),
   });
 
-  // POST /admin/posts/:postId/comments/reply - Reply to a comment
   fastify.post('/reply', {
+    preHandler: [validateParams(postIdParamSchema), validateBody(replyCommentSchema)],
     handler: commentsController.replyToComment.bind(commentsController),
   });
 
-  // PUT /admin/comments/:id - Update a comment
   fastify.put('/:id', {
+    preHandler: [validateParams(commentParamsSchema), validateBody(updateCommentSchema)],
     handler: commentsController.updateComment.bind(commentsController),
   });
 
-  // DELETE /admin/comments/:id - Delete a comment
   fastify.delete('/:id', {
+    preHandler: validateParams(commentParamsSchema),
     handler: commentsController.deleteComment.bind(commentsController),
   });
 }
