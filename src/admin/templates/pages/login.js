@@ -1,26 +1,13 @@
 // src/admin/templates/pages/login.js
 // Login page template
 
-import { authLayout } from '../layouts/auth.js';
-
 /**
- * Login Page Template
- * 
- * @param {Object} options
- * @param {string} [options.error] - Error message to display
- * @param {string} [options.success] - Success message to display (e.g., after password reset)
- * @returns {string} Complete HTML page
+ * Login page inner content (layout applied via fastify-html addLayout).
+ *
+ * @returns {string} Inner HTML for the login form panel
  */
-export function loginPage({ error = '', success = '' } = {}) {
-  const errorHtml = error 
-    ? `<div class="alert alert--danger" role="alert">${escapeHtml(error)}</div>` 
-    : '';
-  
-  const successHtml = success 
-    ? `<div class="alert alert--success" role="alert">${escapeHtml(success)}</div>` 
-    : '';
-
-  const body = `
+export function loginContent() {
+  return `
         <div class="login__container">
           <!-- Auth Card -->
           <div class="auth-card">
@@ -205,27 +192,17 @@ export function loginPage({ error = '', success = '' } = {}) {
           </div>
         </div>
   `;
-
-  return authLayout({
-    title: 'Sign In',
-    description: 'Sign in to your BlogCMS Dashboard account',
-    body
-  });
 }
 
 /**
- * Escape HTML special characters to prevent XSS
- * @param {string} text 
- * @returns {string}
+ * Login page metadata for fastify-html addLayout.
+ *
+ * @param {Object} [_options]
+ * @returns {{ title: string, description: string }}
  */
-function escapeHtml(text) {
-  if (!text) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
+export function loginMeta(_options = {}) {
+  return {
+    title: 'Sign In',
+    description: 'Sign in to your BlogCMS Dashboard account',
   };
-  return text.replace(/[&<>"']/g, char => map[char]);
 }

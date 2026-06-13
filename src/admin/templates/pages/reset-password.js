@@ -1,22 +1,22 @@
 // src/admin/templates/pages/reset-password.js
 // Reset password page template
 
-import { authLayout } from '../layouts/auth.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 /**
- * Reset Password Page Template
- * 
+ * Reset password page inner content (layout applied via fastify-html addLayout).
+ *
  * @param {Object} options
  * @param {string} options.token - Password reset token
  * @param {string} [options.error] - Error message to display
- * @returns {string} Complete HTML page
+ * @returns {string} Inner HTML for the reset password form panel
  */
-export function resetPasswordPage({ token, error = '' } = {}) {
-  const errorHtml = error 
-    ? `<div class="alert alert--error" role="alert">${escapeHtml(error)}</div>` 
+export function resetPasswordContent({ token, error = '' } = {}) {
+  const errorHtml = error
+    ? `<div class="alert alert--error" role="alert">${escapeHtml(error)}</div>`
     : '';
 
-  const body = `
+  return `
         <div class="login__container">
           <!-- Auth Card -->
           <div class="auth-card">
@@ -86,27 +86,17 @@ export function resetPasswordPage({ token, error = '' } = {}) {
           </div>
         </div>
   `;
-
-  return authLayout({
-    title: 'Reset Password',
-    description: 'Reset your BlogCMS Dashboard password',
-    body
-  });
 }
 
 /**
- * Escape HTML special characters to prevent XSS
- * @param {string} text 
- * @returns {string}
+ * Reset password page metadata for fastify-html addLayout.
+ *
+ * @param {Object} [_options]
+ * @returns {{ title: string, description: string }}
  */
-function escapeHtml(text) {
-  if (!text) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
+export function resetPasswordMeta(_options = {}) {
+  return {
+    title: 'Reset Password',
+    description: 'Reset your BlogCMS Dashboard password',
   };
-  return text.replace(/[&<>"']/g, char => map[char]);
 }
