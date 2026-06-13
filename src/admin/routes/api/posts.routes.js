@@ -2,21 +2,17 @@
 // Public API routes for posts
 
 import { postsAPIController } from '../../controllers/api/posts.controller.js';
+import { validateParams, validateQuery } from '../../middleware/validate.js';
+import { apiPaginationQuerySchema, slugParamSchema } from '../../schemas/common.schema.js';
 
-/**
- * Posts API Routes
- * Public endpoints for consuming posts data
- */
 export default async function postsAPIRoutes(fastify) {
-  // GET /api/v1/posts
-  // List all published posts with pagination
   fastify.get('/', {
+    preHandler: validateQuery(apiPaginationQuerySchema),
     handler: postsAPIController.list.bind(postsAPIController),
   });
 
-  // GET /api/v1/posts/:slug
-  // Get single post by slug
   fastify.get('/:slug', {
+    preHandler: validateParams(slugParamSchema),
     handler: postsAPIController.getBySlug.bind(postsAPIController),
   });
 }
