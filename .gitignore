@@ -22,6 +22,7 @@ lerna-debug.log*
 # Build outputs
 build/
 .build/
+dist/
 *.tsbuildinfo
 
 # Cache
@@ -46,60 +47,50 @@ build/
 .DS_Store
 Thumbs.db
 
-# Temporary files
+# Temporary / local runtime
 *.tmp
 *.temp
 tmp/
 temp/
-
-# Compiled CSS (if using build process)
-# public/css/*.css
-# public/css/*.map
+scripts/.tmp/
 
 # Testing
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
 
-# Misc
-*.local
-.history/
-cookies.txt
-
-# Local agent workspace files
+# Local agent / assistant workspace
 .serena/
 .opencode/
 .playwright-mcp/
 .tmp/
 .cursor/
-
-# AI assistant prompts
 dashboard-prompt.json
 session*.json
+cookies.txt
+*.local
+.history/
 
-# Session exports from AI assistants
-session*.json
+# Local backups (large tarballs / old checkouts)
+_backups/
+*.tar.gz
 
-# Local docs (keep off GitHub)
-docs/
-
-# Generated media uploads/cache
+# Generated media uploads (seed assets excepted below)
 public/uploads/images/image-*
 public/uploads/images/thumbs/
-public/uploads/images/pexels-*
 public/uploads/posts/post-*
 public/uploads/events/
 public/uploads/board-members/
-public/uploads/videos/thumbs/thumb-*
+public/uploads/videos/thumbs/
+public/uploads/videos/video-*
 public/uploads/videos/*.mp4
+!public/uploads/videos/seeder-video.mp4
 
 # Built vendor bundles
 public/vendor/
 
-# Screenshots and test artifacts
+# Screenshots and stray artifacts at repo root
 /*.png
 admin-*.yml
 home-page-snapshot.txt
-_backups/
-
-# Compiled assets
-dist/
