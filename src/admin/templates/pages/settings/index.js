@@ -1,7 +1,4 @@
 // src/admin/templates/pages/settings/index.js
-// Settings Page - One long page with all sections (admin only)
+// Settings page barrel export
 
-import { mainLayout } from '../../layouts/main.js';
-import { settingsPage } from './settings.js';
-
-export { settingsPage };
+export { settingsContent, settingsMeta } from './settings.js';

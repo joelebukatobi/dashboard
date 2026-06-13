@@ -1,24 +1,15 @@
 // src/admin/templates/pages/settings/settings.js
 // Settings Page - Individual section forms with accordion
 
-import { mainLayout } from '../../layouts/main.js';
-import { escapeHtml } from '../../utils/helpers.js';
+import { escapeHtml, toastQueryScript } from '../../utils/helpers.js';
 
 /**
- * Settings Page Template
- * Accordion-style sections with individual save buttons
+ * Settings page inner content (layout applied via fastify-html addLayout).
  */
-export function settingsPage({ user, settings, toast }) {
-  // Build toast script
-  const toastScript = toast ? `
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        document.body.dispatchEvent(new CustomEvent('htmx:toast', {
-          detail: { message: 'Settings saved successfully!', type: 'success' }
-        }));
-      });
-    </script>
-  ` : '';
+export function settingsContent({ user, settings, toast }) {
+  const toastScript = toastQueryScript(toast, {
+    saved: 'Settings saved successfully!',
+  });
 
   // Helper to get setting value
   const getSetting = (group, key, defaultValue = '') => {
@@ -461,15 +452,17 @@ export function settingsPage({ user, settings, toast }) {
     ${toastScript}
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function settingsMeta() {
+  return {
     title: 'Settings',
     description: 'Configure your site preferences',
-    content,
-    user,
     activeRoute: '/admin/settings',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Settings', url: '/admin/settings' },
     ],
-  });
+  };
 }
