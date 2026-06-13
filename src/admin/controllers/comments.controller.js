@@ -4,6 +4,7 @@
 import { commentsService } from '../../services/comments.service.js';
 import { postsService } from '../../services/posts.service.js';
 import { successToast, errorToast } from '../templates/partials/alerts.js';
+import { renderAdminPage, renderFragment, renderEmpty, setHtmxTrigger } from '../render.js';
 
 /**
  * Comments Controller
@@ -24,26 +25,28 @@ class CommentsController {
       const post = await postsService.getPostById(postId);
       if (!post) {
         reply.code(404);
-        return reply.type('text/html').send(errorToast({
+        return reply.html`!${errorToast({
           message: 'Post not found.',
-        }));
+        })}`;
       }
 
       // Get comments for post
       const { comments, pagination } = await commentsService.getCommentsByPostId(postId, page);
 
-      // Import comments template
-      const { postCommentsPage } = await import('../templates/pages/posts/comments.js');
+      const { postCommentsContent, postCommentsMeta } = await import('../templates/pages/posts/comments.js');
 
-      return reply.type('text/html').send(
-        postCommentsPage({ user, post, comments, pagination })
+      return renderAdminPage(
+        request,
+        reply,
+        postCommentsMeta({ post, user: request.user }),
+        postCommentsContent({ user, post, comments, pagination, toast: request.query.toast }),
       );
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
+      return reply.html`!${errorToast({
         message: 'Failed to load comments.',
-      }));
+      })}`;
     }
   }
 
@@ -57,28 +60,20 @@ class CommentsController {
       const { postId } = request.params;
       const { parentId, content } = request.body;
 
-      if (!parentId || !content) {
-        reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: 'Parent comment and content are required.',
-        }));
-      }
-
       // Create reply
-      const reply = await commentsService.replyToComment(parentId, { content }, user);
+      const newReply = await commentsService.replyToComment(parentId, { content }, user);
 
       // Check if HTMX request
       const isHtmx = request.headers['hx-request'] === 'true';
 
       if (isHtmx) {
-        // Return the rendered reply HTML
         const { renderCommentPartial } = await import('../templates/pages/posts/comments.js');
-        return reply
-          .type('text/html')
-          .header('HX-Trigger', JSON.stringify({
-            'toast': { message: 'Reply posted successfully.', type: 'success' }
-          }))
-          .send(renderCommentPartial(reply, user, 1));
+        return renderFragment(
+          setHtmxTrigger(reply, {
+            toast: { message: 'Reply posted successfully.', type: 'success' },
+          }),
+          renderCommentPartial(newReply, user, 1),
+        );
       }
 
       // Redirect back to comments page
@@ -86,9 +81,9 @@ class CommentsController {
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
+      return reply.html`!${errorToast({
         message: 'Failed to post reply.',
-      }));
+      })}`;
     }
   }
 
@@ -100,13 +95,6 @@ class CommentsController {
     try {
       const { id } = request.params;
       const { content } = request.body;
-
-      if (!content) {
-        reply.code(400);
-        return reply.type('text/html').send(errorToast({
-          message: 'Content is required.',
-        }));
-      }
 
       // Update comment
       const updatedComment = await commentsService.updateComment(id, content);
@@ -124,21 +112,19 @@ class CommentsController {
           .replace(/'/g, '&#039;')
           .replace(/\n/g, '<br>');
         
-        return reply
-          .type('text/html')
-          .header('HX-Trigger', JSON.stringify({
-            'toast': { message: 'Comment updated successfully.', type: 'success' }
-          }))
-          .send(escapedContent);
+        setHtmxTrigger(reply, {
+          toast: { message: 'Comment updated successfully.', type: 'success' },
+        });
+        return reply.html`!${escapedContent}`;
       }
 
-      return reply.type('application/json').send({ success: true, comment: updatedComment });
+      return reply.send({ success: true, comment: updatedComment });
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
+      return reply.html`!${errorToast({
         message: 'Failed to update comment.',
-      }));
+      })}`;
     }
   }
 
@@ -157,12 +143,9 @@ class CommentsController {
 
       if (isHtmx) {
         // Return empty content to remove the comment from DOM
-        return reply
-          .type('text/html')
-          .header('HX-Trigger', JSON.stringify({
-            'toast': { message: 'Comment deleted successfully.', type: 'success' }
-          }))
-          .send('');
+        return renderEmpty(setHtmxTrigger(reply, {
+          toast: { message: 'Comment deleted successfully.', type: 'success' },
+        }));
       }
 
       // Redirect back to comments page with toast
@@ -170,9 +153,9 @@ class CommentsController {
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.type('text/html').send(errorToast({
+      return reply.html`!${errorToast({
         message: 'Failed to delete comment.',
-      }));
+      })}`;
     }
   }
 

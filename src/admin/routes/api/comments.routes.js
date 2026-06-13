@@ -2,20 +2,18 @@
 // Public API routes for comments
 
 import { commentsAPIController } from '../../controllers/api/comments.controller.js';
+import { validateBody, validateParams, validateQuery } from '../../middleware/validate.js';
+import { publicCommentSchema } from '../../schemas/api.schema.js';
+import { apiCommentsQuerySchema, slugParamSchema } from '../../schemas/common.schema.js';
 
-/**
- * Register comments API routes
- * @param {FastifyInstance} fastify
- * @param {Object} opts
- */
 export default async function commentsAPIRoutes(fastify, opts) {
-  // GET /api/v1/posts/:slug/comments - Get comments for a post
   fastify.get('/posts/:slug/comments', {
+    preHandler: [validateParams(slugParamSchema), validateQuery(apiCommentsQuerySchema)],
     handler: commentsAPIController.getByPostSlug.bind(commentsAPIController),
   });
 
-  // POST /api/v1/comments - Create a new comment
   fastify.post('/comments', {
+    preHandler: validateBody(publicCommentSchema),
     handler: commentsAPIController.create.bind(commentsAPIController),
   });
 }
