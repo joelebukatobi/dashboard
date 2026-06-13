@@ -3,29 +3,40 @@
 
 import { albumsController } from '../controllers/albums.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
+import { createAlbumSchema, updateAlbumSchema } from '../schemas/album.schema.js';
+import { listQuerySchema, resourceIdSchema } from '../schemas/common.schema.js';
+
+const auth = requireAuthRedirect('/admin/auth/login');
 
 export default async function albumsRoutes(fastify, opts) {
   fastify.get('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
-  }, albumsController.list.bind(albumsController));
+    preHandler: [auth, validateQuery(listQuerySchema)],
+    handler: albumsController.list.bind(albumsController),
+  });
 
   fastify.get('/new', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
-  }, albumsController.showNewForm.bind(albumsController));
+    preHandler: auth,
+    handler: albumsController.showNewForm.bind(albumsController),
+  });
 
   fastify.post('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
-  }, albumsController.create.bind(albumsController));
+    preHandler: [auth, validateBody(createAlbumSchema)],
+    handler: albumsController.create.bind(albumsController),
+  });
 
   fastify.get('/:id/edit', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
-  }, albumsController.showEditForm.bind(albumsController));
+    preHandler: [auth, validateParams(resourceIdSchema)],
+    handler: albumsController.showEditForm.bind(albumsController),
+  });
 
   fastify.put('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
-  }, albumsController.update.bind(albumsController));
+    preHandler: [auth, validateParams(resourceIdSchema), validateBody(updateAlbumSchema)],
+    handler: albumsController.update.bind(albumsController),
+  });
 
   fastify.delete('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
-  }, albumsController.delete.bind(albumsController));
+    preHandler: [auth, validateParams(resourceIdSchema)],
+    handler: albumsController.delete.bind(albumsController),
+  });
 }
