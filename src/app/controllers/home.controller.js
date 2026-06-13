@@ -1,8 +1,9 @@
-import { appHomePage } from '../templates/pages/home/home.js';
+import { homeContent, homeMeta } from '../templates/pages/home/home.js';
+import { renderAppPage } from '../render.js';
 
 class HomeController {
   async index(request, reply) {
-    return reply.type('text/html').send(appHomePage());
+    return renderAppPage(request, reply, homeMeta(), homeContent());
   }
 }
 
