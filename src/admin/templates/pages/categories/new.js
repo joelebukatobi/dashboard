@@ -1,14 +1,10 @@
 // src/admin/templates/pages/categories/new.js
 // New Category Page - Exact structure from new-category.html
 
-import { mainLayout } from '../../layouts/main.js';
-
 /**
- * New Category Page Template
- * Create new category
- * Structure matches new-category.html exactly
+ * New Category page inner content (layout applied via fastify-html addLayout).
  */
-export function categoryNewPage({ user, errors = {} }) {
+export function categoryNewContent({ user, errors = {} }) {
   const content = `
     <div class="categories">
       <div class="content">
@@ -115,16 +111,18 @@ export function categoryNewPage({ user, errors = {} }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function categoryNewMeta() {
+  return {
     title: 'New Category',
     description: 'Create a new category',
-    content,
-    user,
     activeRoute: '/admin/categories',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Categories', url: '/admin/categories' },
-      { label: 'New Category', url: '/admin/categories/new' }
-    ]
-  });
+      { label: 'New Category', url: '/admin/categories/new' },
+    ],
+  };
 }

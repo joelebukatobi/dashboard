@@ -1,15 +1,12 @@
 // src/admin/templates/pages/categories/edit.js
 // Edit Category Page - Exact structure from edit-category.html
 
-import { mainLayout } from '../../layouts/main.js';
 import { escapeHtml } from '../../utils/helpers.js';
 
 /**
- * Edit Category Page Template
- * Edit existing category
- * Structure matches edit-category.html exactly
+ * Edit Category page inner content (layout applied via fastify-html addLayout).
  */
-export function categoryEditPage({ category, user, errors = {} }) {
+export function categoryEditContent({ category, user, errors = {} }) {
   const content = `
     <div class="categories">
       <div class="content">
@@ -102,16 +99,18 @@ export function categoryEditPage({ category, user, errors = {} }) {
     </script>
   `;
 
-  return mainLayout({
+  return content;
+}
+
+export function categoryEditMeta({ category }) {
+  return {
     title: 'Edit Category',
     description: 'Edit category',
-    content,
-    user,
     activeRoute: '/admin/categories',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Categories', url: '/admin/categories' },
-      { label: escapeHtml(category.title), url: `/admin/categories/${category.id}/edit` }
-    ]
-  });
+      { label: category.title, url: `/admin/categories/${category.id}/edit` },
+    ],
+  };
 }
