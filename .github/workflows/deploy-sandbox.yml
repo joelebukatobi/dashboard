@@ -120,7 +120,6 @@ jobs:
             **/node_modules/**
             **/.env*
             **/.github/**
-            docs/**
             **/.DS_Store
             **/tmp/**
             **/.vscode/**
@@ -188,7 +187,7 @@ jobs:
 
             # NOTE: Database seeding is disabled. Use setup wizard instead.
 
-            echo "✅ Deployment complete. Run 'node scripts/generate-setup-token.js' to generate setup URL."
+            echo "✅ Deployment complete. Run 'node scripts/cli.js setup-token' to generate setup URL."
 
             mkdir -p tmp
             date > tmp/restart.txt
