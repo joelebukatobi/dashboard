@@ -1,16 +1,10 @@
 // Batch image upload page template
 
-import { mainLayout } from '../../../layouts/main.js';
-
 /**
- * Generate batch image upload page
- * @param {Object} options - Page options
- * @param {Object} options.user - Current user
- * @param {Array} options.albums - Albums for dropdown
- * @returns {string} - HTML string
+ * Batch image upload page inner content (layout applied via fastify-html addLayout).
  */
-export function imagesBatchPage({ user, albums }) {
-  const content = `
+export function imagesBatchContent({ user, albums }) {
+  return `
     <div class="media">
       <div class="content">
         <!-- Page Header -->
@@ -213,12 +207,12 @@ export function imagesBatchPage({ user, albums }) {
       });
     </script>
   `;
+}
 
-  return mainLayout({
+export function imagesBatchMeta() {
+  return {
     title: 'Batch Upload Images',
     description: 'Upload multiple images at once',
-    content,
-    user,
     activeRoute: '/admin/media/images',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
@@ -226,5 +220,5 @@ export function imagesBatchPage({ user, albums }) {
       { label: 'Images', url: '/admin/media/images' },
       { label: 'Batch Upload', url: '/admin/media/images/batch' },
     ],
-  });
+  };
 }

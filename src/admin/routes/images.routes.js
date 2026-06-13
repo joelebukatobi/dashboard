@@ -3,58 +3,50 @@
 
 import { imagesController } from '../controllers/images.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
+import { updateMediaSchema } from '../schemas/media.schema.js';
+import { listQuerySchema, resourceIdSchema } from '../schemas/common.schema.js';
 
-/**
- * Register image routes
- * @param {FastifyInstance} fastify - Fastify instance
- * @param {Object} opts - Route options
- */
+const auth = requireAuthRedirect('/admin/auth/login');
+
 export default async function imagesRoutes(fastify, opts) {
-  // GET /admin/media/images - List all images
   fastify.get('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateQuery(listQuerySchema)],
     handler: imagesController.list.bind(imagesController),
   });
 
-  // GET /admin/media/images/new - Show new image form
   fastify.get('/new', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: imagesController.showNewForm.bind(imagesController),
   });
 
-  // POST /admin/media/images - Upload image
   fastify.post('/', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: imagesController.upload.bind(imagesController),
   });
 
-  // GET /admin/media/images/batch - Show batch upload form
   fastify.get('/batch', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: imagesController.showBatchForm.bind(imagesController),
   });
 
-  // POST /admin/media/images/batch - Batch upload images
   fastify.post('/batch', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: auth,
     handler: imagesController.batchUpload.bind(imagesController),
   });
 
-  // GET /admin/media/images/:id/edit - Show edit form
   fastify.get('/:id/edit', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: imagesController.showEditForm.bind(imagesController),
   });
 
-  // PUT /admin/media/images/:id - Update image
   fastify.put('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema), validateBody(updateMediaSchema)],
     handler: imagesController.update.bind(imagesController),
   });
 
-  // DELETE /admin/media/images/:id - Delete image
   fastify.delete('/:id', {
-    preHandler: requireAuthRedirect('/admin/auth/login'),
+    preHandler: [auth, validateParams(resourceIdSchema)],
     handler: imagesController.delete.bind(imagesController),
   });
 }
