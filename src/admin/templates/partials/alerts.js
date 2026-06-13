@@ -1,6 +1,8 @@
 // src/admin/templates/partials/alerts.js
 // Toast notification partials
 
+import { escapeHtml } from '../utils/helpers.js';
+
 /**
  * Success toast notification
  * @param {Object} options - Toast options
@@ -47,19 +49,4 @@ export function errorToast({ message }) {
       }
     </script>
   `;
-}
-
-/**
- * Escape HTML to prevent XSS
- * @param {string} text - Text to escape
- * @returns {string} - Escaped text
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
