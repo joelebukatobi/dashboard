@@ -1,10 +1,11 @@
 // src/admin/templates/pages/albums/new.js
 // New Album Page
 
-import { mainLayout } from '../../layouts/main.js';
-
-export function albumNewPage({ user }) {
-  const content = `
+/**
+ * New album page inner content (layout applied via fastify-html addLayout).
+ */
+export function albumNewContent({ user }) {
+  return `
     <div class="albums">
       <div class="content">
         <div class="page-header">
@@ -100,12 +101,12 @@ export function albumNewPage({ user }) {
       }
     </script>
   `;
+}
 
-  return mainLayout({
+export function albumNewMeta() {
+  return {
     title: 'New Album',
     description: 'Create a new album',
-    content,
-    user,
     activeRoute: '/admin/media/albums',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
@@ -113,5 +114,5 @@ export function albumNewPage({ user }) {
       { label: 'Albums', url: '/admin/media/albums' },
       { label: 'New Album', url: '/admin/media/albums/new' },
     ],
-  });
+  };
 }

@@ -1,14 +1,16 @@
 // src/admin/templates/pages/albums/edit.js
 // Edit Album Page
 
-import { mainLayout } from '../../layouts/main.js';
 import { escapeHtml } from '../../utils/helpers.js';
 
-export function albumEditPage({ user, album, albumImages = [] }) {
+/**
+ * Edit album page inner content (layout applied via fastify-html addLayout).
+ */
+export function albumEditContent({ user, album, albumImages = [] }) {
   const hasCover = album.coverImage && album.coverImage.path;
   const coverImageId = album.coverImageId || '';
-  
-  const content = `
+
+  return `
     <div class="albums">
       <div class="content">
         <div class="page-header">
@@ -144,18 +146,18 @@ export function albumEditPage({ user, album, albumImages = [] }) {
       }
     </script>
   `;
+}
 
-  return mainLayout({
-    title: `Edit Album - ${escapeHtml(album.title)}`,
+export function albumEditMeta({ album }) {
+  return {
+    title: `Edit Album - ${album.title}`,
     description: 'Edit album details',
-    content,
-    user,
     activeRoute: '/admin/media/albums',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
       { label: 'Media', url: '/admin/media/images' },
       { label: 'Albums', url: '/admin/media/albums' },
-      { label: escapeHtml(album.title), url: `/admin/media/albums/${album.id}/edit` },
+      { label: album.title, url: `/admin/media/albums/${album.id}/edit` },
     ],
-  });
+  };
 }
