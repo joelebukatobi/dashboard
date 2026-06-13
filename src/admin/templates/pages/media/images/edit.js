@@ -1,22 +1,14 @@
 // Edit image page template
 
-import { mainLayout } from '../../../layouts/main.js';
 import { escapeHtml } from '../../../utils/helpers.js';
 
 /**
- * Generate image edit page
- * @param {Object} options - Page options
- * @param {Object} options.user - Current user
- * @param {Object} options.image - Image data
- * @param {Array} options.posts - Posts for attachment dropdown
- * @param {Array} options.albums - Albums for dropdown
- * @returns {string} - HTML string
+ * Edit image page inner content (layout applied via fastify-html addLayout).
  */
-export function imagesEditPage({ user, image, posts, albums = [] }) {
-  const content = `
+export function imagesEditContent({ user, image, posts, albums = [] }) {
+  return `
     <div class="media">
       <div class="content">
-        <!-- Page Header -->
         <div class="page-header">
           <div class="page-header__left">
             <h1 class="page-header__title">Edit Image</h1>
@@ -25,32 +17,26 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
           <div class="page-header__toast-container"></div>
         </div>
 
-        <!-- Edit Form Layout -->
         <div class="media-layout media-layout--start">
-          <!-- Left: Image Preview -->
           <div class="media-layout__content media-layout__content--start">
             <div class="upload-zone upload-zone--preview upload-zone--full image-preview-container">
-              <!-- Background image (blurred backdrop) -->
-              <img 
+              <img
                 class="image-preview-bg"
                 src="${image.path}"
                 alt=""
               />
-              
-              <!-- Main image (foreground, natural aspect ratio) -->
-              <img 
-                class="image-preview-main" 
+              <img
+                class="image-preview-main"
                 src="${image.path}"
                 alt="${escapeHtml(image.altText || image.title || '')}"
               />
             </div>
           </div>
 
-          <!-- Right: Form -->
           <div class="media-layout__sidebar">
             <div class="card card__panel">
               <div class="card__body">
-                <form 
+                <form
                   id="editForm"
                   class="form"
                   hx-put="/admin/media/images/${image.id}"
@@ -59,27 +45,25 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
                 >
                   <div id="form-response"></div>
                   <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
-                  
-                  <!-- File Name -->
+
                   <div class="form__group">
                     <label class="label label--required" for="fileName">File Name</label>
-                    <input 
-                      type="text" 
-                      name="title" 
-                      id="fileName" 
+                    <input
+                      type="text"
+                      name="title"
+                      id="fileName"
                       class="input"
                       value="${escapeHtml(image.title || '')}"
                       placeholder="Enter file name"
-                      required 
+                      required
                     />
                   </div>
 
-                  <!-- Alt Text -->
                   <div class="form__group">
                     <label class="label" for="altText">Alt Text</label>
-                    <input 
-                      type="text" 
-                      name="altText" 
+                    <input
+                      type="text"
+                      name="altText"
                       id="altText"
                       class="input"
                       value="${escapeHtml(image.altText || '')}"
@@ -88,11 +72,10 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
                     <p class="form-feedback form-feedback--hint">Describe the image for screen readers</p>
                   </div>
 
-                  <!-- Album -->
                   <div class="form__group">
                     <label class="label" for="albumId">Album (Optional)</label>
-                    <select 
-                      name="albumId" 
+                    <select
+                      name="albumId"
                       id="albumId"
                       class="form__select-native"
                       data-hs-select='{
@@ -106,17 +89,16 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
                       }'
                     >
                       <option value="">None</option>
-                      ${albums.map(album => `
+                      ${albums.map((album) => `
                         <option value="${album.id}" ${image.albumId === album.id ? 'selected' : ''}>${escapeHtml(album.title)}</option>
                       `).join('')}
                     </select>
                   </div>
 
-                  <!-- Attach to Post -->
                   <div class="form__group">
                     <label class="label" for="postId">Attach to Post (Optional)</label>
-                    <select 
-                      name="postId" 
+                    <select
+                      name="postId"
                       id="postId"
                       class="form__select-native"
                       data-hs-select='{
@@ -130,7 +112,7 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
                       }'
                     >
                       <option value="">None</option>
-                      ${posts.map(post => `
+                      ${posts.map((post) => `
                         <option value="${post.id}">${escapeHtml(post.title)}</option>
                       `).join('')}
                     </select>
@@ -144,8 +126,8 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
                     Save
                   </button>
                   <a href="/admin/media/images" class="btn btn--outline btn--cancel">Cancel</a>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     class="btn btn--danger btn--outline"
                     onclick="openDeleteModal(event)"
                   >
@@ -159,8 +141,12 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
         </div>
       </div>
     </div>
+  `;
+}
 
-    <!-- Delete Confirmation Modal -->
+/** Delete confirmation modal for image edit page */
+export function imagesEditModals({ user, image }) {
+  return `
     <div id="deleteModal" class="modal" role="dialog" tabindex="-1">
       <div class="modal__backdrop" onclick="closeDeleteModal()"></div>
       <div class="modal__panel">
@@ -216,12 +202,12 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
       });
     </script>
   `;
+}
 
-  return mainLayout({
+export function imagesEditMeta({ user, image }) {
+  return {
     title: 'Edit Image',
     description: `Editing ${image.originalName}`,
-    content,
-    user,
     activeRoute: '/admin/media/images',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
@@ -229,5 +215,6 @@ export function imagesEditPage({ user, image, posts, albums = [] }) {
       { label: 'Images', url: '/admin/media/images' },
       { label: image.title || 'Edit Image', url: `/admin/media/images/${image.id}/edit` },
     ],
-  });
+    modals: imagesEditModals({ user, image }),
+  };
 }

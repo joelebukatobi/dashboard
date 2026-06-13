@@ -1,17 +1,12 @@
 // New image page template
 
-import { mainLayout } from '../../../layouts/main.js';
 import { escapeHtml } from '../../../utils/helpers.js';
 
 /**
- * Generate new image page
- * @param {Object} options - Page options
- * @param {Object} options.user - Current user
- * @param {Array} options.posts - Posts for attachment dropdown
- * @returns {string} - HTML string
+ * New image page inner content (layout applied via fastify-html addLayout).
  */
-export function imagesNewPage({ user, posts }) {
-  const content = `
+export function imagesNewContent({ user, posts }) {
+  return `
     <div class="media">
       <div class="content">
         <!-- Page Header -->
@@ -197,12 +192,12 @@ export function imagesNewPage({ user, posts }) {
       });
     </script>
   `;
+}
 
-  return mainLayout({
+export function imagesNewMeta() {
+  return {
     title: 'New Image',
     description: 'Upload a new image to the media library',
-    content,
-    user,
     activeRoute: '/admin/media/images',
     breadcrumbs: [
       { label: 'Dashboard', url: '/admin' },
@@ -210,5 +205,5 @@ export function imagesNewPage({ user, posts }) {
       { label: 'Images', url: '/admin/media/images' },
       { label: 'New Image', url: '/admin/media/images/new' },
     ],
-  });
+  };
 }
