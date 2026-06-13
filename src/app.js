@@ -9,12 +9,14 @@ import fastifyStatic from '@fastify/static';
 import fastifyMultipart from '@fastify/multipart';
 import fastifyHtml from 'fastify-html';
 import path from 'path';
+import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { checkSetupStatus } from './middleware/setup-check.js';
 import { ensureDatabaseUrl } from '../env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const PUBLIC_DIR = path.join(__dirname, '../public');
 
 // Load environment variables (process.env, .env.local, .env.development, .env, cPanel)
 ensureDatabaseUrl({ scriptName: 'server', exitOnError: false });
@@ -124,13 +126,6 @@ export default async function app(fastify, opts) {
     decorateReply: false,
   });
 
-  // Serve fslightbox
-  await fastify.register(fastifyStatic, {
-    root: path.join(__dirname, '../node_modules/fslightbox'),
-    prefix: '/vendor/fslightbox/',
-    decorateReply: false,
-  });
-
   // Serve ApexCharts
   await fastify.register(fastifyStatic, {
     root: path.join(__dirname, '../node_modules/apexcharts/dist'),
@@ -138,11 +133,14 @@ export default async function app(fastify, opts) {
     decorateReply: false,
   });
 
-  // Serve Cropper.js
-  await fastify.register(fastifyStatic, {
-    root: path.join(__dirname, '../node_modules/cropperjs/dist'),
-    prefix: '/vendor/cropperjs/',
-    decorateReply: false,
+  fastify.get('/favicon.svg', async (_request, reply) => {
+    const data = await readFile(path.join(PUBLIC_DIR, 'favicon.svg'));
+    return reply.type('image/svg+xml').send(data);
+  });
+
+  fastify.get('/favicon.ico', async (_request, reply) => {
+    const data = await readFile(path.join(PUBLIC_DIR, 'favicon.ico'));
+    return reply.type('image/x-icon').send(data);
   });
 
   // Health check endpoint
@@ -155,19 +153,9 @@ export default async function app(fastify, opts) {
     };
   });
 
-   // Register admin routes
-   await fastify.register(import('./admin/routes/auth.routes.js'), { prefix: '/admin/auth' });
-   await fastify.register(import('./admin/routes/dashboard.routes.js'), { prefix: '/admin' });
-   await fastify.register(import('./admin/routes/posts.routes.js'), { prefix: '/admin/posts' });
-   await fastify.register(import('./admin/routes/comments.routes.js'), { prefix: '/admin/posts/:postId/comments' });
-   await fastify.register(import('./admin/routes/categories.routes.js'), { prefix: '/admin/categories' });
-   await fastify.register(import('./admin/routes/tags.routes.js'), { prefix: '/admin/tags' });
-     await fastify.register(import('./admin/routes/users.routes.js'), { prefix: '/admin/users' });
-     await fastify.register(import('./admin/routes/subscribers.routes.js'), { prefix: '/admin/subscribers' });
-     await fastify.register(import('./admin/routes/images.routes.js'), { prefix: '/admin/media/images' });
-     await fastify.register(import('./admin/routes/videos.routes.js'), { prefix: '/admin/media/videos' });
-     await fastify.register(import('./admin/routes/albums.routes.js'), { prefix: '/admin/media/albums' });
-     await fastify.register(import('./admin/routes/settings.routes.js'), { prefix: '/admin/settings' });
+   // Register admin routes (fastify-html layouts scoped per plugin)
+   await fastify.register(import('./admin/auth-plugin.js'));
+   await fastify.register(import('./admin/plugin.js'));
 
   // Register public API routes (v1)
   await fastify.register(import('./admin/routes/api/posts.routes.js'), { prefix: '/api/v1/posts' });
@@ -178,8 +166,8 @@ export default async function app(fastify, opts) {
    await fastify.register(import('./admin/routes/api/videos.routes.js'), { prefix: '/api/v1/videos' });
    await fastify.register(import('./admin/routes/api/subscribers.routes.js'), { prefix: '/api/v1' });
 
-  // Register public app routes
-  await fastify.register(import('./app/routes/home.routes.js'));
+  // Register public app routes (fastify-html layout scoped per plugin)
+  await fastify.register(import('./app/plugin.js'));
 
   // 404 handler
   fastify.setNotFoundHandler(async (request, reply) => {
