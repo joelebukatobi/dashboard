@@ -7,7 +7,7 @@ import { resetPasswordContent, resetPasswordMeta } from '../templates/pages/rese
 import { renderAdminPage } from '../render.js';
 import { validateBody } from '../middleware/validate.js';
 import { loginSchema } from '../../utils/validators.js';
-import { forgotPasswordSchema, resetPasswordSchema } from '../schemas/auth.schema.js';
+import { forgotPasswordSchema, resetPasswordSchema, verifyTotpSchema } from '../schemas/auth.schema.js';
 import { errorAlert } from '../render.js';
 
 function authFormValidationFail(request, reply, message) {
@@ -19,6 +19,24 @@ export default async function authRoutes(fastify) {
   fastify.post('/login', {
     preHandler: validateBody(loginSchema),
     handler: authController.login.bind(authController),
+  });
+
+  fastify.post('/verify-totp', {
+    preHandler: validateBody(verifyTotpSchema),
+    handler: authController.verifyTotp.bind(authController),
+  });
+
+  fastify.get('/totp', {
+    handler: authController.showTotpPage.bind(authController),
+  });
+
+  fastify.get('/totp-setup', {
+    handler: authController.showTotpSetupPage.bind(authController),
+  });
+
+  fastify.post('/totp-setup/verify', {
+    preHandler: validateBody(verifyTotpSchema),
+    handler: authController.verifyTotpSetup.bind(authController),
   });
   
   // GET /admin/auth/login

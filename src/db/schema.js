@@ -82,6 +82,8 @@ export const users = mysqlTable('users', {
   lastActiveAt: timestamp('last_active_at'),
   failedLoginAttempts: int('failed_login_attempts').default(0).notNull(),
   lockedUntil: timestamp('locked_until'),
+  totpSecret: varchar('totp_secret', { length: 255 }),
+  totpEnabled: boolean('totp_enabled').default(false).notNull(),
 });
 
 export const usersRelations = relations(users, ({ many }) => ({

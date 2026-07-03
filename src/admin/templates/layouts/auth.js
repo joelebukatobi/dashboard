@@ -15,17 +15,30 @@
  * Auth shell HTML (login split layout + scripts).
  * Used by authLayout (legacy) and fastify-html addLayout.
  */
-export function buildAuthShell({ title = 'Sign In', description = 'Sign in to your account', body }) {
+export function buildAuthShell({
+  title = 'Sign In',
+  description = 'Sign in to your account',
+  body,
+  siteName = 'BlogCMS',
+  favicon = '/favicon.svg',
+  ogMeta = '',
+}) {
+  const safeTitle = String(title).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const safeSiteName = String(siteName).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const safeDescription = String(description).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  const safeFavicon = String(favicon).replace(/"/g, '&quot;');
+
   return `<!doctype html>
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title} - BlogCMS Dashboard</title>
-    <meta name="description" content="${description}" />
+    <title>${safeTitle} - ${safeSiteName}</title>
+    <meta name="description" content="${safeDescription}" />
+    ${ogMeta}
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="${safeFavicon}" />
 
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

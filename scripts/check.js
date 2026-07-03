@@ -66,7 +66,7 @@ function checkHtmlPatterns() {
 }
 
 const MULTIPART_FILES = new Set(['images.routes.js', 'videos.routes.js']);
-const MULTIPART_ROUTE = /'\/(logo|avatar|batch|upload-image|upload-video)'/;
+const MULTIPART_ROUTE = /'\/(logo|avatar|batch|upload-image|upload-video|icon)'/;
 const MUTATING_ROUTE = /fastify\.(post|put|patch)\(/;
 const VALIDATE_HANDLER = /validate(Body|Query|Params|SetupBody)/;
 const AUTH_JSON_HANDLER = /handler:.*Controller\.(logout|getCurrentUser)/;

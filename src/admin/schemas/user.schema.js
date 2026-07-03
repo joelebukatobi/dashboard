@@ -16,3 +16,10 @@ export const updateUserSchema = z.object({
   role: z.enum(['ADMIN', 'EDITOR', 'AUTHOR', 'VIEWER']).optional(),
   status: z.enum(['ACTIVE', 'INVITED', 'SUSPENDED']).optional(),
 });
+
+export const totpVerifySchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Code must be 6 digits'),
+});

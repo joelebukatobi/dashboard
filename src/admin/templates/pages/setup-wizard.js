@@ -80,7 +80,7 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
 
       <div class="setup-wizard__token-info">
         <i data-lucide="clock"></i>
-        <span>Token Expires In: <strong id="countdown">${formatCountdown(expiresIn)}</strong></span>
+        <span>Token Expires In: <strong id="countdown" class="setup-wizard__countdown">${formatCountdown(expiresIn)}</strong></span>
       </div>
 
       <form class="auth-card__form" method="POST" action="/setup?token=${token}">
@@ -184,10 +184,23 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
       let expiresIn = ${expiresIn};
       const countdownEl = document.getElementById('countdown');
 
+      function updateCountdownState() {
+        countdownEl.classList.remove(
+          'setup-wizard__countdown--warning',
+          'setup-wizard__countdown--critical',
+        );
+
+        if (expiresIn <= 0 || expiresIn < 300) {
+          countdownEl.classList.add('setup-wizard__countdown--critical');
+        } else if (expiresIn < 1800) {
+          countdownEl.classList.add('setup-wizard__countdown--warning');
+        }
+      }
+
       function updateCountdown() {
         if (expiresIn <= 0) {
           countdownEl.textContent = 'Expired';
-          countdownEl.style.color = '#dc2626';
+          updateCountdownState();
           return;
         }
 
@@ -205,12 +218,7 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
         }
 
         countdownEl.textContent = text;
-
-        if (expiresIn < 300) {
-          countdownEl.style.color = '#dc2626';
-        } else if (expiresIn < 1800) {
-          countdownEl.style.color = '#d97706';
-        }
+        updateCountdownState();
 
         expiresIn--;
       }

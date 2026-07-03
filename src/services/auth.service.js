@@ -47,33 +47,15 @@ class AuthService {
    * @returns {Promise<object>} - { valid: boolean, user?: object, errorType?: string }
    */
   async validateCredentials(email, password) {
-    // Check email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return { valid: false, errorType: 'INVALID_EMAIL_FORMAT' };
     }
-    
-    // Check password length
-    if (password.length < 8) {
-      return { valid: false, errorType: 'PASSWORD_TOO_SHORT' };
+
+    if (!password) {
+      return { valid: false, errorType: 'PASSWORD_REQUIRED' };
     }
-    
-    // Check for lowercase letter
-    if (!/[a-z]/.test(password)) {
-      return { valid: false, errorType: 'PASSWORD_NO_LOWERCASE' };
-    }
-    
-    // Check for uppercase letter
-    if (!/[A-Z]/.test(password)) {
-      return { valid: false, errorType: 'PASSWORD_NO_UPPERCASE' };
-    }
-    
-    // Check for number
-    if (!/\d/.test(password)) {
-      return { valid: false, errorType: 'PASSWORD_NO_NUMBER' };
-    }
-    
-    // Find user by email
+
     const user = await this.findUserByEmail(email);
     
     if (!user) {
@@ -153,7 +135,9 @@ class AuthService {
           lastName: users.lastName,
           role: users.role,
           status: users.status,
-          avatarUrl: users.avatarUrl
+          avatarUrl: users.avatarUrl,
+          lastActiveAt: users.lastActiveAt,
+          totpEnabled: users.totpEnabled,
         }
       })
       .from(sessions)
@@ -167,6 +151,51 @@ class AuthService {
       .limit(1);
     
     return result[0] || null;
+  }
+
+  /**
+   * Check whether a session has exceeded idle timeout (production only).
+   * @param {{ rememberMe?: boolean }} session
+   * @param {{ lastActiveAt?: Date|string|null }} user
+   * @param {Record<string, unknown>} [siteSettings]
+   * @returns {boolean}
+   */
+  isSessionIdleExpired(session, user, siteSettings = {}) {
+    if (process.env.NODE_ENV !== 'production') {
+      return false;
+    }
+
+    if (!user.lastActiveAt) {
+      return false;
+    }
+
+    const lastActive = new Date(user.lastActiveAt).getTime();
+    if (Number.isNaN(lastActive)) {
+      return false;
+    }
+
+    const idleMs = session.rememberMe
+      ? 7 * 24 * 60 * 60 * 1000
+      : (Number(siteSettings.sessionTimeout) || 60) * 60 * 1000;
+
+    return Date.now() - lastActive > idleMs;
+  }
+
+  /**
+   * Load TOTP fields for login verification (internal use).
+   * @param {string} userId
+   */
+  async getUserTotpCredentials(userId) {
+    const [row] = await db
+      .select({
+        totpSecret: users.totpSecret,
+        totpEnabled: users.totpEnabled,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    return row || null;
   }
 
   /**

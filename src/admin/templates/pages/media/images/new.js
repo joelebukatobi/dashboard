@@ -38,7 +38,7 @@ export function imagesNewContent({ user, posts }) {
                 id="imageInput" 
                 accept="image/jpeg,image/png,image/webp,image/gif" 
                 required
-                style="opacity: 0; position: absolute; inset: 0; cursor: pointer; width: 100%; height: 100%; z-index: 10;"
+                class="upload-zone__input"
                 onchange="handleFileSelect(this)"
               />
               <div class="upload-placeholder" id="uploadPlaceholder">

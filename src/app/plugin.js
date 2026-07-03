@@ -5,6 +5,7 @@ import {
   buildComingSoonShell,
   buildAppErrorShell,
 } from './templates/layouts/app.js';
+import { resolvePageMeta, renderOgMetaTags } from '../lib/site-meta.js';
 
 /**
  * Encapsulated public app plugin.
@@ -14,27 +15,46 @@ export default async function appPlugin(fastify) {
   await fastify.register(fastifyHtml);
 
   fastify.addLayout((inner, reply) => {
-    const meta = reply.request.templateMeta ?? {};
+    const pageMeta = reply.request.templateMeta ?? {};
+    const siteMap = reply.request.siteSettingsMap ?? {};
+    const siteName = String(siteMap.siteName || 'BlogCMS');
+    const siteIcon = String(siteMap.siteIcon || '');
+    const favicon = siteIcon || '/favicon.svg';
+    const resolved = resolvePageMeta(siteMap, {
+      title: pageMeta.title,
+      description: pageMeta.description,
+      path: reply.request.url,
+      image: pageMeta.image,
+    });
+    const ogMeta = renderOgMetaTags(resolved);
+    const layoutProps = {
+      title: resolved.title,
+      siteName,
+      favicon,
+      ogMeta,
+    };
 
-    switch (meta.layout) {
+    switch (pageMeta.layout) {
       case 'blog':
         return buildBlogShell({
-          title: meta.title ?? 'Blog',
-          activeBlogNav: meta.activeBlogNav ?? false,
+          ...layoutProps,
+          activeBlogNav: pageMeta.activeBlogNav ?? false,
           content: inner,
-          footer: meta.footer ?? '',
+          footer: pageMeta.footer ?? '',
         });
       case 'coming-soon':
-        return buildComingSoonShell({ content: inner });
+        return buildComingSoonShell({ content: inner, favicon, ogMeta });
       case 'error':
         return buildAppErrorShell({
-          title: meta.title ?? 'Error',
+          title: pageMeta.title ?? 'Error',
           content: inner,
+          favicon,
+          ogMeta,
         });
       case 'app':
       default:
         return buildAppShell({
-          title: meta.title ?? 'BlogCMS App',
+          ...layoutProps,
           content: inner,
         });
     }

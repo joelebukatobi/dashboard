@@ -142,6 +142,10 @@ $collapsed-item-size: 3.2rem;
     & svg {
       @apply w-[2rem] h-[2rem] stroke-[1.2] stroke-blue-600 dark:stroke-grey-600;
     }
+
+    &-img {
+      @apply w-[2rem] h-[2rem] object-contain;
+    }
   }
 
   &__logo-text {

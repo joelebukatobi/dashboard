@@ -37,18 +37,18 @@ export function imagesBatchContent({ user, albums }) {
               accept="image/jpeg,image/png,image/webp,image/gif"
               multiple
               required
-              style="opacity: 0; position: absolute; inset: 0; cursor: pointer; width: 100%; height: 100%; z-index: 10;"
+              class="batch-upload-zone__input"
               onchange="handleBatchFileSelect(this)"
             />
             <div class="upload-placeholder" id="uploadPlaceholder">
-              <i data-lucide="images" style="width: 48px; height: 48px; margin-bottom: 1rem;"></i>
+              <i data-lucide="images" class="upload-placeholder__icon"></i>
               <p>Drag & Drop or Click to Select Images</p>
               <p>Up to 20 images, JPEG, PNG, WebP, GIF up to 50MB each</p>
             </div>
           </div>
 
           <!-- Batch File List -->
-          <div class="table" id="batchFileList" style="display: none; margin-bottom: 2rem;">
+          <div class="table batch-file-list" id="batchFileList">
             <table>
               <thead class="table__thead">
                 <tr class="table__tr">
@@ -117,8 +117,8 @@ export function imagesBatchContent({ user, albums }) {
 
         // Update placeholder with count, show file list
         placeholder.innerHTML = '<p><strong>' + files.length + ' image' + (files.length !== 1 ? 's' : '') + ' selected</strong></p><p>Click to add more images</p>';
-        placeholder.style.padding = '1rem';
-        fileList.style.display = 'block';
+        placeholder.classList.add('upload-placeholder--compact');
+        fileList.classList.add('batch-file-list--visible');
         submitBtn.disabled = false;
         dropZone.classList.add('batch-upload-zone--has-files');
 
@@ -142,10 +142,12 @@ export function imagesBatchContent({ user, albums }) {
               '<span class="table__label">Size</span>' +
               '<span>' + formatFileSize(file.size) + '</span>' +
             '</td>' +
-            '<td class="table__td table__td--actions" style="text-align: right;">' +
+            '<td class="table__td table__td--actions">' +
+              '<div class="row-actions">' +
               '<button type="button" class="btn btn--ghost" onclick="removeBatchImage(' + index + ')" title="Remove">' +
                 '<i data-lucide="x"></i>' +
               '</button>' +
+              '</div>' +
             '</td>' +
           '</tr>';
         }).join('');
@@ -163,9 +165,9 @@ export function imagesBatchContent({ user, albums }) {
           // Reset to empty state
           document.getElementById('batchImageInput').value = '';
           const placeholder = document.getElementById('uploadPlaceholder');
-          placeholder.innerHTML = '<i data-lucide="images" style="width: 48px; height: 48px; margin-bottom: 1rem;"></i><p>Drag & Drop or Click to Select Images</p><p>Up to 20 images, JPEG, PNG, WebP, GIF up to 50MB each</p>';
-          placeholder.style.padding = '2rem';
-          document.getElementById('batchFileList').style.display = 'none';
+          placeholder.innerHTML = '<i data-lucide="images" class="upload-placeholder__icon"></i><p>Drag & Drop or Click to Select Images</p><p>Up to 20 images, JPEG, PNG, WebP, GIF up to 50MB each</p>';
+          placeholder.classList.remove('upload-placeholder--compact');
+          document.getElementById('batchFileList').classList.remove('batch-file-list--visible');
           document.getElementById('batchSubmitBtn').disabled = true;
           document.getElementById('dropZone').classList.remove('batch-upload-zone--has-files');
           if (typeof lucide !== 'undefined') {

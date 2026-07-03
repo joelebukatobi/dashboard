@@ -2,6 +2,7 @@
 // Public API controller for posts - serves JSON for frontend consumption
 
 import { postsService } from '../../../services/posts.service.js';
+import { getPublicPageLimit } from '../../../lib/site-pagination.js';
 import { db, posts, categories, users, tags, postTags } from '../../../db/index.js';
 import { eq, and, desc, asc, sql, count, inArray } from 'drizzle-orm';
 
@@ -63,9 +64,10 @@ class PostsAPIController {
    */
   async list(request, reply) {
     try {
-      const { page = 1, limit = 10, category, tag } = request.query;
+      const { page = 1, limit, category, tag } = request.query;
       const pageNum = parseInt(page, 10) || 1;
-      const limitNum = parseInt(limit, 10) || 10;
+      const siteMap = request.siteSettingsMap ?? {};
+      const limitNum = getPublicPageLimit(siteMap, limit);
       const offset = (pageNum - 1) * limitNum;
 
       // Build conditions
