@@ -1,7 +1,7 @@
 // src/services/users.service.js
 import { db, users, posts } from '../db/index.js';
 import { eq, and, like, desc, asc, sql } from 'drizzle-orm';
-import { activityService } from './activity.service.js';
+import { isUserTotpEnabled, isUserTotpPending } from '../lib/user-totp.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
@@ -130,6 +130,7 @@ class UsersService {
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
         lastActiveAt: users.lastActiveAt,
+        totpEnabled: users.totpEnabled,
       })
       .from(users)
       .where(eq(users.id, id));
@@ -566,6 +567,121 @@ class UsersService {
       categoriesCount: 0,
       usersCount: 0,
     };
+  }
+
+  /**
+   * Start TOTP enrollment (stores secret, not yet enabled).
+   * @param {string} userId
+   * @param {{ email: string, siteName: string }} context
+   */
+  async startTotpEnrollment(userId, { email, siteName }) {
+    const { createEnrollmentData } = await import('./totp.service.js');
+    const { secret, qrDataUrl } = await createEnrollmentData(email, siteName || 'Dashboard');
+
+    await db
+      .update(users)
+      .set({ totpSecret: secret, totpEnabled: false, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+
+    return { qrDataUrl };
+  }
+
+  /**
+   * Confirm TOTP enrollment with a verification code.
+   * @param {string} userId
+   * @param {string} code
+   */
+  async confirmTotpEnrollment(userId, code) {
+    const [row] = await db
+      .select({ totpSecret: users.totpSecret })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!row?.totpSecret) {
+      throw new Error('No enrollment in progress');
+    }
+
+    const { verifyTotpCode } = await import('./totp.service.js');
+    if (!(await verifyTotpCode(code, row.totpSecret))) {
+      throw new Error('Invalid verification code');
+    }
+
+    await db
+      .update(users)
+      .set({ totpEnabled: true, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+
+    return true;
+  }
+
+  /**
+   * Disable TOTP for a user.
+   * @param {string} userId
+   */
+  async disableTotp(userId) {
+    await db
+      .update(users)
+      .set({ totpSecret: null, totpEnabled: false, updatedAt: new Date() })
+      .where(eq(users.id, userId));
+
+    return true;
+  }
+
+  /**
+   * Whether user has a pending (unverified) TOTP secret.
+   * @param {string} userId
+   */
+  async hasPendingTotpEnrollment(userId) {
+    const status = await this.getUserTotpStatus(userId);
+    return status.pending;
+  }
+
+  /**
+   * @param {string} userId
+   * @returns {Promise<{ enrolled: boolean, pending: boolean }>}
+   */
+  async getUserTotpStatus(userId) {
+    const [row] = await db
+      .select({ totpSecret: users.totpSecret, totpEnabled: users.totpEnabled })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    return {
+      enrolled: isUserTotpEnabled(row?.totpEnabled),
+      pending: isUserTotpPending(row ?? {}),
+    };
+  }
+
+  /**
+   * Resume pending enrollment (same secret, new QR) or start fresh.
+   * @param {string} userId
+   * @param {{ email: string, siteName: string, reset?: boolean }} context
+   */
+  async resumeOrStartTotpEnrollment(userId, { email, siteName, reset = false }) {
+    if (reset) {
+      return this.startTotpEnrollment(userId, { email, siteName });
+    }
+
+    const [row] = await db
+      .select({ totpSecret: users.totpSecret, totpEnabled: users.totpEnabled })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (isUserTotpEnabled(row?.totpEnabled)) {
+      throw new Error('2FA is already enabled');
+    }
+
+    if (row?.totpSecret) {
+      const { qrDataUrlFromSecret } = await import('./totp.service.js');
+      const qrDataUrl = await qrDataUrlFromSecret(email, siteName || 'Dashboard', row.totpSecret);
+      return { qrDataUrl, pending: true };
+    }
+
+    const { qrDataUrl } = await this.startTotpEnrollment(userId, { email, siteName });
+    return { qrDataUrl, pending: false };
   }
 }
 

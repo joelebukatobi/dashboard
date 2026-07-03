@@ -7,14 +7,11 @@ function escapeHtml(value = '') {
     .replace(/'/g, '&#39;');
 }
 
+import { formatSiteDate } from '../../../../lib/site-dates.js';
+import { getRequestSettings } from '../../../../lib/settings-context.js';
+
 function formatDate(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  return formatSiteDate(isoString, getRequestSettings());
 }
 
 function renderComments(comments = []) {

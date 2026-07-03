@@ -2,11 +2,19 @@
 // Edit User Page - Two column layout with avatar upload
 
 import { escapeHtml, formatDate, formatRelativeTime, getInitials } from '../../utils/helpers.js';
+import { isUserTotpEnabled } from '../../../lib/user-totp.js';
 
 /**
  * Edit User page inner content (layout applied via fastify-html addLayout).
  */
-export function usersEditContent({ editUser, user, userStats = {}, errors = {} }) {
+export function usersEditContent({
+  editUser,
+  user,
+  userStats = {},
+  errors = {},
+  totpEnroll = null,
+  adminTotpRequired = false,
+}) {
   // Check if editing self
   const isSelf = user?.id === editUser?.id;
   // Check if this is the last admin
@@ -144,6 +152,8 @@ export function usersEditContent({ editUser, user, userStats = {}, errors = {} }
                   </div>
                   </div>
 
+                  ${isSelf ? totpSectionHtml({ editUser, totpEnroll, adminTotpRequired }) : ''}
+
                   <!-- Divider -->
                   <hr class="form__divider" />
 
@@ -265,6 +275,90 @@ export function userEditMeta({ editUser }) {
       { label: `${editUser.firstName} ${editUser.lastName}`, url: `/admin/users/${editUser.id}/edit` },
     ],
   };
+}
+
+/**
+ * Two-factor authentication section (self-edit only).
+ * @param {{ editUser: object, adminTotpRequired?: boolean, totpEnroll?: { pending?: boolean, qrDataUrl?: string } | null }} options
+ */
+export function totpSectionHtml({ editUser, adminTotpRequired = false, totpEnroll = null }) {
+  const userId = editUser.id;
+  let inner = '';
+
+  if (isUserTotpEnabled(editUser.totpEnabled)) {
+    if (adminTotpRequired) {
+      inner = `
+        <p class="form-feedback form-feedback--hint">
+          Two-factor authentication is enabled and required for admin accounts by site policy.
+        </p>
+      `;
+    } else {
+      inner = `
+        <p class="form-feedback form-feedback--hint">Two-factor authentication is enabled on your account.</p>
+        <button
+          type="button"
+          class="btn btn--outline"
+          hx-delete="/admin/users/${userId}/totp"
+          hx-target="#totp-section"
+          hx-swap="outerHTML"
+          hx-confirm="Disable two-factor authentication?"
+        >
+          Disable 2FA
+        </button>
+      `;
+    }
+  } else if (totpEnroll?.qrDataUrl || totpEnroll?.pending) {
+    const qrBlock = totpEnroll.qrDataUrl
+      ? `<img src="${totpEnroll.qrDataUrl}" alt="2FA QR code" width="200" height="200" class="form__totp-qr" />`
+      : '<p class="form-feedback form-feedback--hint">Enter the code from your authenticator app to finish setup.</p>';
+
+    inner = `
+      <p class="form-feedback form-feedback--hint">Scan the QR code with your authenticator app, then enter the verification code.</p>
+      ${qrBlock}
+      <form
+        class="form"
+        hx-post="/admin/users/${userId}/totp/verify"
+        hx-target="#totp-section"
+        hx-swap="outerHTML"
+      >
+        <div class="form__group">
+          <label class="label" for="totp-verify-code">Verification code</label>
+          <input
+            type="text"
+            id="totp-verify-code"
+            name="code"
+            class="input"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            autocomplete="one-time-code"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn--primary">Enable 2FA</button>
+      </form>
+    `;
+  } else {
+    inner = `
+      <p class="form-feedback form-feedback--hint">Add an extra layer of security to your account.</p>
+      <button
+        type="button"
+        class="btn btn--outline"
+        hx-post="/admin/users/${userId}/totp/enroll"
+        hx-target="#totp-section"
+        hx-swap="outerHTML"
+      >
+        Enable 2FA
+      </button>
+    `;
+  }
+
+  return `
+    <div class="form__group" id="totp-section">
+      <h4 class="form__info-box-title form__info-box-title--mb">Two-Factor Authentication</h4>
+      ${inner}
+    </div>
+  `;
 }
 
 /**

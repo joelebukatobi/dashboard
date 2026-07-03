@@ -4,7 +4,7 @@
 import { settingsController } from '../controllers/settings.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody } from '../middleware/validate.js';
-import { settingsUpdateSchema } from '../schemas/settings.schema.js';
+import { settingsUpdateSchema, siteIconSelectSchema } from '../schemas/settings.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
@@ -17,6 +17,26 @@ export default async function settingsRoutes(fastify, opts) {
   fastify.put('/', {
     preHandler: [auth, validateBody(settingsUpdateSchema)],
     handler: settingsController.updateSettings.bind(settingsController),
+  });
+
+  fastify.post('/icon', {
+    preHandler: auth,
+    handler: settingsController.uploadSiteIcon.bind(settingsController),
+  });
+
+  fastify.post('/icon/select', {
+    preHandler: [auth, validateBody(siteIconSelectSchema)],
+    handler: settingsController.selectSiteIcon.bind(settingsController),
+  });
+
+  fastify.delete('/icon', {
+    preHandler: auth,
+    handler: settingsController.removeSiteIcon.bind(settingsController),
+  });
+
+  fastify.get('/icon-picker', {
+    preHandler: auth,
+    handler: settingsController.showIconPicker.bind(settingsController),
   });
 
   fastify.post('/logo', {

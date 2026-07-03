@@ -73,7 +73,7 @@ cookies.txt
 .history/
 
 # Local backups (large tarballs / old checkouts)
-_backups/
+.backup/
 *.tar.gz
 
 # Generated media uploads (seed assets excepted below)

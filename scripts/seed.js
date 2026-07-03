@@ -154,15 +154,15 @@ async function seed() {
       { key: 'siteName', value: 'My Blog', group: 'GENERAL', type: 'STRING' },
       { key: 'siteTagline', value: 'A modern blog built with Fastify', group: 'GENERAL', type: 'STRING' },
       { key: 'siteUrl', value: 'http://localhost:3000', group: 'GENERAL', type: 'STRING' },
+      { key: 'siteIcon', value: '', group: 'GENERAL', type: 'STRING' },
       { key: 'timezone', value: 'UTC', group: 'GENERAL', type: 'STRING' },
       { key: 'dateFormat', value: 'MM/DD/YYYY', group: 'GENERAL', type: 'STRING' },
-      { key: 'language', value: 'en', group: 'GENERAL', type: 'STRING' },
       { key: 'postsPerPage', value: '10', group: 'CONTENT', type: 'NUMBER' },
-      { key: 'defaultPostStatus', value: 'DRAFT', group: 'CONTENT', type: 'STRING' },
-      { key: 'maxUploadSize', value: '10', group: 'CONTENT', type: 'NUMBER' },
-      { key: 'require2FA', value: 'false', group: 'SECURITY', type: 'BOOLEAN' },
-      { key: 'passwordMinLength', value: '8', group: 'SECURITY', type: 'NUMBER' },
+      { key: 'enableComments', value: 'true', group: 'CONTENT', type: 'BOOLEAN' },
+      { key: 'moderateComments', value: 'false', group: 'CONTENT', type: 'BOOLEAN' },
       { key: 'sessionTimeout', value: '60', group: 'SECURITY', type: 'NUMBER' },
+      { key: 'requireStrongPasswords', value: 'true', group: 'SECURITY', type: 'BOOLEAN' },
+      { key: 'twoFactorAuth', value: 'false', group: 'SECURITY', type: 'BOOLEAN' },
     ];
     await insertWithIgnore(settings, settingsData);
     stats.settings = settingsData.length;
@@ -740,8 +740,15 @@ export async function seedDemoData(options = {}) {
     { key: 'siteName', value: 'My Blog', group: 'GENERAL', type: 'STRING' },
     { key: 'siteTagline', value: 'A modern blog built with Fastify', group: 'GENERAL', type: 'STRING' },
     { key: 'siteUrl', value: process.env.APP_URL || 'http://localhost:3000', group: 'GENERAL', type: 'STRING' },
+    { key: 'siteIcon', value: '', group: 'GENERAL', type: 'STRING' },
     { key: 'timezone', value: 'UTC', group: 'GENERAL', type: 'STRING' },
+    { key: 'dateFormat', value: 'MM/DD/YYYY', group: 'GENERAL', type: 'STRING' },
     { key: 'postsPerPage', value: '10', group: 'CONTENT', type: 'NUMBER' },
+    { key: 'enableComments', value: 'true', group: 'CONTENT', type: 'BOOLEAN' },
+    { key: 'moderateComments', value: 'false', group: 'CONTENT', type: 'BOOLEAN' },
+    { key: 'sessionTimeout', value: '60', group: 'SECURITY', type: 'NUMBER' },
+    { key: 'requireStrongPasswords', value: 'true', group: 'SECURITY', type: 'BOOLEAN' },
+    { key: 'twoFactorAuth', value: 'false', group: 'SECURITY', type: 'BOOLEAN' },
   ];
 
   for (const setting of settingData) {

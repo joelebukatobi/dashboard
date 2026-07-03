@@ -2,6 +2,8 @@
 // Users controller - handles user HTTP requests
 
 import { usersService } from '../../services/users.service.js';
+import { isSettingEnabled } from '../../services/settings.service.js';
+import { isUserTotpEnabled, canDisableUserTotp } from '../../lib/user-totp.js';
 import {
   renderAdminPage,
   renderFragment,
@@ -184,12 +186,29 @@ class UsersController {
       const userStats = await usersService.getUserStats(id);
 
       const { usersEditContent, userEditMeta } = await import('../templates/pages/users/index.js');
+      const siteMap = request.siteSettingsMap ?? {};
+      const isSelf = user.id === id;
+      /** @type {{ pending?: boolean, qrDataUrl?: string } | null} */
+      let totpEnroll = null;
+      if (isSelf) {
+        const pending = await usersService.hasPendingTotpEnrollment(id);
+        if (pending) totpEnroll = { pending: true };
+      }
+
+      const adminTotpRequired = editUser.role === 'ADMIN'
+        && isSettingEnabled(siteMap.twoFactorAuth);
 
       return renderAdminPage(
         request,
         reply,
         userEditMeta({ editUser }),
-        usersEditContent({ user, editUser, userStats }),
+        usersEditContent({
+          user,
+          editUser,
+          userStats,
+          totpEnroll,
+          adminTotpRequired,
+        }),
       );
     } catch (error) {
       request.log.error(error);
@@ -537,6 +556,154 @@ class UsersController {
       return renderFragment(reply, errorAlert({
         message: 'Failed to upload avatar.',
       }));
+    }
+  }
+
+  /**
+   * POST /admin/users/:id/totp/enroll
+   */
+  async enrollTotp(request, reply) {
+    try {
+      const { id } = request.params;
+      const currentUser = request.user;
+      const siteMap = request.siteSettingsMap ?? {};
+      const isSettingsModal = request.headers['hx-target'] === '#totpSetupBody'
+        || request.query?.context === 'settings';
+
+      if (currentUser.id !== id) {
+        reply.code(403);
+        return renderFragment(reply, errorAlert({ message: 'You can only manage 2FA on your own account.' }));
+      }
+
+      const editUser = await usersService.getUserById(id);
+      if (!editUser) {
+        reply.code(404);
+        return renderFragment(reply, errorAlert({ message: 'User not found.' }));
+      }
+
+      if (isUserTotpEnabled(editUser.totpEnabled)) {
+        if (isSettingsModal) {
+          const { totpSetupFragment } = await import('../templates/partials/totp-setup.js');
+          return renderFragment(reply, totpSetupFragment({ userId: id, totpEnabled: true }));
+        }
+        reply.code(400);
+        return renderFragment(reply, errorAlert({ message: '2FA is already enabled.' }));
+      }
+
+      const siteName = String(siteMap.siteName || 'Dashboard');
+      const reset = request.query?.reset === 'true';
+      const { qrDataUrl, pending } = await usersService.resumeOrStartTotpEnrollment(id, {
+        email: editUser.email,
+        siteName,
+        reset,
+      });
+
+      if (isSettingsModal) {
+        const { totpSetupFragment } = await import('../templates/partials/totp-setup.js');
+        return renderFragment(reply, totpSetupFragment({
+          userId: id,
+          totpEnroll: { qrDataUrl, pending },
+        }));
+      }
+
+      const { totpSectionHtml } = await import('../templates/pages/users/edit.js');
+      const adminTotpRequired = editUser.role === 'ADMIN'
+        && isSettingEnabled(siteMap.twoFactorAuth);
+      return renderFragment(reply, totpSectionHtml({
+        editUser: { ...editUser, totpEnabled: false },
+        totpEnroll: { qrDataUrl },
+        adminTotpRequired,
+      }));
+    } catch (error) {
+      request.log.error(error);
+      reply.code(500);
+      return renderFragment(reply, errorAlert({ message: 'Failed to start 2FA enrollment.' }));
+    }
+  }
+
+  /**
+   * POST /admin/users/:id/totp/verify
+   */
+  async verifyTotpEnroll(request, reply) {
+    try {
+      const { id } = request.params;
+      const { code } = request.body;
+      const currentUser = request.user;
+
+      if (currentUser.id !== id) {
+        reply.code(403);
+        return renderFragment(reply, errorAlert({ message: 'You can only manage 2FA on your own account.' }));
+      }
+
+      await usersService.confirmTotpEnrollment(id, code);
+
+      const editUser = await usersService.getUserById(id);
+      const isSettingsModal = request.headers['hx-target'] === '#totpSetupBody'
+        || request.query?.context === 'settings';
+
+      if (isSettingsModal) {
+        return htmxRedirect(reply, '/admin/settings?toast=totpEnrolled');
+      }
+
+      const siteMap = request.siteSettingsMap ?? {};
+      const { totpSectionHtml } = await import('../templates/pages/users/edit.js');
+      const adminTotpRequired = editUser.role === 'ADMIN'
+        && isSettingEnabled(siteMap.twoFactorAuth);
+      return renderFragment(reply, totpSectionHtml({
+        editUser,
+        adminTotpRequired,
+      }));
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({
+        message: error.message === 'Invalid verification code'
+          ? 'Invalid code. Try again.'
+          : 'Failed to enable 2FA.',
+      }));
+    }
+  }
+
+  /**
+   * DELETE /admin/users/:id/totp
+   */
+  async disableTotp(request, reply) {
+    try {
+      const { id } = request.params;
+      const currentUser = request.user;
+
+      if (currentUser.id !== id) {
+        reply.code(403);
+        return renderFragment(reply, errorAlert({ message: 'You can only manage 2FA on your own account.' }));
+      }
+
+      const siteMap = request.siteSettingsMap ?? {};
+      const editUser = await usersService.getUserById(id);
+      if (!editUser) {
+        reply.code(404);
+        return renderFragment(reply, errorAlert({ message: 'User not found.' }));
+      }
+
+      if (!canDisableUserTotp(editUser, siteMap)) {
+        reply.code(400);
+        return renderFragment(reply, errorAlert({
+          message: 'Admin two-factor authentication is required by site policy and cannot be disabled.',
+        }));
+      }
+
+      await usersService.disableTotp(id);
+
+      const { totpSectionHtml } = await import('../templates/pages/users/edit.js');
+      const adminTotpRequired = editUser.role === 'ADMIN'
+        && isSettingEnabled(siteMap.twoFactorAuth);
+      return renderFragment(reply, totpSectionHtml({
+        editUser,
+        adminTotpRequired,
+      }));
+    } catch (error) {
+      request.log.error(error);
+      reply.code(500);
+      return renderFragment(reply, errorAlert({ message: 'Failed to disable 2FA.' }));
     }
   }
 }

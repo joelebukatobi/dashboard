@@ -51,6 +51,12 @@ export async function authenticate(request, reply) {
       throw new Error('Session expired or invalid');
     }
 
+    const siteMap = request.siteSettingsMap ?? {};
+    if (authService.isSessionIdleExpired(sessionData.session, sessionData.user, siteMap)) {
+      await authService.deleteSession(token);
+      throw new Error('Session expired due to inactivity');
+    }
+
     // Check if user is still active
     if (sessionData.user.status === 'SUSPENDED') {
       throw new Error('Account suspended');

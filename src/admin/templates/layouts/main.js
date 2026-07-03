@@ -4,6 +4,7 @@
 
 import { sidebar } from '../partials/sidebar.js';
 import { header } from '../partials/header.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 /**
  * Main Dashboard Layout Template
@@ -26,17 +27,36 @@ import { header } from '../partials/header.js';
  * Dashboard shell HTML (sidebar + header + scripts).
  * Used by mainLayout (legacy) and fastify-html addLayout.
  */
-export function buildDashboardShell({ title = 'Dashboard', description = 'BlogCMS Dashboard', content, user, activeRoute = '/', breadcrumbs = [], modals = '' }) {
+export function buildDashboardShell({
+  title = 'Dashboard',
+  description = 'BlogCMS Dashboard',
+  content,
+  user,
+  activeRoute = '/',
+  breadcrumbs = [],
+  modals = '',
+  siteName = 'BlogCMS',
+  siteIcon = '',
+  siteUrl = '/',
+  favicon = '/favicon.svg',
+  ogMeta = '',
+}) {
+  const safeTitle = escapeHtml(title);
+  const safeSiteName = escapeHtml(siteName);
+  const safeDescription = escapeHtml(description);
+  const faviconHref = escapeHtml(favicon);
+
   return `<!doctype html>
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title} - BlogCMS Dashboard</title>
-    <meta name="description" content="${description}" />
+    <title>${safeTitle} - ${safeSiteName}</title>
+    <meta name="description" content="${safeDescription}" />
+    ${ogMeta}
 
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="${faviconHref}" />
 
     <!-- Preconnect to external resources -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -63,12 +83,12 @@ export function buildDashboardShell({ title = 'Dashboard', description = 'BlogCM
       <!-- Layout wrapper -->
       <div class="layout">
         <!-- Sidebar -->
-        ${sidebar({ activeRoute, user })}
+        ${sidebar({ activeRoute, user, siteName, siteIcon })}
 
         <!-- Main Content Area -->
         <main class="main">
           <!-- Header -->
-          ${header({ user, breadcrumbs })}
+          ${header({ user, breadcrumbs, siteUrl })}
 
           <!-- Main Content -->
           ${content}
@@ -148,11 +168,21 @@ export function buildDashboardShell({ title = 'Dashboard', description = 'BlogCM
         layout.classList.toggle('layout--sidebar-collapsed');
       });
 
+      function expandSidebar() {
+        sidebar?.classList.remove('sidebar--collapsed');
+        layout?.classList.remove('layout--sidebar-collapsed');
+      }
+
+      sidebar?.querySelector('.sidebar__nav')?.addEventListener('click', (e) => {
+        const link = e.target.closest('a.sidebar__item');
+        if (!link || !sidebar?.classList.contains('sidebar--collapsed')) return;
+        expandSidebar();
+      });
+
       sidebarLogo?.addEventListener('click', (e) => {
         if (sidebar.classList.contains('sidebar--collapsed')) {
           e.preventDefault();
-          sidebar.classList.remove('sidebar--collapsed');
-          layout.classList.remove('layout--sidebar-collapsed');
+          expandSidebar();
         }
       });
 

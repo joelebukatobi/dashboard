@@ -1,6 +1,8 @@
 // src/admin/templates/partials/sidebar.js
 // Sidebar navigation component
 
+import { escapeHtml } from '../utils/helpers.js';
+
 /**
  * Sidebar Partial
  * Displays navigation menu with logo, groups, and submenus
@@ -11,7 +13,7 @@
  * @param {string} options.user.email - User email
  * @returns {string} Sidebar HTML
  */
-export function sidebar({ activeRoute = '/', user } = {}) {
+export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIcon = '' } = {}) {
   const isActive = (route) => {
     // Exact match for dashboard (just /admin or /admin/)
     if (route === '/admin') {
@@ -21,15 +23,19 @@ export function sidebar({ activeRoute = '/', user } = {}) {
     return activeRoute.startsWith(route) ? 'sidebar__item--active' : '';
   };
 
+  const logoIcon = siteIcon
+    ? `<img src="${escapeHtml(siteIcon)}" alt="" class="sidebar__logo-icon-img" />`
+    : `<i data-lucide="square-library"></i>`;
+
   return `
     <aside class="sidebar">
       <!-- Sidebar Header / Logo -->
       <div class="sidebar__header">
           <a href="/admin" class="sidebar__logo">
           <div class="sidebar__logo-icon">
-            <i data-lucide="square-library"></i>
+            ${logoIcon}
           </div>
-          <span class="sidebar__logo-text">BlogCMS</span>
+          <span class="sidebar__logo-text">${escapeHtml(siteName)}</span>
         </a>
         <!-- Desktop: Collapse toggle -->
         <button class="sidebar__toggle" id="sidebarToggle" title="Toggle sidebar">

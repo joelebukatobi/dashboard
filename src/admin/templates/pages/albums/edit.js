@@ -89,25 +89,24 @@ export function albumEditContent({ user, album, albumImages = [] }) {
 
               <!-- Cover Image Selection Grid -->
               ${albumImages.length > 0 ? `
-                <div class="form__group" style="margin-top: 2.4rem;">
+                <div class="form__group album-cover-section">
                   <label class="label">Select Cover Image</label>
                   <p class="form-feedback form-feedback--hint">Click an image to set it as the album cover</p>
-                  <div class="album-image-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1.2rem;">
+                  <div class="album-image-grid">
                     ${albumImages.map(img => `
                       <div 
                         class="album-image-option ${img.id === coverImageId ? 'album-image-option--selected' : ''}"
                         data-image-id="${img.id}"
                         data-image-path="${img.path}"
                         onclick="selectCoverImage('${img.id}', '${img.path}')"
-                        style="cursor: pointer; border: 2px solid ${img.id === coverImageId ? '#3a1920' : 'transparent'}; border-radius: 0.4rem; overflow: hidden; transition: border-color 0.2s;"
                       >
-                        <img src="${img.thumbnailPath || img.path}" alt="${escapeHtml(img.title || '')}" style="width: 100%; height: 12rem; object-fit: cover;" />
+                        <img src="${img.thumbnailPath || img.path}" alt="${escapeHtml(img.title || '')}" />
                       </div>
                     `).join('')}
                   </div>
                 </div>
               ` : `
-                <p class="form-feedback form-feedback--hint" style="margin-top: 2.4rem;">Upload images to this album to set a cover</p>
+                <p class="form-feedback form-feedback--hint album-cover-section">Upload images to this album to set a cover</p>
               `}
 
               <input type="hidden" name="coverImageId" id="coverImageId" value="${coverImageId}" />
@@ -133,7 +132,7 @@ export function albumEditContent({ user, album, albumImages = [] }) {
         
         // Update visual selection on grid
         document.querySelectorAll('.album-image-option').forEach(el => {
-          el.style.borderColor = el.dataset.imageId === imageId ? '#3a1920' : 'transparent';
+          el.classList.toggle('album-image-option--selected', el.dataset.imageId === imageId);
         });
 
         // Update the main cover preview

@@ -133,15 +133,45 @@ export default async function app(fastify, opts) {
     decorateReply: false,
   });
 
-  fastify.get('/favicon.svg', async (_request, reply) => {
-    const data = await readFile(path.join(PUBLIC_DIR, 'favicon.svg'));
-    return reply.type('image/svg+xml').send(data);
-  });
+  // Site settings (cached; used by API, layouts, auth)
+  await fastify.register(import('./plugins/site-settings.js'));
 
-  fastify.get('/favicon.ico', async (_request, reply) => {
-    const data = await readFile(path.join(PUBLIC_DIR, 'favicon.ico'));
-    return reply.type('image/x-icon').send(data);
-  });
+  const MIME_BY_EXT = {
+    '.svg': 'image/svg+xml',
+    '.ico': 'image/x-icon',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.webp': 'image/webp',
+  };
+
+  function resolveSiteIconFsPath(siteIcon) {
+    if (!siteIcon || siteIcon === '/favicon.svg') return null;
+    const rel = siteIcon.startsWith('/public/')
+      ? siteIcon.slice('/public/'.length)
+      : siteIcon.replace(/^\//, '');
+    return path.join(PUBLIC_DIR, rel);
+  }
+
+  async function sendFavicon(request, reply, fallbackFile) {
+    const map = request.siteSettingsMap ?? await fastify.siteSettings.getMap();
+    const customPath = resolveSiteIconFsPath(String(map.siteIcon || ''));
+    if (customPath) {
+      try {
+        const data = await readFile(customPath);
+        const ext = path.extname(customPath).toLowerCase();
+        return reply.type(MIME_BY_EXT[ext] || 'application/octet-stream').send(data);
+      } catch {
+        // fall through to default
+      }
+    }
+    const data = await readFile(path.join(PUBLIC_DIR, fallbackFile));
+    const type = fallbackFile.endsWith('.ico') ? 'image/x-icon' : 'image/svg+xml';
+    return reply.type(type).send(data);
+  }
+
+  fastify.get('/favicon.svg', (request, reply) => sendFavicon(request, reply, 'favicon.svg'));
+  fastify.get('/favicon.ico', (request, reply) => sendFavicon(request, reply, 'favicon.ico'));
 
   // Health check endpoint
   fastify.get('/health', async () => {
@@ -165,6 +195,7 @@ export default async function app(fastify, opts) {
    await fastify.register(import('./admin/routes/api/images.routes.js'), { prefix: '/api/v1/images' });
    await fastify.register(import('./admin/routes/api/videos.routes.js'), { prefix: '/api/v1/videos' });
    await fastify.register(import('./admin/routes/api/subscribers.routes.js'), { prefix: '/api/v1' });
+  await fastify.register(import('./admin/routes/api/settings.routes.js'), { prefix: '/api/v1' });
 
   // Register public app routes (fastify-html layout scoped per plugin)
   await fastify.register(import('./app/plugin.js'));

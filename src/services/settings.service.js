@@ -9,6 +9,22 @@ import crypto from 'crypto';
  * Settings Service
  * Handles all settings-related database operations
  */
+const BOOLEAN_SETTING_KEYS = new Set([
+  'enableComments',
+  'moderateComments',
+  'requireStrongPasswords',
+  'twoFactorAuth',
+]);
+
+/**
+ * Coerce a stored setting value to boolean (handles legacy STRING rows).
+ * @param {unknown} value
+ * @returns {boolean}
+ */
+export function isSettingEnabled(value) {
+  return value === true || value === 'true';
+}
+
 class SettingsService {
   /**
    * Get all settings
@@ -169,7 +185,7 @@ class SettingsService {
     const results = [];
 
     for (const [key, value] of Object.entries(settingsData)) {
-      const updated = await this.upsertSetting(key, value, group, this.inferType(value));
+      const updated = await this.upsertSetting(key, value, group, this.inferType(value, key));
       results.push(updated);
     }
 
@@ -196,9 +212,9 @@ class SettingsService {
       { key: 'siteName', value: 'My Blog', group: 'GENERAL', type: 'STRING' },
       { key: 'siteTagline', value: 'Thoughts, stories and ideas', group: 'GENERAL', type: 'STRING' },
       { key: 'siteUrl', value: 'https://example.com', group: 'GENERAL', type: 'STRING' },
+      { key: 'siteIcon', value: '', group: 'GENERAL', type: 'STRING' },
       { key: 'timezone', value: 'UTC', group: 'GENERAL', type: 'STRING' },
       { key: 'dateFormat', value: 'MM/DD/YYYY', group: 'GENERAL', type: 'STRING' },
-      { key: 'language', value: 'en-US', group: 'GENERAL', type: 'STRING' },
 
       // Content
       { key: 'postsPerPage', value: '10', group: 'CONTENT', type: 'NUMBER' },
@@ -206,9 +222,15 @@ class SettingsService {
       { key: 'moderateComments', value: 'false', group: 'CONTENT', type: 'BOOLEAN' },
 
       // Security
-      { key: 'sessionTimeout', value: '3600', group: 'SECURITY', type: 'NUMBER' },
+      { key: 'sessionTimeout', value: '60', group: 'SECURITY', type: 'NUMBER' },
       { key: 'requireStrongPasswords', value: 'true', group: 'SECURITY', type: 'BOOLEAN' },
       { key: 'twoFactorAuth', value: 'false', group: 'SECURITY', type: 'BOOLEAN' },
+
+      // Social
+      { key: 'socialTwitter', value: '', group: 'SOCIAL', type: 'STRING' },
+      { key: 'socialFacebook', value: '', group: 'SOCIAL', type: 'STRING' },
+      { key: 'socialLinkedIn', value: '', group: 'SOCIAL', type: 'STRING' },
+      { key: 'socialGitHub', value: '', group: 'SOCIAL', type: 'STRING' },
     ];
 
     for (const def of defaults) {
@@ -238,6 +260,8 @@ class SettingsService {
           return value;
         }
       default:
+        if (value === 'true') return true;
+        if (value === 'false') return false;
         return value;
     }
   }
@@ -245,18 +269,63 @@ class SettingsService {
   /**
    * Infer type from value
    * @param {*} value - Value to check
+   * @param {string} [key] - Setting key (for known boolean keys)
    * @returns {string} - Inferred type
    */
-  inferType(value) {
+  inferType(value, key = '') {
+    if (BOOLEAN_SETTING_KEYS.has(key)) return 'BOOLEAN';
     if (typeof value === 'boolean') return 'BOOLEAN';
+    if (value === 'true' || value === 'false') return 'BOOLEAN';
     if (typeof value === 'number') return 'NUMBER';
     if (typeof value === 'object') return 'JSON';
     return 'STRING';
   }
 
+  async getSettingsMap() {
+    try {
+      await this.initializeDefaults();
+      const allSettings = await this.getAllSettings();
+      return allSettings.reduce((acc, row) => {
+        acc[row.key] = this.parseValue(row.value, row.type);
+        return acc;
+      }, {});
+    } catch {
+      return {};
+    }
+  }
+
   /**
-   * Get settings formatted for UI
-   * Returns settings grouped by category
+   * Public-safe settings for API and frontends.
+   * @param {Record<string, unknown>} [map] - Preloaded settings map
+   */
+  getPublicSettings(map) {
+    const s = map ?? {};
+    return {
+      siteName: s.siteName ?? 'My Blog',
+      siteTagline: s.siteTagline ?? '',
+      siteUrl: s.siteUrl ?? '',
+      siteIcon: s.siteIcon ?? '',
+      social: {
+        twitter: s.socialTwitter ?? '',
+        facebook: s.socialFacebook ?? '',
+        linkedIn: s.socialLinkedIn ?? '',
+        github: s.socialGitHub ?? '',
+      },
+      postsPerPage: Number(s.postsPerPage) || 10,
+      commentsEnabled: isSettingEnabled(s.enableComments),
+    };
+  }
+
+  /**
+   * Invalidate cache hook target — called after updates.
+   */
+  async refreshCache() {
+    return this.getSettingsMap();
+  }
+
+  /**
+   * Get settings formatted for UI.
+   * Returns settings grouped by category.
    */
   async getSettingsForUI() {
     const allSettings = await this.getAllSettings();

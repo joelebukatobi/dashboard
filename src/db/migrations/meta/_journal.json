@@ -36,6 +36,13 @@
       "when": 1779115916122,
       "tag": "0004_drop_subscriber_name",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1780440000000,
+      "tag": "0005_add_user_totp",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 // src/admin/templates/partials/header.js
 // Header component with user menu
 
-import { getInitials } from '../utils/helpers.js';
+import { getInitials, escapeHtml } from '../utils/helpers.js';
 
 /**
  * Header Partial
@@ -16,11 +16,12 @@ import { getInitials } from '../utils/helpers.js';
  * @param {string} options.user.avatarUrl - User's avatar URL
  * @returns {string} Header HTML
  */
-export function header({ user, breadcrumbs = [] }) {
+export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
   const displayName = user
     ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0]
     : 'User';
   const avatarUrl = user?.avatarUrl;
+  const websiteHref = escapeHtml(siteUrl || '/');
 
   // Generate breadcrumb HTML with chevrons
   const breadcrumbHtml =
@@ -112,6 +113,10 @@ export function header({ user, breadcrumbs = [] }) {
               Settings
             </a>
             ` : ''}
+            <a class="dropdown__item" href="${websiteHref}" target="_blank" rel="noopener noreferrer">
+              <i data-lucide="globe"></i>
+              View Website
+            </a>
             <div class="dropdown__divider"></div>
             <a class="dropdown__item dropdown__item--danger" href="#" onclick="handleLogout()">
               <i data-lucide="log-out"></i>

@@ -2,6 +2,7 @@
 // Settings Page - Individual section forms with accordion
 
 import { escapeHtml, toastQueryScript } from '../../utils/helpers.js';
+import { totpSetupModal } from '../../partials/totp-setup.js';
 
 /**
  * Settings page inner content (layout applied via fastify-html addLayout).
@@ -9,6 +10,10 @@ import { escapeHtml, toastQueryScript } from '../../utils/helpers.js';
 export function settingsContent({ user, settings, toast }) {
   const toastScript = toastQueryScript(toast, {
     saved: 'Settings saved successfully!',
+    iconUploaded: 'Site icon updated.',
+    iconSelected: 'Site icon updated from library.',
+    iconRemoved: 'Site icon removed.',
+    totpEnrolled: 'Two-factor authentication enabled on your account.',
   });
 
   // Helper to get setting value
@@ -17,6 +22,15 @@ export function settingsContent({ user, settings, toast }) {
     const setting = groupSettings.find(s => s.key === key);
     return setting?.parsedValue ?? defaultValue;
   };
+
+  const siteIcon = getSetting('GENERAL', 'siteIcon', '');
+  const siteTwoFactorOn = getSetting('SECURITY', 'twoFactorAuth', false);
+  const userEnrolled = user?.totpEnabled === true;
+  const userPending = user?.totpPending === true;
+  const safeUserId = escapeHtml(user?.id || '');
+  const siteIconPreview = siteIcon
+    ? `<img src="${escapeHtml(siteIcon)}" alt="Site icon" class="site-icon-field__preview-img" />`
+    : `<i data-lucide="square-library" class="site-icon-field__preview-icon"></i>`;
 
   const content = `
     <div class="settings">
@@ -31,11 +45,23 @@ export function settingsContent({ user, settings, toast }) {
         </div>
 
         <div id="form-response"></div>
+        <input type="hidden" id="settings-csrf" name="_csrf" value="${user?.csrfToken || ''}" />
+        <form
+          id="siteIconUploadForm"
+          class="site-icon-field__upload-form"
+          hx-post="/admin/settings/icon"
+          hx-encoding="multipart/form-data"
+          hx-target="#form-response"
+          hx-swap="innerHTML"
+        >
+          <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
+        </form>
 
         <div class="form__stack">
           <!-- ==================== GENERAL SETTINGS (Open by default) ==================== -->
           <div class="card card--accordion" data-accordion="general">
             <form
+              id="generalSettingsForm"
               hx-put="/admin/settings"
               hx-target="#form-response"
               hx-swap="innerHTML"
@@ -61,6 +87,47 @@ export function settingsContent({ user, settings, toast }) {
                 </div>
               </div>
               <div class="card__body card__body--accordion" data-accordion-body="general">
+                <!-- Site Icon -->
+                <div class="site-icon-field">
+                  <div class="site-icon-field__row">
+                    <label class="site-icon-field__trigger" for="siteIconFileInput" title="Change site icon">
+                      <div class="site-icon-field__preview" id="siteIconPreview">
+                        ${siteIconPreview}
+                        <span class="site-icon-field__overlay">
+                          <i data-lucide="upload"></i>
+                          <span>${siteIcon ? 'Change' : 'Upload'}</span>
+                        </span>
+                      </div>
+                    </label>
+                    <div class="site-icon-field__info">
+                      <span class="site-icon-field__title">Site Icon</span>
+                      <p class="form-feedback form-feedback--hint">Used in the sidebar and as the default favicon. Falls back to the library icon when empty.</p>
+                      ${siteIcon ? `
+                        <button
+                          type="button"
+                          class="btn btn--ghost btn--sm site-icon-field__remove"
+                          hx-delete="/admin/settings/icon"
+                          hx-target="#form-response"
+                          hx-swap="innerHTML"
+                          hx-include="#settings-csrf"
+                        >
+                          Remove
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                <input
+                  form="siteIconUploadForm"
+                  id="siteIconFileInput"
+                  type="file"
+                  name="icon"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml,image/x-icon"
+                  class="site-icon-field__file-input"
+                  onchange="document.getElementById('siteIconUploadForm').requestSubmit()"
+                />
+
                 <!-- Site Name & Tagline -->
                 <div class="form__row form__row--2col">
                   <div class="form__group">
@@ -96,8 +163,8 @@ export function settingsContent({ user, settings, toast }) {
                   />
                 </div>
 
-                <!-- Timezone, Date Format, Language -->
-                <div class="form__row form__row--3col">
+                <!-- Timezone & Date Format -->
+                <div class="form__row form__row--2col">
                   <div class="form__group">
                     <label class="label">Timezone</label>
                     <select
@@ -136,25 +203,6 @@ export function settingsContent({ user, settings, toast }) {
                       <option value="DD/MM/YYYY" ${getSetting('GENERAL', 'dateFormat') === 'DD/MM/YYYY' ? 'selected' : ''}>DD/MM/YYYY</option>
                       <option value="YYYY-MM-DD" ${getSetting('GENERAL', 'dateFormat') === 'YYYY-MM-DD' ? 'selected' : ''}>YYYY-MM-DD</option>
                       <option value="MMM DD, YYYY" ${getSetting('GENERAL', 'dateFormat') === 'MMM DD, YYYY' ? 'selected' : ''}>MMM DD, YYYY</option>
-                    </select>
-                  </div>
-                  <div class="form__group">
-                    <label class="label">Language</label>
-                    <select
-                      name="language"
-                      class="hidden"
-                      data-hs-select='{
-                        "placeholder": "Select language...",
-                        "toggleClasses": "form__select-toggle",
-                        "dropdownClasses": "form__select-dropdown",
-                        "optionClasses": "form__select-option"
-                      }'
-                    >
-                      <option value="en-US" ${getSetting('GENERAL', 'language', 'en-US') === 'en-US' ? 'selected' : ''}>English (US)</option>
-                      <option value="en-GB" ${getSetting('GENERAL', 'language') === 'en-GB' ? 'selected' : ''}>English (UK)</option>
-                      <option value="es" ${getSetting('GENERAL', 'language') === 'es' ? 'selected' : ''}>Spanish</option>
-                      <option value="fr" ${getSetting('GENERAL', 'language') === 'fr' ? 'selected' : ''}>French</option>
-                      <option value="de" ${getSetting('GENERAL', 'language') === 'de' ? 'selected' : ''}>German</option>
                     </select>
                   </div>
                 </div>
@@ -207,6 +255,7 @@ export function settingsContent({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
+                  <input type="hidden" name="enableComments" value="false" />
                   <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
@@ -220,6 +269,7 @@ export function settingsContent({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
+                  <input type="hidden" name="moderateComments" value="false" />
                   <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
@@ -281,6 +331,7 @@ export function settingsContent({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
+                  <input type="hidden" name="requireStrongPasswords" value="false" />
                   <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
@@ -294,17 +345,66 @@ export function settingsContent({ user, settings, toast }) {
                 </div>
 
                 <div class="form__group">
+                  <input type="hidden" name="twoFactorAuth" value="false" />
                   <label class="form__checkbox-wrapper">
                     <input
                       type="checkbox"
+                      id="twoFactorAuthCheckbox"
                       name="twoFactorAuth"
                       value="true"
-                      ${getSetting('SECURITY', 'twoFactorAuth', false) ? 'checked' : ''}
+                      ${siteTwoFactorOn ? 'checked' : ''}
                       class="form__checkbox"
                     />
-                    <span>Enable two-factor authentication (2FA)</span>
+                    <span>Require two-factor authentication for admin login</span>
                   </label>
-                  <p class="form-feedback form-feedback--hint">Users will need an authenticator app to log in</p>
+                  <p class="form-feedback form-feedback--hint">
+                    When saved, all admin accounts must use an authenticator at sign-in. Other users can enable or disable 2FA on their profile.
+                  </p>
+                </div>
+
+                <div
+                  class="form__group totp-account-section"
+                  id="totpAccountSection"
+                  data-enrolled="${userEnrolled ? 'true' : 'false'}"
+                  data-pending="${userPending ? 'true' : 'false'}"
+                >
+                  <span class="site-icon-field__title">Your account</span>
+                  ${userEnrolled ? `
+                    <p class="form-feedback form-feedback--success">
+                      Your authenticator is configured on this account.
+                    </p>
+                  ` : userPending ? `
+                    <p class="form-feedback form-feedback--warning">
+                      Setup was started but not completed. Continue with your existing code or start over with a new QR code.
+                    </p>
+                    <div class="totp-account-section__actions">
+                      <button type="button" class="btn btn--outline" onclick="openTotpSetupModal()">
+                        Continue setup
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn--ghost btn--sm"
+                        onclick="openTotpSetupModal(true)"
+                      >
+                        Start over
+                      </button>
+                    </div>
+                  ` : `
+                    <p class="form-feedback form-feedback--hint">
+                      Set up an authenticator on your admin account before requiring 2FA site-wide.
+                    </p>
+                    <button type="button" class="btn btn--outline" onclick="openTotpSetupModal()">
+                      Set up authenticator
+                    </button>
+                  `}
+                  <button
+                    type="button"
+                    id="totpEnrollResetTrigger"
+                    class="hidden"
+                    hx-post="/admin/users/${safeUserId}/totp/enroll?context=settings&amp;reset=true"
+                    hx-target="#totpSetupBody"
+                    hx-swap="innerHTML"
+                  ></button>
                 </div>
 
                 <input type="hidden" name="_csrf" value="${user?.csrfToken || ''}" />
@@ -430,6 +530,8 @@ export function settingsContent({ user, settings, toast }) {
         </div>
       </div>
     </div>
+
+    ${totpSetupModal({ userId: user?.id || '' })}
 
     <script>
       // Accordion toggle function

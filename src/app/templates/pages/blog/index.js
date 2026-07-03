@@ -12,14 +12,11 @@ function truncate(text = '', max = 180) {
   return `${text.slice(0, max).trimEnd()}...`;
 }
 
+import { formatSiteDate } from '../../../../lib/site-dates.js';
+import { getRequestSettings } from '../../../../lib/settings-context.js';
+
 function formatDate(isoString) {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  return formatSiteDate(isoString, getRequestSettings());
 }
 
 export function blogIndexMeta({ page = 1, totalPages = 1 }) {
