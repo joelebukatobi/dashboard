@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { validatePasswordStrength } from '../../utils/security.js';
+import { getRequestSettings } from '../../lib/settings-context.js';
 
 export const forgotPasswordSchema = z.object({
   email: z
@@ -23,7 +24,8 @@ export const resetPasswordSchema = z.object({
     });
   }
 
-  const strength = validatePasswordStrength(data.password);
+  const requireStrong = getRequestSettings().requireStrongPasswords !== false;
+  const strength = validatePasswordStrength(data.password, { requireStrong });
   if (!strength.valid) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -31,4 +33,13 @@ export const resetPasswordSchema = z.object({
       message: strength.errors.join('. '),
     });
   }
+});
+
+export const verifyTotpSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(6, 'Enter your 6-digit code')
+    .max(6, 'Enter your 6-digit code')
+    .regex(/^\d{6}$/, 'Code must be 6 digits'),
 });

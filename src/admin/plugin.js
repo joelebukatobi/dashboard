@@ -1,5 +1,6 @@
 import fastifyHtml from 'fastify-html';
 import { buildDashboardShell } from './templates/layouts/main.js';
+import { resolvePageMeta, renderOgMetaTags } from '../lib/site-meta.js';
 
 /**
  * Encapsulated admin dashboard plugin.
@@ -9,17 +10,31 @@ export default async function adminPlugin(fastify) {
   await fastify.register(fastifyHtml);
 
   fastify.addLayout((inner, reply) => {
-    const meta = reply.request.templateMeta ?? {};
-    const user = reply.request.user;
+    const pageMeta = reply.request.templateMeta ?? {};
+    const siteMap = reply.request.siteSettingsMap ?? {};
+    const siteName = String(siteMap.siteName || 'BlogCMS');
+    const siteIcon = String(siteMap.siteIcon || '');
+    const siteUrl = String(siteMap.siteUrl || '/').trim() || '/';
+    const favicon = siteIcon || '/favicon.svg';
+    const resolved = resolvePageMeta(siteMap, {
+      title: pageMeta.title,
+      description: pageMeta.description,
+      path: reply.request.url,
+    });
 
     return buildDashboardShell({
-      title: meta.title ?? 'Dashboard',
-      description: meta.description ?? 'BlogCMS Dashboard',
+      title: pageMeta.title ?? 'Dashboard',
+      description: resolved.description || pageMeta.description || 'BlogCMS Dashboard',
       content: inner,
-      user,
-      activeRoute: meta.activeRoute ?? '/admin',
-      breadcrumbs: meta.breadcrumbs ?? [],
-      modals: meta.modals ?? '',
+      user: reply.request.user,
+      activeRoute: pageMeta.activeRoute ?? '/admin',
+      breadcrumbs: pageMeta.breadcrumbs ?? [],
+      modals: pageMeta.modals ?? '',
+      siteName,
+      siteIcon,
+      siteUrl,
+      favicon,
+      ogMeta: renderOgMetaTags(resolved),
     });
   }, { skipOnHeader: 'hx-request' });
 

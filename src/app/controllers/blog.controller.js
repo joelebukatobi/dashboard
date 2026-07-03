@@ -1,3 +1,4 @@
+import { getPublicPageLimit } from '../../lib/site-pagination.js';
 import {
   blogIndexContent,
   blogIndexMeta,
@@ -13,10 +14,12 @@ import { renderAppPage } from '../render.js';
 class BlogController {
   async index(request, reply) {
     const page = request.query.page;
+    const siteMap = request.siteSettingsMap ?? {};
+    const limit = getPublicPageLimit(siteMap, request.query.limit);
 
     const apiResponse = await request.server.inject({
       method: 'GET',
-      url: `/api/v1/posts?page=${page}&limit=10`,
+      url: `/api/v1/posts?page=${page || 1}&limit=${limit}`,
     });
 
     if (apiResponse.statusCode !== 200) {
@@ -60,9 +63,12 @@ class BlogController {
       );
     }
 
+    const siteMap = request.siteSettingsMap ?? {};
+    const commentLimit = getPublicPageLimit(siteMap, 50);
+
     const commentsResponse = await request.server.inject({
       method: 'GET',
-      url: `/api/v1/posts/${encodeURIComponent(slug)}/comments?limit=50`,
+      url: `/api/v1/posts/${encodeURIComponent(slug)}/comments?limit=${commentLimit}`,
     });
 
     const post = postResponse.json();

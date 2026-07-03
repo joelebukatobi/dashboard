@@ -12,6 +12,7 @@ import {
   htmxRedirect,
   setHtmxToast,
 } from '../render.js';
+import { formatSiteDate } from '../../lib/site-dates.js';
 
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -19,15 +20,6 @@ function formatFileSize(bytes) {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
-function formatDate(date) {
-  if (!date) return '-';
-  return new Date(date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 }
 
 class VideosController {
@@ -55,7 +47,7 @@ class VideosController {
         videos: videos.map((video) => ({
           ...video,
           sizeFormatted: formatFileSize(video.size),
-          dateFormatted: formatDate(video.createdAt),
+          dateFormatted: formatSiteDate(video.createdAt, request.siteSettingsMap ?? {}),
           durationFormatted: videosService.formatDuration(video.duration),
         })),
         pagination,
@@ -211,7 +203,7 @@ class VideosController {
       const videoData = {
         ...video,
         sizeFormatted: formatFileSize(video.size),
-        dateFormatted: formatDate(video.createdAt),
+        dateFormatted: formatSiteDate(video.createdAt, request.siteSettingsMap ?? {}),
         durationFormatted: videosService.formatDuration(video.duration),
       };
 

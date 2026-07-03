@@ -1,115 +1,99 @@
 // src/admin/templates/pages/login.js
 // Login page template
 
+import { escapeHtml } from '../utils/helpers.js';
+
+/**
+ * Login card — swapped into #login-panel via HTMX.
+ * @param {{ error?: string, email?: string, rememberMe?: boolean }} [options]
+ */
+export function loginPanelContent({ error = '', email = '', rememberMe = false } = {}) {
+  const errorHtml = error
+    ? `<p id="login-error" class="auth-card__error">${escapeHtml(error)}</p>`
+    : '<p id="login-error" class="auth-card__error">&nbsp;</p>';
+
+  return `
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h1 class="auth-card__title">Welcome Back</h1>
+        <p class="auth-card__subtitle">Sign in to your account to continue</p>
+      </div>
+
+      ${errorHtml}
+
+      <hr class="divider" />
+
+      <form
+        class="auth-card__form"
+        hx-post="/admin/auth/login"
+        hx-target="#login-panel"
+        hx-swap="innerHTML"
+        novalidate
+      >
+        <div class="form__group">
+          <label class="label" for="email">Email address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="input input--lg"
+            placeholder="you@example.com"
+            value="${escapeHtml(email)}"
+            required
+          />
+        </div>
+
+        <div class="form__group">
+          <label class="label" for="password">Password</label>
+          <div class="form__wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="input input--lg input--icon-right"
+              placeholder="Enter your password"
+              required
+            />
+            <button type="button" class="input__addon" onclick="togglePassword()">
+              <i data-lucide="eye" id="password-icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-card__links">
+          <div class="auth-card__remember">
+            <input
+              type="checkbox"
+              id="remember"
+              name="rememberMe"
+              value="true"
+              ${rememberMe ? 'checked' : ''}
+            />
+            <label for="remember">Remember Me</label>
+          </div>
+          <a href="#" data-hs-overlay="#forgot-password-modal">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--xl btn--full">
+          Sign In
+        </button>
+      </form>
+
+      <div class="auth-card__footer">
+        Don't have an account? <a href="#" data-hs-overlay="#request-access-modal">Request Access</a>
+      </div>
+    </div>
+  `;
+}
+
 /**
  * Login page inner content (layout applied via fastify-html addLayout).
- *
- * @returns {string} Inner HTML for the login form panel
  */
 export function loginContent() {
   return `
         <div class="login__container">
-          <!-- Auth Card -->
-          <div class="auth-card">
-            <div class="auth-card__header">
-              <h1 class="auth-card__title">Welcome Back</h1>
-              <p class="auth-card__subtitle">Sign in to your account to continue</p>
-            </div>
-
-            <!-- Error message area - always visible, fills with content on error -->
-            <p id="login-error" class="auth-card__error">&nbsp;</p>
-
-            <hr class="divider" />
-
-            <!-- Login Form -->
-            <form
-              class="auth-card__form"
-              hx-post="/admin/auth/login"
-              hx-target="#login-error"
-              hx-swap="innerHTML"
-              novalidate
-            >
-              <!-- Email -->
-              <div class="form__group">
-                <label class="label" for="email">Email address</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  class="input input--lg"
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-
-              <!-- Password with visibility toggle -->
-              <div class="form__group">
-                <label class="label" for="password">Password</label>
-                <div class="form__wrapper">
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    class="input input--lg input--icon-right"
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button type="button" class="input__addon" onclick="togglePassword()">
-                    <i data-lucide="eye" id="password-icon"></i>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Remember me & Forgot password -->
-              <div class="auth-card__links">
-                <div class="auth-card__remember">
-                  <input type="checkbox" id="remember" name="rememberMe" value="true" />
-                  <label for="remember">Remember Me</label>
-                </div>
-                <a href="#" data-hs-overlay="#forgot-password-modal">Forgot Password?</a>
-              </div>
-
-              <!-- Sign in button -->
-              <button type="submit" class="btn btn--primary btn--xl btn--full">
-                Sign In
-              </button>
-            </form>
-
-            <!-- Google SSO - Disabled (requires Google Cloud Console setup) -->
-            <!--
-            <div class="auth-divider">
-              <span class="auth-divider__text">or continue with</span>
-            </div>
-
-            <a href="/admin/auth/google" class="social-btn social-btn--google">
-              <span class="social-btn__icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    fill="#4285F4"
-                  />
-                  <path
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    fill="#34A853"
-                  />
-                  <path
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    fill="#FBBC05"
-                  />
-                  <path
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    fill="#EA4335"
-                  />
-                </svg>
-              </span>
-              <span class="social-btn__text">Continue with Google</span>
-            </a>
-            -->
-
-            <!-- Footer -->
-            <div class="auth-card__footer">
-              Don't have an account? <a href="#" data-hs-overlay="#request-access-modal">Request Access</a>
-            </div>
+          <div id="login-panel">
+            ${loginPanelContent()}
           </div>
         </div>
 
@@ -129,7 +113,6 @@ export function loginContent() {
                 <p class="auth-card__subtitle">Enter your email and we'll send you a reset link</p>
               </div>
 
-              <!-- Response area for forgot password -->
               <div id="forgot-password-response"></div>
 
               <form 
@@ -194,15 +177,162 @@ export function loginContent() {
   `;
 }
 
-/**
- * Login page metadata for fastify-html addLayout.
- *
- * @param {Object} [_options]
- * @returns {{ title: string, description: string }}
- */
 export function loginMeta(_options = {}) {
   return {
     title: 'Sign In',
     description: 'Sign in to your BlogCMS Dashboard account',
   };
+}
+
+export function totpMeta() {
+  return {
+    title: 'Two-Factor Authentication',
+    description: 'Enter your authenticator code to continue',
+  };
+}
+
+/**
+ * Full TOTP page content (auth layout).
+ * @param {{ error?: string }} [options]
+ */
+export function totpPageContent({ error = '' } = {}) {
+  return `
+    <div class="login__container">
+      <div id="login-panel">
+        ${totpStepContent({ error })}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * TOTP verification card.
+ */
+export function totpStepContent({ error = '' } = {}) {
+  const errorHtml = error
+    ? `<p id="login-error" class="auth-card__error">${escapeHtml(error)}</p>`
+    : '<p id="login-error" class="auth-card__error">&nbsp;</p>';
+
+  return `
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h1 class="auth-card__title">Two-Factor Authentication</h1>
+        <p class="auth-card__subtitle">Enter the 6-digit code from your authenticator app</p>
+      </div>
+
+      ${errorHtml}
+
+      <form
+        class="auth-card__form"
+        method="post"
+        action="/admin/auth/verify-totp"
+        novalidate
+      >
+        <div class="form__group">
+          <label class="label" for="totp-code">Authentication code</label>
+          <input
+            type="text"
+            id="totp-code"
+            name="code"
+            class="input input--lg"
+            placeholder="000000"
+            inputmode="numeric"
+            pattern="[0-9]{6}"
+            maxlength="6"
+            autocomplete="one-time-code"
+            required
+            autofocus
+          />
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--xl btn--full">
+          Verify
+        </button>
+      </form>
+
+      <div class="auth-card__footer">
+        <a href="/admin/auth/login">← Back to login</a>
+      </div>
+    </div>
+  `;
+}
+
+export function totpSetupMeta() {
+  return {
+    title: 'Set Up Two-Factor Authentication',
+    description: 'Configure your authenticator app to continue',
+  };
+}
+
+/**
+ * Mandatory admin 2FA setup page (auth layout).
+ * @param {{ qrDataUrl?: string, error?: string }} [options]
+ */
+export function totpSetupPageContent({ qrDataUrl = '', error = '' } = {}) {
+  return `
+    <div class="login__container">
+      <div id="login-panel">
+        ${totpSetupStepContent({ qrDataUrl, error })}
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Admin mandatory setup card shown after password login.
+ */
+export function totpSetupStepContent({ qrDataUrl = '', error = '' } = {}) {
+  const errorHtml = error
+    ? `<p id="login-error" class="auth-card__error">${escapeHtml(error)}</p>`
+    : '<p id="login-error" class="auth-card__error">&nbsp;</p>';
+
+  const qrBlock = qrDataUrl
+    ? `<div class="totp-setup__qr"><img src="${escapeHtml(qrDataUrl)}" alt="2FA QR code" width="200" height="200" /></div>`
+    : '';
+
+  return `
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <h1 class="auth-card__title">Set Up Two-Factor Authentication</h1>
+        <p class="auth-card__subtitle">Admin login requires an authenticator app. Scan the QR code, then enter your verification code.</p>
+      </div>
+
+      ${errorHtml}
+
+      <div class="totp-setup">
+        ${qrBlock}
+        <form
+          class="auth-card__form"
+          method="post"
+          action="/admin/auth/totp-setup/verify"
+          novalidate
+        >
+          <div class="form__group">
+            <label class="label" for="totp-setup-code">Verification code</label>
+            <input
+              type="text"
+              id="totp-setup-code"
+              name="code"
+              class="input input--lg"
+              placeholder="000000"
+              inputmode="numeric"
+              pattern="[0-9]{6}"
+              maxlength="6"
+              autocomplete="one-time-code"
+              required
+              autofocus
+            />
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--xl btn--full">
+            Verify &amp; Continue
+          </button>
+        </form>
+      </div>
+
+      <div class="auth-card__footer">
+        <a href="/admin/auth/totp-setup?reset=true">Start over with a new QR code</a>
+      </div>
+    </div>
+  `;
 }

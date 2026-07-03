@@ -1,6 +1,9 @@
 // src/admin/templates/utils/helpers.js
 // Shared utility functions for templates
 
+import { formatSiteDate } from '../../../lib/site-dates.js';
+import { getRequestSettings } from '../../../lib/settings-context.js';
+
 /**
  * Get user initials from first and last name
  * @param {string} firstName - First name
@@ -41,12 +44,17 @@ export function escapeHtml(text) {
 }
 
 /**
- * Format date to readable string
- * @param {Date|string} date - Date to format
- * @param {string} format - Format style (short, medium, long)
- * @returns {string} - Formatted date
+ * Format date using site settings (timezone + dateFormat).
+ * @param {Date|string} date
+ * @param {string} [format] - Legacy short/medium/long; ignored when site settings are bound
+ * @returns {string}
  */
 export function formatDate(date, format = 'medium') {
+  const settings = getRequestSettings();
+  if (Object.keys(settings).length > 0) {
+    return formatSiteDate(date, settings);
+  }
+
   const d = new Date(date);
   if (isNaN(d.getTime())) return '-';
 

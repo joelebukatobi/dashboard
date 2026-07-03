@@ -10,16 +10,23 @@ export function modal({
   content,
   actions,
   highZIndex = false,
+  panelClass = '',
+  noFooter = false,
+  closeHandler = null,
 }) {
   const modalClass = highZIndex ? 'modal modal--high' : 'modal';
-  const iconClass = `modal__icon modal__icon--${iconVariant}`;
+  const iconClass = iconVariant
+    ? `modal__icon modal__icon--${iconVariant}`
+    : 'modal__icon';
+  const panelClasses = panelClass ? `modal__panel ${panelClass}` : 'modal__panel';
+  const backdropClose = closeHandler ? `onclick="${closeHandler}"` : `onclick="closeModal('${id}')"`;
 
   const defaultBody = `
     <div class="modal__header">
       <div class="${iconClass}">
         <i data-lucide="${icon}"></i>
       </div>
-      <h3 class="modal__title">${title}</h3>
+      <h3 id="${id}Label" class="modal__title">${title}</h3>
       <p class="modal__description">${description}</p>
     </div>
   `;
@@ -31,12 +38,14 @@ export function modal({
     </div>
   `;
 
+  const footer = noFooter ? '' : (actions ?? defaultActions);
+
   return `
     <div id="${id}" class="${modalClass}" role="dialog" tabindex="-1" aria-labelledby="${id}Label">
-      <div class="modal__backdrop" onclick="closeModal('${id}')"></div>
-      <div class="modal__panel">
+      <div class="modal__backdrop" ${backdropClose}></div>
+      <div class="${panelClasses}">
         ${content || defaultBody}
-        ${actions || defaultActions}
+        ${footer}
       </div>
     </div>
   `;

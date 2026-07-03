@@ -4,7 +4,7 @@
 import { usersController } from '../controllers/users.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
-import { createUserSchema, updateUserSchema } from '../schemas/user.schema.js';
+import { createUserSchema, updateUserSchema, totpVerifySchema } from '../schemas/user.schema.js';
 import { listQuerySchema, resourceIdSchema, usersListQuerySchema } from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
@@ -58,5 +58,20 @@ export default async function userRoutes(fastify, opts) {
   fastify.post('/:id/avatar', {
     preHandler: [auth, validateParams(resourceIdSchema)],
     handler: usersController.uploadAvatar.bind(usersController),
+  });
+
+  fastify.post('/:id/totp/enroll', {
+    preHandler: [auth, validateParams(resourceIdSchema)],
+    handler: usersController.enrollTotp.bind(usersController),
+  });
+
+  fastify.post('/:id/totp/verify', {
+    preHandler: [auth, validateParams(resourceIdSchema), validateBody(totpVerifySchema)],
+    handler: usersController.verifyTotpEnroll.bind(usersController),
+  });
+
+  fastify.delete('/:id/totp', {
+    preHandler: [auth, validateParams(resourceIdSchema)],
+    handler: usersController.disableTotp.bind(usersController),
   });
 }

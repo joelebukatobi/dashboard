@@ -19,6 +19,24 @@
       @apply font-semibold;
     }
   }
+
+  &__countdown {
+    &--warning {
+      @apply text-amber-600;
+
+      .dark & {
+        @apply text-amber-400;
+      }
+    }
+
+    &--critical {
+      @apply text-red-600;
+
+      .dark & {
+        @apply text-red-400;
+      }
+    }
+  }
 }
 
 

@@ -3,6 +3,7 @@
 
 import { commentsService } from '../../../services/comments.service.js';
 import { postsService } from '../../../services/posts.service.js';
+import { getPublicPageLimit } from '../../../lib/site-pagination.js';
 import { db, comments } from '../../../db/index.js';
 import { eq, and, desc, asc, sql } from 'drizzle-orm';
 
@@ -18,9 +19,10 @@ class CommentsAPIController {
   async getByPostSlug(request, reply) {
     try {
       const { slug } = request.params;
-      const { page = 1, limit = 10 } = request.query;
+      const { page = 1, limit } = request.query;
       const pageNum = parseInt(page, 10) || 1;
-      const limitNum = parseInt(limit, 10) || 10;
+      const siteMap = request.siteSettingsMap ?? {};
+      const limitNum = getPublicPageLimit(siteMap, limit);
 
       // Get post by slug
       const post = await postsService.getPostBySlug(slug);
@@ -176,6 +178,19 @@ class CommentsAPIController {
         });
       }
 
+      // Comments disabled site-wide
+      const siteMap = request.siteSettingsMap ?? {};
+      if (siteMap.enableComments === false) {
+        reply.code(403);
+        return reply.send({
+          statusCode: 403,
+          error: 'Forbidden',
+          message: 'Comments are disabled on this site',
+        });
+      }
+
+      const commentStatus = siteMap.moderateComments === true ? 'PENDING' : 'APPROVED';
+
       // Create comment
       const comment = await commentsService.createComment({
         postId: post.id,
@@ -183,17 +198,23 @@ class CommentsAPIController {
         authorName: authorName?.trim() || 'Anonymous',
         authorEmail: authorEmail?.trim() || null,
         content: content.trim(),
-      });
+      }, { status: commentStatus });
+
+      const responseComment = {
+        id: comment.id,
+        authorName: comment.authorName,
+        content: commentStatus === 'APPROVED' ? comment.content : undefined,
+        createdAt: comment.createdAt,
+        parentId: comment.parentId,
+        status: commentStatus.toLowerCase(),
+      };
 
       return reply.code(201).send({
         success: true,
-        comment: {
-          id: comment.id,
-          authorName: comment.authorName,
-          content: comment.content,
-          createdAt: comment.createdAt,
-          parentId: comment.parentId,
-        },
+        message: commentStatus === 'PENDING'
+          ? 'Comment submitted for moderation'
+          : 'Comment posted successfully',
+        comment: responseComment,
       });
     } catch (error) {
       request.log.error(error);

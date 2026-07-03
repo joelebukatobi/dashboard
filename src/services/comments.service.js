@@ -191,10 +191,11 @@ class CommentsService {
    * @param {Object} data - Comment data
    * @returns {Promise<Object>} - Created comment
    */
-  async createComment(data) {
+  async createComment(data, options = {}) {
     const sanitizedContent = this.sanitizeContent(data.content);
     const commentId = crypto.randomUUID();
-    
+    const status = options.status || 'APPROVED';
+
     await db
       .insert(comments)
       .values({
@@ -204,7 +205,7 @@ class CommentsService {
         authorName: data.authorName || 'Anonymous',
         authorEmail: data.authorEmail || null,
         content: sanitizedContent,
-        status: 'APPROVED', // Auto-approved
+        status,
       });
 
     const comment = await this.getCommentById(commentId);

@@ -12,6 +12,7 @@ import {
   htmxRedirect,
   setHtmxToast,
 } from '../render.js';
+import { formatSiteDate } from '../../lib/site-dates.js';
 
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 B';
@@ -19,15 +20,6 @@ function formatFileSize(bytes) {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-}
-
-function formatDate(date) {
-  if (!date) return '-';
-  return new Date(date).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 }
 
 class ImagesController {
@@ -55,7 +47,7 @@ class ImagesController {
         images: images.map((img) => ({
           ...img,
           sizeFormatted: formatFileSize(img.size),
-          dateFormatted: formatDate(img.createdAt),
+          dateFormatted: formatSiteDate(img.createdAt, request.siteSettingsMap ?? {}),
         })),
         pagination,
         filters: { search },
@@ -221,7 +213,7 @@ class ImagesController {
       const imageData = {
         ...image,
         sizeFormatted: formatFileSize(image.size),
-        dateFormatted: formatDate(image.createdAt),
+        dateFormatted: formatSiteDate(image.createdAt, request.siteSettingsMap ?? {}),
       };
 
       const { imagesEditContent, imagesEditMeta } = await import('../templates/pages/media/images/index.js');
