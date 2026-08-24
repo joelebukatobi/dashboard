@@ -1,6 +1,8 @@
 import fastifyHtml from 'fastify-html';
 import { buildDashboardShell } from './templates/layouts/main.js';
 import { resolvePageMeta, renderOgMetaTags } from '../lib/site-meta.js';
+import { buildPageManifest, buildProjectManifest } from './routes/manifest.js';
+import { projectPagePrefixes } from './routes/project/prefixes.js';
 
 /**
  * Encapsulated admin dashboard plugin.
@@ -38,15 +40,13 @@ export default async function adminPlugin(fastify) {
     });
   }, { skipOnHeader: 'hx-request' });
 
-  await fastify.register(import('./routes/dashboard.routes.js'), { prefix: '/admin' });
-  await fastify.register(import('./routes/posts.routes.js'), { prefix: '/admin/posts' });
-  await fastify.register(import('./routes/comments.routes.js'), { prefix: '/admin/posts/:postId/comments' });
-  await fastify.register(import('./routes/categories.routes.js'), { prefix: '/admin/categories' });
-  await fastify.register(import('./routes/tags.routes.js'), { prefix: '/admin/tags' });
-  await fastify.register(import('./routes/users.routes.js'), { prefix: '/admin/users' });
-  await fastify.register(import('./routes/subscribers.routes.js'), { prefix: '/admin/subscribers' });
-  await fastify.register(import('./routes/images.routes.js'), { prefix: '/admin/media/images' });
-  await fastify.register(import('./routes/videos.routes.js'), { prefix: '/admin/media/videos' });
-  await fastify.register(import('./routes/albums.routes.js'), { prefix: '/admin/media/albums' });
-  await fastify.register(import('./routes/settings.routes.js'), { prefix: '/admin/settings' });
+  // Core admin pages, autoloaded from src/admin/routes/*.routes.js.
+  for (const route of buildPageManifest(projectPagePrefixes)) {
+    await fastify.register(import(route.url), { prefix: route.prefix });
+  }
+
+  // Fork-owned admin pages, autoloaded from src/admin/routes/project/.
+  for (const route of buildProjectManifest(projectPagePrefixes)) {
+    await fastify.register(import(route.url), { prefix: route.prefix });
+  }
 }
