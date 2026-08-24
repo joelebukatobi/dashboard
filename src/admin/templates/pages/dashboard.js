@@ -201,6 +201,22 @@ export function dashboardContent({ user, stats = {}, activity = [], recentPosts 
             activeTab.setAttribute('aria-selected', 'true');
           }
         }
+
+        document.body.addEventListener('htmx:afterSettle', (event) => {
+          if (event.detail.target?.id !== 'chart-container-wrapper') {
+            return;
+          }
+
+          event.detail.target.querySelectorAll('script').forEach((oldScript) => {
+            const script = document.createElement('script');
+            script.textContent = oldScript.textContent;
+            oldScript.replaceWith(script);
+          });
+
+          if (window.lucide) {
+            lucide.createIcons();
+          }
+        });
       </script>
 
       <!-- Recent Activity -->

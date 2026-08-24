@@ -515,9 +515,22 @@ export function postNewContent({ categories, tags, user }) {
 
       dropzone?.addEventListener('click', () => imageInput.click());
 
+      const showFeaturedImageToast = (message, type = 'error') => {
+        document.body.dispatchEvent(new CustomEvent('htmx:toast', {
+          detail: { message, type }
+        }));
+      };
+
       imageInput?.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
+
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+          showFeaturedImageToast('File too large. Max size: 10MB');
+          e.target.value = '';
+          return;
+        }
 
         const formData = new FormData();
         formData.append('image', file);
@@ -527,16 +540,22 @@ export function postNewContent({ categories, tags, user }) {
             method: 'POST',
             body: formData
           });
+          const data = await response.json().catch(() => ({}));
 
-          if (response.ok) {
-            const data = await response.json();
-            previewImg.src = data.url;
-            featuredImageId.value = data.id;
-            imagePreview.classList.add('has-image');
-            lucide.createIcons();
+          if (!response.ok) {
+            showFeaturedImageToast(data.error || 'Failed to upload image');
+            e.target.value = '';
+            return;
           }
+
+          previewImg.src = data.url;
+          featuredImageId.value = data.id;
+          imagePreview.classList.add('has-image');
+          lucide.createIcons();
         } catch (error) {
           console.error('Upload failed:', error);
+          showFeaturedImageToast('Upload failed. Please try again.');
+          e.target.value = '';
         }
       });
 

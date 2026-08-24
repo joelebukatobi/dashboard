@@ -2,6 +2,7 @@
 // Auth layout for login, reset password, and other auth pages
 
 import { assetUrl } from '../../../lib/asset-version.js';
+import { DEFAULT_PLACEHOLDER_IMAGE_URL } from '../../../lib/media-defaults.js';
 
 /**
  * Auth Layout Template
@@ -29,6 +30,7 @@ export function buildAuthShell({
   const safeSiteName = String(siteName).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const safeDescription = String(description).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   const safeFavicon = String(favicon).replace(/"/g, '&quot;');
+  const brandingBackground = String(DEFAULT_PLACEHOLDER_IMAGE_URL).replace(/"/g, '&quot;');
 
   return `<!doctype html>
 <html lang="en" class="scroll-smooth">
@@ -66,8 +68,8 @@ export function buildAuthShell({
     <div class="admin">
       <!-- Login Layout - Split screen -->
       <div class="login">
-        <!-- Left side - Branding panel (hidden on mobile) -->
-        <div class="login__branding"></div>
+        <!-- Branding panel (full-bleed bg on mobile, left split on desktop) -->
+        <div class="login__branding" style="background-image: url(&quot;${brandingBackground}&quot;);"></div>
 
         <!-- Right side - Form panel (contains modals) -->
         <div class="login__form-panel" id="login-form-panel">
