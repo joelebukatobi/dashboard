@@ -11,6 +11,7 @@
     "build:js": "node scripts/build-js.js",
     "watch:css": "chokidar 'scss/**/*.scss' -c 'npm run build:css' --initial",
     "db:generate": "drizzle-kit generate",
+    "db:generate:project": "drizzle-kit generate --config drizzle.project.config.js",
     "db:migrate": "node scripts/migrate.js",
     "db:push": "drizzle-kit push",
     "db:seed": "node scripts/seed.js",

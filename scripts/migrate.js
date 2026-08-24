@@ -4,6 +4,7 @@
 // Drizzle's migrate() is idempotent — it skips already-applied migrations
 
 import { ensureDatabaseUrl } from '../env.js';
+import { existsSync } from 'node:fs';
 import mysql from 'mysql2/promise';
 import { drizzle } from 'drizzle-orm/mysql2';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
@@ -21,9 +22,21 @@ async function runMigrations() {
   try {
     const db = drizzle(connection);
 
-    // Run migrations from the migrations folder
+    // Core migrations, owned by dashboard.
     // Drizzle tracks which ones are applied internally — safe to run every time
     await migrate(db, { migrationsFolder: './src/db/migrations' });
+
+    // Fork migrations, owned by the project. Separate folder, separate
+    // journal, separate tracking table — the two sequences cannot collide
+    // or renumber each other across an upstream merge.
+    const projectFolder = './src/db/migrations/project';
+    if (existsSync(`${projectFolder}/meta/_journal.json`)) {
+      console.log('🔄 Running project migrations...');
+      await migrate(db, {
+        migrationsFolder: projectFolder,
+        migrationsTable: '__drizzle_migrations_project',
+      });
+    }
 
     console.log('✅ Migrations completed successfully!');
     process.exit(0);
