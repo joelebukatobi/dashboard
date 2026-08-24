@@ -8,9 +8,9 @@ import { escapeHtml } from '../utils/helpers.js';
  * @param {{ error?: string, email?: string, rememberMe?: boolean }} [options]
  */
 export function loginPanelContent({ error = '', email = '', rememberMe = false } = {}) {
-  const errorHtml = error
-    ? `<p id="login-error" class="auth-card__error">${escapeHtml(error)}</p>`
-    : '<p id="login-error" class="auth-card__error">&nbsp;</p>';
+  const alertHtml = error
+    ? `<div class="alert alert--error alert--mb" role="alert">${escapeHtml(error)}</div>`
+    : '';
 
   return `
     <div class="auth-card">
@@ -19,9 +19,11 @@ export function loginPanelContent({ error = '', email = '', rememberMe = false }
         <p class="auth-card__subtitle">Sign in to your account to continue</p>
       </div>
 
-      ${errorHtml}
-
       <hr class="divider" />
+
+      <div id="login-response">
+        ${alertHtml}
+      </div>
 
       <form
         class="auth-card__form"
@@ -54,7 +56,7 @@ export function loginPanelContent({ error = '', email = '', rememberMe = false }
               placeholder="Enter your password"
               required
             />
-            <button type="button" class="input__addon" onclick="togglePassword()">
+            <button type="button" class="input__addon" onclick="togglePassword('password', 'password-icon')">
               <i data-lucide="eye" id="password-icon"></i>
             </button>
           </div>
@@ -169,9 +171,9 @@ export function totpPageContent({ error = '' } = {}) {
  * TOTP verification card.
  */
 export function totpStepContent({ error = '' } = {}) {
-  const errorHtml = error
-    ? `<p id="login-error" class="auth-card__error">${escapeHtml(error)}</p>`
-    : '<p id="login-error" class="auth-card__error">&nbsp;</p>';
+  const alertHtml = error
+    ? `<div class="alert alert--error alert--mb" role="alert">${escapeHtml(error)}</div>`
+    : '';
 
   return `
     <div class="auth-card">
@@ -180,7 +182,11 @@ export function totpStepContent({ error = '' } = {}) {
         <p class="auth-card__subtitle">Enter the 6-digit code from your authenticator app</p>
       </div>
 
-      ${errorHtml}
+      <hr class="divider" />
+
+      <div id="login-response">
+        ${alertHtml}
+      </div>
 
       <form
         class="auth-card__form"
@@ -242,9 +248,9 @@ export function totpSetupPageContent({ qrDataUrl = '', error = '' } = {}) {
  * Admin mandatory setup card shown after password login.
  */
 export function totpSetupStepContent({ qrDataUrl = '', error = '' } = {}) {
-  const errorHtml = error
-    ? `<p id="login-error" class="auth-card__error">${escapeHtml(error)}</p>`
-    : '<p id="login-error" class="auth-card__error">&nbsp;</p>';
+  const alertHtml = error
+    ? `<div class="alert alert--error alert--mb" role="alert">${escapeHtml(error)}</div>`
+    : '';
 
   const qrBlock = qrDataUrl
     ? `<div class="totp-setup__qr"><img src="${escapeHtml(qrDataUrl)}" alt="2FA QR code" width="200" height="200" /></div>`
@@ -257,7 +263,11 @@ export function totpSetupStepContent({ qrDataUrl = '', error = '' } = {}) {
         <p class="auth-card__subtitle">Admin login requires an authenticator app. Scan the QR code, then enter your verification code.</p>
       </div>
 
-      ${errorHtml}
+      <hr class="divider" />
+
+      <div id="login-response">
+        ${alertHtml}
+      </div>
 
       <div class="totp-setup">
         ${qrBlock}

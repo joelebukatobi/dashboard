@@ -262,6 +262,8 @@ export function settingsContent({ user, settings, toast }) {
                   onchange="document.getElementById('siteIconUploadForm').requestSubmit()"
                 />
 
+                <hr class="form__divider" />
+
                 <!-- Site Name & Tagline -->
                 <div class="form__row form__row--2col">
                   <div class="form__group">

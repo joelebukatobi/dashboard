@@ -315,8 +315,8 @@ function chartFragment({ range, data }) {
         <div class="chart-container__chart">
           <div class="text-center text-gray-500 py-8">
             <i data-lucide="bar-chart-2" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
-            <p>No traffic data available</p>
-            <p class="text-sm">Data will appear once views are recorded</p>
+            <p>No traffic data yet</p>
+            <p class="text-sm">Daily traffic appears here as visitors read your posts. Page Views above shows lifetime totals.</p>
           </div>
         </div>
       </div>
