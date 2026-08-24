@@ -152,12 +152,15 @@ class PostsAPIController {
       }
 
       // Format posts
-      const formattedPosts = results.map(r => ({
-        ...r.post,
-        author: r.author,
-        category: r.category,
-        tags: tagsByPost[r.post.id] || [],
-      })).map(formatPostForAPI);
+      const postsWithImages = await postsService.attachFeaturedImageUrls(
+        results.map(r => ({
+          ...r.post,
+          author: r.author,
+          category: r.category,
+          tags: tagsByPost[r.post.id] || [],
+        })),
+      );
+      const formattedPosts = postsWithImages.map(formatPostForAPI);
 
       // Filter by tag if provided (do this after fetching)
       let filteredPosts = formattedPosts;
@@ -250,12 +253,12 @@ class PostsAPIController {
         .innerJoin(tags, eq(postTags.tagId, tags.id))
         .where(eq(postTags.postId, post.id));
 
-      const postWithRelations = {
+      const postWithRelations = await postsService.attachFeaturedImageUrls({
         ...post,
         author,
         category,
         tags: tagsData,
-      };
+      });
 
       // Increment view count
       await postsService.incrementViewCount(post.id);

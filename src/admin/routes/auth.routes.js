@@ -4,6 +4,7 @@ import { authenticate, optionalAuth } from '../../middleware/authenticate.js';
 import { requireAdmin } from '../../middleware/authorize.js';
 import { loginContent, loginMeta } from '../templates/pages/login.js';
 import { resetPasswordContent, resetPasswordMeta } from '../templates/pages/reset-password.js';
+import { acceptInviteContent, acceptInviteMeta } from '../templates/pages/accept-invite.js';
 import { renderAdminPage } from '../render.js';
 import { validateBody } from '../middleware/validate.js';
 import { loginSchema } from '../../utils/validators.js';
@@ -54,7 +55,17 @@ export default async function authRoutes(fastify) {
         }
       }
       
-      return renderAdminPage(request, reply, loginMeta({}), loginContent());
+      const { reset, invite, password } = request.query;
+      let flashMessage = '';
+      if (reset === 'success') {
+        flashMessage = 'Password reset successful. Please sign in with your new password.';
+      } else if (invite === 'accepted') {
+        flashMessage = 'Your account is active. You can sign in now.';
+      } else if (password === 'changed') {
+        flashMessage = 'Password updated. Please sign in again.';
+      }
+
+      return renderAdminPage(request, reply, loginMeta({}), loginContent({ flashMessage }));
     }
   });
   
@@ -91,12 +102,29 @@ export default async function authRoutes(fastify) {
   fastify.get('/reset-password', {
     handler: async (request, reply) => {
       const { token, error } = request.query;
-      
+
       if (!token) {
         return reply.redirect('/admin/auth/login');
       }
-      
+
       return renderAdminPage(request, reply, resetPasswordMeta({}), resetPasswordContent({ token, error }));
+    }
+  });
+
+  fastify.post('/accept-invite', {
+    preHandler: validateBody(resetPasswordSchema, { onFail: authFormValidationFail }),
+    handler: authController.acceptInvite.bind(authController),
+  });
+
+  fastify.get('/accept-invite', {
+    handler: async (request, reply) => {
+      const { token, error } = request.query;
+
+      if (!token) {
+        return reply.redirect('/admin/auth/login');
+      }
+
+      return renderAdminPage(request, reply, acceptInviteMeta({}), acceptInviteContent({ token, error }));
     }
   });
 }

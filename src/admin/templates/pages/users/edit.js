@@ -2,7 +2,8 @@
 // Edit User Page - Two column layout with avatar upload
 
 import { escapeHtml, formatDate, formatRelativeTime, getInitials } from '../../utils/helpers.js';
-import { isUserTotpEnabled } from '../../../lib/user-totp.js';
+import { isUserTotpEnabled } from '../../../../lib/user-totp.js';
+import { ghostPasswordField } from '../../partials/ghost-password-field.js';
 
 /**
  * Edit User page inner content (layout applied via fastify-html addLayout).
@@ -15,8 +16,9 @@ export function usersEditContent({
   totpEnroll = null,
   adminTotpRequired = false,
 }) {
-  // Check if editing self
   const isSelf = user?.id === editUser?.id;
+  const canSetPasswordForOther = user?.role === 'ADMIN' && !isSelf;
+  const showPasswordSection = isSelf || canSetPasswordForOther;
   // Check if this is the last admin
   const canChangeRole = !(isSelf && editUser?.role === 'ADMIN');
   
@@ -152,6 +154,8 @@ export function usersEditContent({
                   </div>
                   </div>
 
+                  ${showPasswordSection ? passwordSectionHtml({ isSelf, canSetPasswordForOther, editUser, errors }) : ''}
+
                   ${isSelf ? totpSectionHtml({ editUser, totpEnroll, adminTotpRequired }) : ''}
 
                   <!-- Divider -->
@@ -275,6 +279,98 @@ export function userEditMeta({ editUser }) {
       { label: `${editUser.firstName} ${editUser.lastName}`, url: `/admin/users/${editUser.id}/edit` },
     ],
   };
+}
+
+/**
+ * Password change section for self-edit or admin reset.
+ */
+function passwordSectionHtml({ isSelf, canSetPasswordForOther, editUser, errors = {} }) {
+  const invitedHint = editUser.status === 'INVITED' && canSetPasswordForOther
+    ? '<p class="form-feedback form-feedback--hint">Setting a password activates this invited account.</p>'
+    : '';
+
+  if (isSelf) {
+    return `
+      <hr class="form__divider" />
+      <div class="form__group">
+        <h4 class="form__info-box-title form__info-box-title--mb">Change Password</h4>
+        <p class="form-feedback form-feedback--hint">Leave the new password fields blank to keep your current password.</p>
+      </div>
+      ${ghostPasswordField({
+        id: 'currentPassword',
+        name: 'currentPassword',
+        label: 'Current Password',
+        error: errors.currentPassword,
+        autocomplete: 'current-password',
+        hint: 'Click to enter your current password when changing it.',
+      })}
+      <div class="form__row form__row--2col">
+        ${renderPlainPasswordField({
+          id: 'newPassword',
+          name: 'newPassword',
+          label: 'New Password',
+          error: errors.newPassword,
+          autocomplete: 'new-password',
+        })}
+        ${renderPlainPasswordField({
+          id: 'confirmPassword',
+          name: 'confirmPassword',
+          label: 'Confirm New Password',
+          error: errors.confirmPassword,
+          autocomplete: 'new-password',
+        })}
+      </div>
+    `;
+  }
+
+  return `
+    <hr class="form__divider" />
+    <div class="form__group">
+      <h4 class="form__info-box-title form__info-box-title--mb">Password</h4>
+      <p class="form-feedback form-feedback--hint">Leave blank to keep the current password.</p>
+      ${invitedHint}
+    </div>
+    ${editUser.status === 'ACTIVE'
+      ? ghostPasswordField({
+        id: 'currentPasswordDisplay',
+        label: 'Current Password',
+        displayOnly: true,
+        hint: 'Password is set. Enter a new password below to change it.',
+      })
+      : ''}
+    <div class="form__row form__row--2col">
+      ${renderPlainPasswordField({
+        id: 'newPassword',
+        name: 'newPassword',
+        label: 'New Password',
+        error: errors.newPassword,
+        autocomplete: 'new-password',
+      })}
+      ${renderPlainPasswordField({
+        id: 'confirmPassword',
+        name: 'confirmPassword',
+        label: 'Confirm New Password',
+        error: errors.confirmPassword,
+        autocomplete: 'new-password',
+      })}
+    </div>
+  `;
+}
+
+function renderPlainPasswordField({ id, name, label, error, autocomplete }) {
+  return `
+    <div class="form__group ${error ? 'form__group--error' : ''}">
+      <label class="label" for="${id}">${label}</label>
+      <input
+        type="password"
+        class="input"
+        id="${id}"
+        name="${name}"
+        autocomplete="${autocomplete}"
+      />
+      ${error ? `<p class="form-feedback form-feedback--error">${error}</p>` : ''}
+    </div>
+  `;
 }
 
 /**

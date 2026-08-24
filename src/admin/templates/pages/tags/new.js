@@ -26,6 +26,7 @@ export function tagNewContent({ user, errors = {} }) {
           <form
             class="form"
             id="newTagForm"
+            novalidate
             hx-post="/admin/tags"
             hx-target="#form-response"
             hx-swap="innerHTML"
@@ -87,7 +88,6 @@ export function tagNewContent({ user, errors = {} }) {
           </div>
         </div>
       </div>
-    </div>
     </div>
 
     <script>

@@ -1,11 +1,15 @@
 // Edit video page template
 
-import { escapeHtml } from '../../../utils/helpers.js';
+import { escapeHtml, toPublicMediaUrl, toastQueryScript } from '../../../utils/helpers.js';
 
 /**
  * Edit video page inner content (layout applied via fastify-html addLayout).
  */
-export function videosEditContent({ user, video, posts, albums = [] }) {
+export function videosEditContent({ user, video, posts, albums = [], toast }) {
+  const toastScript = toastQueryScript(toast, {
+    uploaded: 'Video uploaded successfully!',
+  });
+
   return `
     <div class="media">
       <div class="content">
@@ -23,7 +27,7 @@ export function videosEditContent({ user, video, posts, albums = [] }) {
               <video
                 id="videoBg"
                 class="video-preview-bg"
-                src="${video.path}"
+                src="${escapeHtml(toPublicMediaUrl(video.path))}"
                 muted
                 loop
                 playsinline
@@ -31,7 +35,7 @@ export function videosEditContent({ user, video, posts, albums = [] }) {
               <video
                 id="videoMain"
                 class="upload-zone__preview video-preview-main"
-                src="${video.path}"
+                src="${escapeHtml(toPublicMediaUrl(video.path))}"
                 controls
               >
                 Your browser does not support the video tag.
@@ -246,6 +250,7 @@ export function videosEditModals({ user, video }) {
         }
       });
     </script>
+    ${toastScript}
   `;
 }
 

@@ -173,10 +173,25 @@ export function buildDashboardShell({
         layout?.classList.remove('layout--sidebar-collapsed');
       }
 
+      let collapsedNavTimer = null;
+      const COLLAPSED_NAV_DELAY_MS = 300;
+
       sidebar?.querySelector('.sidebar__nav')?.addEventListener('click', (e) => {
         const link = e.target.closest('a.sidebar__item');
         if (!link || !sidebar?.classList.contains('sidebar--collapsed')) return;
+
+        e.preventDefault();
+        const href = link.href;
+
+        if (collapsedNavTimer) {
+          clearTimeout(collapsedNavTimer);
+        }
+
         expandSidebar();
+        collapsedNavTimer = window.setTimeout(() => {
+          collapsedNavTimer = null;
+          window.location.assign(href);
+        }, COLLAPSED_NAV_DELAY_MS);
       });
 
       sidebarLogo?.addEventListener('click', (e) => {
@@ -254,14 +269,82 @@ export function buildDashboardShell({
         submenu.classList.toggle('sidebar__submenu--open');
       }
 
+      // Sync Preline HSSelect values into native <select> before HTMX submits
+      window.syncFormSelectValues = function(form) {
+        if (!form || typeof HSSelect === 'undefined') return;
+        form.querySelectorAll('[data-hs-select]').forEach(function(el) {
+          var instance = HSSelect.getInstance(el);
+          if (instance && instance.value) {
+            el.value = instance.value;
+          }
+        });
+      };
+
       // Initialize on page load
       initSidebarSubmenus();
+      initPasswordGhostFields();
+
+      function syncPasswordGhostField(wrapper) {
+        const input = wrapper.querySelector('[data-password-ghost-input]');
+        const mask = wrapper.querySelector('.password-ghost-field__mask');
+        if (!input || !mask) return;
+
+        const showMask = input.hasAttribute('data-password-ghost-display-only')
+          || (!input.matches(':focus') && input.value.length === 0);
+        mask.hidden = !showMask;
+        input.classList.toggle('password-ghost-field__input--ghost', showMask);
+      }
+
+      function initPasswordGhostFields(root) {
+        (root || document).querySelectorAll('[data-password-ghost]').forEach((wrapper) => {
+          const input = wrapper.querySelector('[data-password-ghost-input]');
+          if (!input || input.dataset.ghostBound === 'true') return;
+
+          input.dataset.ghostBound = 'true';
+          ['focus', 'blur', 'input'].forEach((eventName) => {
+            input.addEventListener(eventName, () => syncPasswordGhostField(wrapper));
+          });
+          syncPasswordGhostField(wrapper);
+        });
+      }
 
       // HTMX event handlers
+      document.body.addEventListener('htmx:responseError', function(evt) {
+        var message = 'Request failed. Please try again.';
+        var xhr = evt.detail.xhr;
+        if (xhr && xhr.status >= 400) {
+          message = 'Something went wrong (' + xhr.status + '). Please try again.';
+        }
+        document.body.dispatchEvent(new CustomEvent('htmx:toast', {
+          detail: { message: message, type: 'error' },
+        }));
+      });
+
       document.body.addEventListener('htmx:afterRequest', function(evt) {
-        const redirectUrl = evt.detail.xhr.getResponseHeader('HX-Redirect');
+        const xhr = evt.detail.xhr;
+        const redirectUrl = xhr.getResponseHeader('HX-Redirect');
         if (redirectUrl) {
           window.location.href = redirectUrl;
+          return;
+        }
+
+        const locationUrl = xhr.getResponseHeader('HX-Location');
+        if (locationUrl) {
+          window.location.href = locationUrl;
+        }
+
+        const triggerHeader = xhr.getResponseHeader('HX-Trigger');
+        if (triggerHeader) {
+          try {
+            const triggers = JSON.parse(triggerHeader);
+            if (triggers['htmx:toast']) {
+              document.body.dispatchEvent(new CustomEvent('htmx:toast', {
+                detail: triggers['htmx:toast'],
+              }));
+            }
+          } catch (err) {
+            // ignore malformed HX-Trigger payloads
+          }
         }
 
         // Re-initialize icons after HTMX content swap
@@ -286,6 +369,8 @@ export function buildDashboardShell({
             new HSSelect(el);
           });
         }
+
+        initPasswordGhostFields(evt.target);
 
         // Charts that need initialization will have inline scripts that run automatically
         // This event ensures any global cleanup/setup happens after swap
@@ -390,14 +475,6 @@ export function buildDashboardShell({
           
           // Show toast with a small delay to ensure modal has closed
           setTimeout(displayToast, 100);
-        }
-      });
-
-      // Handle HTMX redirects
-      document.body.addEventListener('htmx:afterRequest', function(evt) {
-        const redirectUrl = evt.detail.xhr.getResponseHeader('HX-Redirect');
-        if (redirectUrl) {
-          window.location.href = redirectUrl;
         }
       });
 

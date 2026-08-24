@@ -8,7 +8,6 @@ import {
   renderFragment,
   renderEmpty,
   errorAlert,
-  htmxLocation,
   htmxRedirect,
   setHtmxToast,
 } from '../render.js';
@@ -172,9 +171,11 @@ class VideosController {
         await videosService.attachToPost(video.id, postId);
       }
 
-      return htmxLocation(reply, `/admin/media/videos/${video.id}/edit`, {
-        message: 'Video uploaded successfully!',
-      });
+      const redirectUrl = `/admin/media/videos/${video.id}/edit?toast=uploaded`;
+      if (request.headers['hx-request'] !== 'true') {
+        return reply.redirect(redirectUrl);
+      }
+      return htmxRedirect(reply, redirectUrl);
     } catch (error) {
       request.log.error('Upload error:', error);
       reply.code(400);
@@ -218,6 +219,7 @@ class VideosController {
           video: videoData,
           posts,
           albums,
+          toast: request.query?.toast,
         }),
       );
     } catch (error) {

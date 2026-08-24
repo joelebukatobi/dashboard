@@ -1,11 +1,15 @@
 // Edit image page template
 
-import { escapeHtml } from '../../../utils/helpers.js';
+import { escapeHtml, toPublicMediaUrl, toastQueryScript } from '../../../utils/helpers.js';
 
 /**
  * Edit image page inner content (layout applied via fastify-html addLayout).
  */
-export function imagesEditContent({ user, image, posts, albums = [] }) {
+export function imagesEditContent({ user, image, posts, albums = [], toast }) {
+  const toastScript = toastQueryScript(toast, {
+    uploaded: 'Image uploaded successfully!',
+  });
+
   return `
     <div class="media">
       <div class="content">
@@ -22,12 +26,12 @@ export function imagesEditContent({ user, image, posts, albums = [] }) {
             <div class="upload-zone upload-zone--preview upload-zone--full image-preview-container">
               <img
                 class="image-preview-bg"
-                src="${image.path}"
+                src="${escapeHtml(toPublicMediaUrl(image.path))}"
                 alt=""
               />
               <img
                 class="image-preview-main"
-                src="${image.path}"
+                src="${escapeHtml(toPublicMediaUrl(image.path))}"
                 alt="${escapeHtml(image.altText || image.title || '')}"
               />
             </div>
@@ -201,6 +205,7 @@ export function imagesEditModals({ user, image }) {
         }
       });
     </script>
+    ${toastScript}
   `;
 }
 

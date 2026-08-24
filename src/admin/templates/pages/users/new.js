@@ -1,6 +1,15 @@
 // src/admin/templates/pages/users/new.js
 // New User Page - Mirrors edit layout with placeholder avatar
 
+import { renderFormSelect } from '../../partials/form-select.js';
+
+const ROLE_OPTIONS = [
+  { value: 'AUTHOR', label: 'Author - Can Create and Edit Own Posts' },
+  { value: 'VIEWER', label: 'Viewer - Read-Only Access' },
+  { value: 'EDITOR', label: 'Editor - Can Publish and Manage All Content' },
+  { value: 'ADMIN', label: 'Admin - Full System Access' },
+];
+
 /**
  * New User page inner content (layout applied via fastify-html addLayout).
  */
@@ -28,9 +37,11 @@ export function usersNewContent({ user, errors = {} }) {
                 <form
                   class="form"
                   id="newUserForm"
+                  novalidate
                   hx-post="/admin/users"
                   hx-target="#form-response"
                   hx-swap="innerHTML"
+                  hx-on:config-request="window.syncFormSelectValues(event.detail.elt)"
                 >
                   <div id="form-response"></div>
 
@@ -108,32 +119,22 @@ export function usersNewContent({ user, errors = {} }) {
 
                     <div class="form__group ${errors.role ? 'form__group--error' : ''}">
                       <label class="label label--required" for="userRole">Role</label>
-                      <select
-                        name="role"
-                        id="userRole"
-                        data-hs-select='{
-                          "placeholder": "Select a role...",
-                          "toggleClasses": "form__select-toggle",
-                        "dropdownClasses": "form__select-dropdown",
-                        "optionClasses": "form__select-option"
-                      }'
-                      class="hidden"
-                      required
-                    >
-                      <option value="">Select a role...</option>
-                      <option value="ADMIN">Admin - Full System Access</option>
-                      <option value="EDITOR">Editor - Can Publish and Manage All Content</option>
-                      <option value="AUTHOR">Author - Can Create and Edit Own Posts</option>
-                      <option value="VIEWER">Viewer - Read-Only Access</option>
-                    </select>
-                    <p class="form-feedback form-feedback--hint form__role-hints">
-                      <strong>Admin:</strong> Full Access |
-                      <strong>Editor:</strong> Manage All Content |
-                      <strong>Author:</strong> Own Content Only |
-                      <strong>Viewer:</strong> Read Only
-                    </p>
-                    ${errors.role ? `<p class="form-feedback form-feedback--error">${errors.role}</p>` : ''}
-                  </div>
+                      ${renderFormSelect(
+                        'role',
+                        ROLE_OPTIONS,
+                        'AUTHOR',
+                        'AUTHOR',
+                        'Select a role...',
+                        'userRole',
+                      )}
+                      <p class="form-feedback form-feedback--hint form__role-hints">
+                        <strong>Admin:</strong> Full Access |
+                        <strong>Editor:</strong> Manage All Content |
+                        <strong>Author:</strong> Own Content Only |
+                        <strong>Viewer:</strong> Read Only
+                      </p>
+                      ${errors.role ? `<p class="form-feedback form-feedback--error">${errors.role}</p>` : ''}
+                    </div>
                   </div>
 
                   <!-- Invite Options -->
@@ -158,7 +159,7 @@ export function usersNewContent({ user, errors = {} }) {
               </div>
               <div class="card__footer">
                 <div class="form__field-group">
-                  <button type="button" class="btn btn--primary" onclick="submitForm()">
+                  <button type="submit" form="newUserForm" class="btn btn--primary">
                     Add User
                   </button>
                   <a href="/admin/users" class="btn btn--outline btn--cancel">Cancel</a>
@@ -170,12 +171,6 @@ export function usersNewContent({ user, errors = {} }) {
       </div>
     </div>
 
-    <script>
-      // Submit form using HTMX trigger
-      function submitForm() {
-        htmx.trigger('#newUserForm', 'submit');
-      }
-    </script>
   `;
 
   return content;

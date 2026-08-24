@@ -14,7 +14,7 @@ const server = Fastify({
 await server.register(app);
 
 // Get port and host from environment
-const port = parseInt(process.env.PORT) || 3000;
+const port = parseInt(process.env.PORT) || 7000;
 const host = process.env.HOST || '0.0.0.0';
 
 try {

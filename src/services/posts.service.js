@@ -1,8 +1,9 @@
 // src/services/posts.service.js
 import { db, posts, categories, tags, postTags, users, mediaItems, comments } from '../db/index.js';
-import { eq, and, desc, asc, like, sql, gte, lt } from 'drizzle-orm';
+import { eq, and, desc, asc, like, sql, gte, lt, inArray } from 'drizzle-orm';
 import { activityService } from './activity.service.js';
 import { commentsService } from './comments.service.js';
+import { mediaItemPublicUrl } from '../lib/media-paths.js';
 import crypto from 'crypto';
 
 /**
@@ -11,6 +12,40 @@ import crypto from 'crypto';
  * Following Single Responsibility Principle
  */
 class PostsService {
+  /**
+   * Attach featuredImageUrl from mediaItems for one or many posts
+   * @param {Object|Object[]} items
+   * @returns {Promise<Object|Object[]>}
+   */
+  async attachFeaturedImageUrls(items) {
+    const list = Array.isArray(items) ? items : [items];
+    if (list.length === 0) {
+      return items;
+    }
+
+    const ids = [...new Set(list.map((p) => p.featuredImageId).filter(Boolean))];
+    if (ids.length === 0) {
+      const empty = list.map((p) => ({ ...p, featuredImageUrl: null }));
+      return Array.isArray(items) ? empty : empty[0];
+    }
+
+    const images = await db
+      .select()
+      .from(mediaItems)
+      .where(inArray(mediaItems.id, ids));
+
+    const urlById = Object.fromEntries(
+      images.map((img) => [img.id, mediaItemPublicUrl(img)]),
+    );
+
+    const enriched = list.map((p) => ({
+      ...p,
+      featuredImageUrl: p.featuredImageId ? urlById[p.featuredImageId] || null : null,
+    }));
+
+    return Array.isArray(items) ? enriched : enriched[0];
+  }
+
   /**
    * Get all posts with filters and pagination
    * @param {Object} options - Query options
@@ -153,12 +188,12 @@ class PostsService {
       .innerJoin(tags, eq(postTags.tagId, tags.id))
       .where(eq(postTags.postId, id));
 
-    return {
+    return this.attachFeaturedImageUrls({
       ...result[0].post,
       author: result[0].author,
       category: result[0].category,
       tags: tagsResult,
-    };
+    });
   }
 
   /**
@@ -514,10 +549,12 @@ class PostsService {
       .orderBy(desc(posts.publishedAt))
       .limit(limit);
 
-    return results.map(r => ({
-      ...r.post,
-      author: r.author,
-    }));
+    return this.attachFeaturedImageUrls(
+      results.map(r => ({
+        ...r.post,
+        author: r.author,
+      })),
+    );
   }
 
   /**

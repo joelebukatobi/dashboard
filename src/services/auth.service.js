@@ -1,6 +1,6 @@
 // src/services/auth.service.js
 import { db, users, sessions } from '../db/index.js';
-import { eq, and, gt } from 'drizzle-orm';
+import { eq, and, gt, isNull } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateSecureToken, generateSessionId } from '../utils/security.js';
 import crypto from 'crypto';
 
@@ -237,25 +237,50 @@ class AuthService {
   }
 
   /**
-   * Create password reset token
+   * Create password reset or invite token
    * @param {string} userId - User UUID
+   * @param {{ expiresInMs?: number }} [options]
    * @returns {Promise<string>} - Reset token
    */
-  async createPasswordResetToken(userId) {
+  async createPasswordResetToken(userId, options = {}) {
     const { passwordResets } = await import('../db/schema.js');
-    
+    const expiresInMs = options.expiresInMs ?? 60 * 60 * 1000;
+
     const token = generateSecureToken(32);
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-    
+    const expiresAt = new Date(Date.now() + expiresInMs);
+
     await db
       .insert(passwordResets)
       .values({
         userId,
         token,
-        expiresAt
+        expiresAt,
       });
-    
+
     return token;
+  }
+
+  async invalidateUserPasswordTokens(userId) {
+    const { passwordResets } = await import('../db/schema.js');
+
+    await db
+      .update(passwordResets)
+      .set({ usedAt: new Date() })
+      .where(and(eq(passwordResets.userId, userId), isNull(passwordResets.usedAt)));
+  }
+
+  async createInviteToken(userId) {
+    await this.invalidateUserPasswordTokens(userId);
+    return this.createPasswordResetToken(userId, { expiresInMs: 7 * 24 * 60 * 60 * 1000 });
+  }
+
+  async markPasswordResetTokenUsed(resetId) {
+    const { passwordResets } = await import('../db/schema.js');
+
+    await db
+      .update(passwordResets)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResets.id, resetId));
   }
 
   /**
@@ -277,7 +302,7 @@ class AuthService {
         and(
           eq(passwordResets.token, token),
           gt(passwordResets.expiresAt, new Date()),
-          eq(passwordResets.usedAt, null)
+          isNull(passwordResets.usedAt)
         )
       )
       .limit(1);
@@ -293,18 +318,43 @@ class AuthService {
    */
   async resetPassword(userId, newPassword) {
     const hashedPassword = await hashPassword(newPassword);
-    
+
     await db
       .update(users)
-      .set({ 
+      .set({
         password: hashedPassword,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
-    
-    // Invalidate all existing sessions
+
     await this.deleteAllUserSessions(userId);
-    
+
+    return true;
+  }
+
+  /**
+   * Set password from reset/invite token and optionally activate invited users.
+   * @param {string} userId
+   * @param {string} newPassword
+   * @param {{ resetId?: string, activateInvited?: boolean }} [options]
+   */
+  async completePasswordSetup(userId, newPassword, options = {}) {
+    await this.resetPassword(userId, newPassword);
+
+    if (options.resetId) {
+      await this.markPasswordResetTokenUsed(options.resetId);
+    }
+
+    if (options.activateInvited) {
+      await db
+        .update(users)
+        .set({
+          status: 'ACTIVE',
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+    }
+
     return true;
   }
 

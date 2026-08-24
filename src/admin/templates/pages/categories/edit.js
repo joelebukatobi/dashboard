@@ -28,6 +28,7 @@ export function categoryEditContent({ category, user, errors = {} }) {
           <form
             class="form"
             id="editCategoryForm"
+            novalidate
             hx-put="/admin/categories/${category.id}"
             hx-target="#form-response"
             hx-swap="innerHTML"
@@ -88,7 +89,6 @@ export function categoryEditContent({ category, user, errors = {} }) {
           </div>
         </div>
       </div>
-    </div>
     </div>
 
     <script>

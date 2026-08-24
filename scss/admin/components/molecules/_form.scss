@@ -67,6 +67,15 @@
       @apply mb-0;
     }
 
+    &:has([data-hs-select]) {
+      @apply relative;
+
+      &:has(.hs-select.open),
+      &:has(.hs-select.active) {
+        @apply z-50;
+      }
+    }
+
     // Force label-first ordering regardless of DOM manipulation (Preline/HTMX)
     &--ordered {
       @apply flex flex-col;
@@ -398,7 +407,7 @@
   }
 
   &__select-dropdown {
-    @apply mt-[0.8rem] z-50 w-full max-h-56 bg-white border border-grey-100 shadow-lg overflow-y-auto p-[0.4rem] rounded-md dark:bg-grey-900 dark:border-grey-700;
+    @apply absolute inset-x-0 top-full mt-[0.8rem] z-[200] w-full max-h-56 bg-white border border-grey-100 shadow-lg overflow-y-auto p-[0.4rem] rounded-md dark:bg-grey-900 dark:border-grey-700;
   }
 
   &__select-search {
@@ -647,6 +656,42 @@
 
     &.ck-editor {
       border: 1px solid #404040 !important;
+    }
+  }
+}
+
+// Optional password fields — masked dots when empty/blurred (unchanged password)
+.password-ghost-field {
+  @apply relative;
+
+  &__input {
+    @apply relative bg-transparent;
+  }
+
+  &__input--ghost:not(:focus) {
+    @apply text-transparent caret-transparent bg-transparent;
+  }
+
+  &__mask {
+    @apply absolute inset-y-0 left-0 right-0 z-[2] flex items-center px-[1.2rem];
+    @apply text-body-sm text-grey-900 pointer-events-none select-none;
+
+    &[hidden] {
+      @apply hidden;
+    }
+
+    .dark & {
+      @apply text-white;
+    }
+  }
+
+  &--display-only {
+    .password-ghost-field__input {
+      @apply cursor-default;
+    }
+
+    .password-ghost-field__mask {
+      @apply flex;
     }
   }
 }
