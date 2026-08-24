@@ -8,7 +8,6 @@ import {
   renderFragment,
   renderEmpty,
   errorAlert,
-  htmxLocation,
   htmxRedirect,
   setHtmxToast,
 } from '../render.js';
@@ -182,9 +181,11 @@ class ImagesController {
         await imagesService.attachToPost(image.id, postId);
       }
 
-      return htmxLocation(reply, `/admin/media/images/${image.id}/edit`, {
-        message: 'Image uploaded successfully!',
-      });
+      const redirectUrl = `/admin/media/images/${image.id}/edit?toast=uploaded`;
+      if (request.headers['hx-request'] !== 'true') {
+        return reply.redirect(redirectUrl);
+      }
+      return htmxRedirect(reply, redirectUrl);
     } catch (error) {
       request.log.error('Upload error:', error);
       reply.code(400);
@@ -227,6 +228,7 @@ class ImagesController {
           image: imageData,
           posts,
           albums,
+          toast: request.query?.toast,
         }),
       );
     } catch (error) {

@@ -26,6 +26,7 @@ export function categoryNewContent({ user, errors = {} }) {
           <form
             class="form"
             id="newCategoryForm"
+            novalidate
             hx-post="/admin/categories"
             hx-target="#form-response"
             hx-swap="innerHTML"
@@ -86,7 +87,6 @@ export function categoryNewContent({ user, errors = {} }) {
           </div>
         </div>
       </div>
-    </div>
     </div>
 
     <script>

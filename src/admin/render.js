@@ -79,8 +79,22 @@ export function successAlert({ message }) {
   `;
 }
 
+export function errorFragment(reply, { message }) {
+  setHtmxToast(reply, { message, type: 'error' });
+  return renderFragment(reply, errorAlert({ message }));
+}
+
 /**
- * Set HX-Trigger with an htmx:toast event.
+ * HTMX response with header toast only (no inline alert swap).
+ * @param {import('fastify').FastifyReply} reply
+ * @param {{ message: string, type?: string }} toast
+ */
+export function toastResponse(reply, { message, type = 'success' }) {
+  setHtmxToast(reply, { message, type });
+  return renderEmpty(reply);
+}
+
+/**
  * @param {import('fastify').FastifyReply} reply
  * @param {{ message: string, type?: string }} toast
  * @returns {import('fastify').FastifyReply}

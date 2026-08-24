@@ -24,6 +24,7 @@ export function albumNewContent({ user }) {
             <form
               class="form"
               id="newAlbumForm"
+              novalidate
               hx-post="/admin/media/albums"
               hx-target="#form-response"
               hx-swap="innerHTML"
@@ -97,6 +98,12 @@ export function albumNewContent({ user }) {
       });
 
       function submitForm() {
+        if (!slugInput?.value?.trim() && titleInput?.value?.trim()) {
+          slugInput.value = titleInput.value
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        }
         htmx.trigger('#newAlbumForm', 'submit');
       }
     </script>

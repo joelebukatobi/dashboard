@@ -7,7 +7,6 @@ import {
   renderFragment,
   renderEmpty,
   errorAlert,
-  htmxLocation,
   htmxRedirect,
   setHtmxToast,
 } from '../render.js';
@@ -90,9 +89,11 @@ class AlbumsController {
         coverImageId: coverImageId || null,
       });
 
-      return htmxLocation(reply, `/admin/media/albums/${album.id}/edit`, {
-        message: 'Album created successfully!',
-      });
+      const redirectUrl = `/admin/media/albums/${album.id}/edit?toast=created`;
+      if (request.headers['hx-request'] !== 'true') {
+        return reply.redirect(redirectUrl);
+      }
+      return htmxRedirect(reply, redirectUrl);
     } catch (error) {
       request.log.error(error);
       reply.code(400);
@@ -123,7 +124,7 @@ class AlbumsController {
         request,
         reply,
         albumEditMeta({ album }),
-        albumEditContent({ user, album, albumImages }),
+        albumEditContent({ user, album, albumImages, toast: request.query?.toast }),
       );
     } catch (error) {
       request.log.error(error);

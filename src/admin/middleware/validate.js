@@ -1,5 +1,5 @@
 import { formatZodError } from '../schemas/common.schema.js';
-import { renderFragment, errorAlert } from '../render.js';
+import { errorFragment } from '../render.js';
 
 function isHtmx(request) {
   return request.headers['hx-request'] === 'true';
@@ -27,7 +27,7 @@ function failValidation(request, reply, message, options = {}) {
   }
 
   if (isHtmx(request)) {
-    return renderFragment(reply, errorAlert({ message }));
+    return errorFragment(reply, { message });
   }
 
   return reply.send({ error: message, statusCode: 400 });

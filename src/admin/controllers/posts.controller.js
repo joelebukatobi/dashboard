@@ -4,14 +4,14 @@ import { db, categories, tags } from '../../db/index.js';
 import { eq } from 'drizzle-orm';
 import { imagesService } from '../../services/images.service.js';
 import { videosService } from '../../services/videos.service.js';
+import { toPublicMediaUrl } from '../../lib/media-paths.js';
 import crypto from 'crypto';
+import { parsePostTagIds } from '../../lib/post-input.js';
 import {
   renderAdminPage,
   renderFragment,
   renderEmpty,
   errorAlert,
-  successAlert,
-  htmxLocation,
   htmxRedirect,
   setHtmxToast,
 } from '../render.js';
@@ -160,16 +160,11 @@ class PostsController {
         status = 'DRAFT',
         metaTitle,
         metaDescription,
+        featuredImageId,
       } = request.body;
 
-      // Parse tags - handle both array (from multi-select) and comma-separated string
-      const tagIds = Array.isArray(tagIdsString)
-        ? tagIdsString.filter(Boolean)
-        : tagIdsString
-          ? tagIdsString.split(',').filter(Boolean)
-          : [];
+      const tagIds = parsePostTagIds({ tags: tagIdsString });
 
-      // Create post
       const post = await postsService.createPost({
         title,
         slug,
@@ -180,12 +175,17 @@ class PostsController {
         status,
         metaTitle,
         metaDescription,
+        featuredImageId,
       }, request.user.id);
 
-      // Send location for delayed redirect + toast trigger
-      return htmxLocation(reply, `/admin/posts/${post.id}/edit`, {
-        message: status === 'PUBLISHED' ? 'Post published successfully!' : 'Draft saved successfully!',
-      });
+      const toastKey = status === 'PUBLISHED' ? 'published' : 'draftSaved';
+      const redirectUrl = `/admin/posts/${post.id}/edit?toast=${toastKey}`;
+
+      if (request.headers['hx-request'] !== 'true') {
+        return reply.redirect(redirectUrl);
+      }
+
+      return htmxRedirect(reply, redirectUrl);
 
     } catch (error) {
       request.log.error(error);
@@ -222,6 +222,7 @@ class PostsController {
         tags: allTags,
         post,
         user: request.user,
+        toast: request.query?.toast,
       };
 
       const { postEditContent, postEditMeta } = await import('../templates/pages/posts/index.js');
@@ -259,14 +260,10 @@ class PostsController {
         status,
         metaTitle,
         metaDescription,
+        featuredImageId,
       } = request.body;
 
-      // Parse tags - handle both array (from multi-select) and comma-separated string
-      const tagIds = Array.isArray(tagIdsString)
-        ? tagIdsString.filter(Boolean)
-        : tagIdsString
-          ? tagIdsString.split(',').filter(Boolean)
-          : undefined;
+      const tagIds = parsePostTagIds({ tags: tagIdsString });
 
       // Update post
       const post = await postsService.updatePost(id, {
@@ -279,6 +276,7 @@ class PostsController {
         status,
         metaTitle,
         metaDescription,
+        featuredImageId,
       });
 
       return renderEmpty(setHtmxToast(reply, {
@@ -368,114 +366,28 @@ class PostsController {
    */
   async uploadImage(request, reply) {
     try {
-      // Get uploaded file from multipart form
       const file = await request.file();
-      
+
       if (!file) {
         reply.code(400);
         return reply.send({ error: 'No image file provided' });
       }
 
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-      if (!allowedTypes.includes(file.mimetype)) {
-        reply.code(400);
-        return reply.send({ error: 'Invalid file type. Allowed: JPEG, PNG, WebP, GIF' });
-      }
-
-      // Validate file size (10MB max)
-      const maxSize = 10 * 1024 * 1024; // 10MB
-      if (file.file.bytesRead > maxSize) {
-        reply.code(400);
-        return reply.send({ error: 'File too large. Max size: 10MB' });
-      }
-
-      // Read file buffer
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      const crypto = await import('crypto');
-      const fileBuffer = await file.toBuffer();
-
-      // Calculate SHA-256 hash of file content
-      const hash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
-
-      // Check if image with this hash already exists
-      const { db, mediaItems } = await import('../../db/index.js');
-      const { eq } = await import('drizzle-orm');
-      
-      const existingImage = await db
-        .select({
-          id: mediaItems.id,
-          path: mediaItems.path,
-          filename: mediaItems.filename,
-        })
-        .from(mediaItems)
-        .where(eq(mediaItems.hash, hash))
-        .limit(1);
-
-      // If duplicate found, return existing image
-      if (existingImage.length > 0) {
-        return reply.send({
-          id: existingImage[0].id,
-          url: `/${existingImage[0].path}`,
-          filename: existingImage[0].filename,
-          deduplicated: true,
-        });
-      }
-
-      // Generate unique filename
-      const timestamp = Date.now();
-      const extension = file.filename.split('.').pop();
-      const filename = `post-${timestamp}.${extension}`;
-      const filepath = `public/uploads/posts/${filename}`;
-
-      // Ensure uploads directory exists
-      const uploadsDir = path.join(process.cwd(), 'public/uploads/posts');
-      
-      try {
-        await fs.access(uploadsDir);
-      } catch {
-        await fs.mkdir(uploadsDir, { recursive: true });
-      }
-
-      // Save file
-      const fullPath = path.join(process.cwd(), filepath);
-      await fs.writeFile(fullPath, fileBuffer);
-
-      // Create media record in database with hash
-      const mediaItemId = crypto.randomUUID();
-
-      await db
-        .insert(mediaItems)
-        .values({
-          id: mediaItemId,
-          type: 'IMAGE',
-          filename,
-          originalName: file.filename,
-          mimeType: file.mimetype,
-          size: file.file.bytesRead,
-          path: filepath,
-          hash, // Store the hash for future deduplication
-          uploadedBy: request.user.id,
-        });
-
-      const [mediaItem] = await db
-        .select()
-        .from(mediaItems)
-        .where(eq(mediaItems.id, mediaItemId))
-        .limit(1);
+      const { mediaItem, deduplicated, url } = await imagesService.uploadForPost(
+        file,
+        request.user.id,
+      );
 
       return reply.send({
         id: mediaItem.id,
-        url: `/${filepath}`,
-        filename,
-        deduplicated: false,
+        url,
+        filename: mediaItem.filename,
+        deduplicated,
       });
-
     } catch (error) {
       request.log.error(error);
-      reply.code(500);
-      return reply.send({ error: 'Failed to upload image' });
+      reply.code(error.message?.includes('Invalid') || error.message?.includes('too large') ? 400 : 500);
+      return reply.send({ error: error.message || 'Failed to upload image' });
     }
   }
 
@@ -505,8 +417,8 @@ class PostsController {
 
       return reply.send({
         id: video.id,
-        url: video.path,
-        thumbnailUrl: video.thumbnailPath,
+        url: toPublicMediaUrl(video.path),
+        thumbnailUrl: toPublicMediaUrl(video.thumbnailPath),
         mimeType: video.mimeType,
         title: video.title,
         duration: video.duration,
@@ -534,8 +446,8 @@ class PostsController {
       return reply.send({
         items: result.data.map((image) => ({
           id: image.id,
-          url: image.path,
-          thumbnailUrl: image.thumbnailPath || image.path,
+          url: toPublicMediaUrl(image.path),
+          thumbnailUrl: toPublicMediaUrl(image.thumbnailPath || image.path),
           title: image.title || image.originalName || image.filename,
           altText: image.altText || '',
           mimeType: image.mimeType,
@@ -565,8 +477,8 @@ class PostsController {
       return reply.send({
         items: result.data.map((video) => ({
           id: video.id,
-          url: video.path,
-          thumbnailUrl: video.thumbnailPath || '',
+          url: toPublicMediaUrl(video.path),
+          thumbnailUrl: toPublicMediaUrl(video.thumbnailPath),
           title: video.title || video.originalName || video.filename,
           mimeType: video.mimeType,
           duration: video.duration || 0,

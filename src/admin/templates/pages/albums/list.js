@@ -3,7 +3,7 @@
 
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
-import { escapeHtml, formatDate, paginationHtml, toastQueryScript } from '../../utils/helpers.js';
+import { escapeHtml, formatDate, paginationHtml, toastQueryScript, toPublicMediaUrl } from '../../utils/helpers.js';
 
 /**
  * Albums list page inner content (layout applied via fastify-html addLayout).
@@ -131,7 +131,7 @@ export function albumsTableFragment({ albums, pagination }) {
   }
 
   const rows = albums.map((album) => {
-    const coverSrc = album.coverImage?.thumbnailPath || album.coverImage?.path || '/favicon.svg';
+    const coverSrc = toPublicMediaUrl(album.coverImage?.thumbnailPath || album.coverImage?.path) || '/favicon.svg';
     return `
       <tr class="table__tr">
         <td class="table__td">

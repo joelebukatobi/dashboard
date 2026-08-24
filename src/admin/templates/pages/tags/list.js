@@ -12,6 +12,7 @@ import { escapeHtml, formatDate, paginationHtml, toastQueryScript } from '../../
  */
 export function tagsListContent({ tags, total, page, totalPages, filters, user, toast }) {
   const toastScript = toastQueryScript(toast, {
+    created: 'Tag created successfully!',
     deleted: 'Tag deleted successfully!',
   });
 

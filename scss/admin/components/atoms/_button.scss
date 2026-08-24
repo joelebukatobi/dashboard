@@ -43,7 +43,7 @@
     @apply border bg-transparent;
     @apply border-grey-300 text-grey-700;
     @apply hover:bg-blue-600/10;
-    @apply focus:ring-2 focus:ring-grey-500 focus:ring-offset-2;
+    @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-grey-400;
 
     .dark & {
       @apply border-grey-600 text-grey-200 hover:bg-grey-800;
@@ -55,7 +55,7 @@
     @apply border bg-transparent;
     @apply border-grey-300 text-grey-700;
     @apply hover:bg-blue-600 hover:text-white hover:border-blue-600;
-    @apply focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-blue-500;
 
     .dark & {
       @apply border-grey-600 text-grey-200;
@@ -96,6 +96,17 @@
     }
   }
 
+  // Outline Danger (visible border before hover)
+  &--outline.btn--danger {
+    @apply border-red-300 text-red-600 bg-transparent;
+    @apply hover:bg-red-50 hover:text-red-700 hover:border-red-400;
+
+    .dark & {
+      @apply border-red-700 text-red-400;
+      @apply hover:bg-red-900/20 hover:text-red-300 hover:border-red-600;
+    }
+  }
+
   // Warning (amber/suspend)
   &--warning {
     @apply text-amber-600 border-amber-300;
@@ -109,7 +120,7 @@
 
   // Sizes
   &--sm {
-    @apply px-[1.2rem] py-[0.4rem] text-body-xs h-[1.6rem];
+    @apply px-[1.2rem] text-body-xs leading-none h-[1.6rem];
     // Inherits rounded-sm from base
   }
 
@@ -126,7 +137,7 @@
     @apply p-[0.8rem];
 
     &.btn--sm {
-      @apply p-[0.4rem];
+      @apply size-[1.6rem] p-0;
     }
 
     &.btn--lg {

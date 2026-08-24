@@ -88,11 +88,17 @@ export function loginPanelContent({ error = '', email = '', rememberMe = false }
 
 /**
  * Login page inner content (layout applied via fastify-html addLayout).
+ * @param {{ flashMessage?: string }} [options]
  */
-export function loginContent() {
+export function loginContent({ flashMessage = '' } = {}) {
+  const flashHtml = flashMessage
+    ? `<div class="alert alert--success alert--mb" role="status">${escapeHtml(flashMessage)}</div>`
+    : '';
+
   return `
         <div class="login__container">
           <div id="login-panel">
+            ${flashHtml}
             ${loginPanelContent()}
           </div>
         </div>

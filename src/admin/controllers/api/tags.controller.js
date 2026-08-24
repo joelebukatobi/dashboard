@@ -3,6 +3,7 @@
 
 import { db, tags, posts, users, categories, postTags } from '../../../db/index.js';
 import { eq, and, desc, sql, count, inArray } from 'drizzle-orm';
+import { postsService } from '../../../services/posts.service.js';
 
 /**
  * Format tag for API response
@@ -230,12 +231,15 @@ class TagsAPIController {
       });
 
       // Format posts
-      const formattedPosts = results.map(r => ({
-        ...r.post,
-        author: r.author,
-        category: r.category,
-        tags: tagsByPost[r.post.id] || [],
-      })).map(formatPostForAPI);
+      const postsWithImages = await postsService.attachFeaturedImageUrls(
+        results.map(r => ({
+          ...r.post,
+          author: r.author,
+          category: r.category,
+          tags: tagsByPost[r.post.id] || [],
+        })),
+      );
+      const formattedPosts = postsWithImages.map(formatPostForAPI);
 
       return reply.send({
         tag: formatTagForAPI(tag),

@@ -28,6 +28,7 @@ export function tagEditContent({ tag, user, errors = {} }) {
           <form
             class="form"
             id="editTagForm"
+            novalidate
             hx-put="/admin/tags/${tag.id}"
             hx-target="#form-response"
             hx-swap="innerHTML"
@@ -89,7 +90,6 @@ export function tagEditContent({ tag, user, errors = {} }) {
           </div>
         </div>
       </div>
-    </div>
     </div>
 
     <script>

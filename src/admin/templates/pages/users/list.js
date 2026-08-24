@@ -22,6 +22,9 @@ export function usersListContent({ users, pagination, counts, filters, user, toa
     deleted: 'User deleted successfully!',
     suspended: 'User suspended successfully!',
     activated: 'User activated successfully!',
+    'invite-sent': 'User invited and email sent successfully!',
+    'invite-failed': 'User invited, but the email could not be sent.',
+    'invite-no-smtp': 'User invited. Configure SMTP in Settings → Email to send invitation emails.',
     'invite-resent': 'Invitation resent successfully!',
   });
 
@@ -124,8 +127,7 @@ export function usersListContent({ users, pagination, counts, filters, user, toa
                               type="button"
                               class="btn btn--ghost row-action row-action--resend"
                               hx-post="/admin/users/${u.id}/resend-invite"
-                              hx-target="#users-table-container"
-                              hx-swap="outerHTML"
+                              hx-swap="none"
                               title="Resend Invite"
                             >
                               <i data-lucide="send"></i>
@@ -136,8 +138,7 @@ export function usersListContent({ users, pagination, counts, filters, user, toa
                                 type="button"
                                 class="btn btn--ghost row-action row-action--activate"
                                 hx-post="/admin/users/${u.id}/activate"
-                                hx-target="#users-table-container"
-                                hx-swap="outerHTML"
+                                hx-swap="none"
                                 title="Activate"
                               >
                                 <i data-lucide="user-check"></i>
@@ -305,8 +306,7 @@ export function usersTableFragment({ users, total, page, totalPages, limit, filt
                 type="button"
                 class="btn btn--ghost row-action row-action--resend"
                 hx-post="/admin/users/${u.id}/resend-invite"
-                hx-target="#users-table-container"
-                hx-swap="outerHTML"
+                hx-swap="none"
                 title="Resend Invite"
               >
                 <i data-lucide="send"></i>
@@ -317,8 +317,7 @@ export function usersTableFragment({ users, total, page, totalPages, limit, filt
                   type="button"
                   class="btn btn--ghost row-action row-action--activate"
                   hx-post="/admin/users/${u.id}/activate"
-                  hx-target="#users-table-container"
-                  hx-swap="outerHTML"
+                  hx-swap="none"
                   title="Activate"
                 >
                   <i data-lucide="user-check"></i>

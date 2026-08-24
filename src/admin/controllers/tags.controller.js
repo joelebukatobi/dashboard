@@ -7,7 +7,6 @@ import {
   renderFragment,
   renderEmpty,
   errorAlert,
-  htmxLocation,
   htmxRedirect,
   setHtmxToast,
 } from '../render.js';
@@ -109,10 +108,11 @@ class TagsController {
         description,
       }, user.id);
 
-      // Redirect to edit page with toast notification
-      return htmxLocation(reply, `/admin/tags/${tag.id}/edit`, {
-        message: 'Tag created successfully!',
-      });
+      const redirectUrl = '/admin/tags?toast=created';
+      if (request.headers['hx-request'] !== 'true') {
+        return reply.redirect(redirectUrl);
+      }
+      return htmxRedirect(reply, redirectUrl);
     } catch (error) {
       request.log.error(error);
       reply.code(400);

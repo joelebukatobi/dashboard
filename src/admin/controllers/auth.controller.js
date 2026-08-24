@@ -5,6 +5,7 @@ import { verifyTotpCode } from '../../services/totp.service.js';
 import { getRequestSettings } from '../../lib/settings-context.js';
 import { getLoginTotpAction, isUserTotpEnabled } from '../../lib/user-totp.js';
 import { usersService } from '../../services/users.service.js';
+import { mailService } from '../../services/mail.service.js';
 import { errorAlert, successAlert, htmxRedirect, renderAdminPage } from '../render.js';
 import {
   loginPanelContent,
@@ -116,7 +117,7 @@ class AuthController {
           EMAIL_NOT_FOUND: 'Email not found',
           WRONG_PASSWORD: 'Wrong password',
           ACCOUNT_SUSPENDED: 'Account suspended',
-          ACCOUNT_NOT_ACTIVATED: 'Account not activated',
+          ACCOUNT_NOT_ACTIVATED: 'Your account is not active yet. Check your email for an invitation link.',
         };
 
         const message = errorMessages[result.errorType] || 'Invalid credentials';
@@ -397,7 +398,20 @@ class AuthController {
 
       if (user) {
         const token = await authService.createPasswordResetToken(user.id);
-        request.log.info(`Password reset token for ${email}: ${token}`);
+        const settingsMap = await request.server.siteSettings.getMap();
+
+        try {
+          await mailService.sendPasswordResetEmail(settingsMap, {
+            to: user.email,
+            token,
+            firstName: user.firstName,
+          });
+        } catch (mailError) {
+          request.log.error(mailError);
+          if (process.env.NODE_ENV === 'development') {
+            request.log.info(`Password reset token for ${email}: ${token}`);
+          }
+        }
       }
 
       return reply.html`!${successAlert({
@@ -436,11 +450,55 @@ class AuthController {
         })}`;
       }
 
-      await authService.resetPassword(resetData.user.id, password);
+      await authService.completePasswordSetup(resetData.user.id, password, {
+        resetId: resetData.reset.id,
+      });
 
       reply.header('HX-Redirect', '/admin/auth/login?reset=success');
       return reply.html`!${successAlert({
         message: 'Password reset successful. Please login with your new password.',
+      })}`;
+    } catch (error) {
+      request.log.error(error);
+      reply.code(500);
+      return reply.html`!${errorAlert({
+        message: 'An error occurred. Please try again.',
+      })}`;
+    }
+  }
+
+  /**
+   * POST /admin/auth/accept-invite
+   */
+  async acceptInvite(request, reply) {
+    try {
+      const { token, password } = request.body;
+      const resetData = await authService.validatePasswordResetToken(token);
+
+      if (!resetData || resetData.user.status !== 'INVITED') {
+        reply.code(400);
+        return reply.html`!${errorAlert({
+          message: 'This invitation link is invalid or has expired.',
+        })}`;
+      }
+
+      const requireStrong = getRequestSettings().requireStrongPasswords !== false;
+      const strength = validatePasswordStrength(password, { requireStrong });
+      if (!strength.valid) {
+        reply.code(400);
+        return reply.html`!${errorAlert({
+          message: strength.errors.join('. '),
+        })}`;
+      }
+
+      await authService.completePasswordSetup(resetData.user.id, password, {
+        resetId: resetData.reset.id,
+        activateInvited: true,
+      });
+
+      reply.header('HX-Redirect', '/admin/auth/login?invite=accepted');
+      return reply.html`!${successAlert({
+        message: 'Your account is active. You can sign in now.',
       })}`;
     } catch (error) {
       request.log.error(error);
