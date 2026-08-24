@@ -43,6 +43,13 @@
       "when": 1780440000000,
       "tag": "0005_add_user_totp",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1787551586636,
+      "tag": "0006_add_post_likes",
+      "breakpoints": true
     }
   ]
 }
