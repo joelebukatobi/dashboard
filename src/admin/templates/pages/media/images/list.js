@@ -2,7 +2,7 @@
 
 import { DeleteModal } from '../../../components/delete-modal.js';
 import { listToolbar } from '../../../partials/list-toolbar.js';
-import { escapeHtml, paginationHtml, toastQueryScript } from '../../../utils/helpers.js';
+import { escapeHtml, paginationHtml, toastQueryScript, toPublicMediaUrl } from '../../../utils/helpers.js';
 
 /**
  * Images list page inner content (layout applied via fastify-html addLayout).
@@ -47,7 +47,7 @@ export function imagesListContent({ images, pagination, filters, toast }) {
               <a href="/admin/media/images/${image.id}/edit" class="media-card">
                 <div class="media-card__thumbnail">
                   <img
-                    src="${(image.thumbnailPath || image.path).startsWith('/public') ? (image.thumbnailPath || image.path) : '/public' + (image.thumbnailPath || image.path)}"
+                    src="${escapeHtml(toPublicMediaUrl(image.thumbnailPath || image.path))}"
                     alt="${escapeHtml(image.altText || image.title)}"
                   />
                   <div class="media-card__details">
@@ -127,15 +127,13 @@ export function imagesGridFragment({ images }) {
   return images.map((image) => {
     const sizeFormatted = formatFileSize(image.size);
     const extension = image.filename.split('.').pop().toUpperCase();
-    const imgPath = (image.thumbnailPath || image.path).startsWith('/public')
-      ? (image.thumbnailPath || image.path)
-      : '/public' + (image.thumbnailPath || image.path);
+    const imgPath = toPublicMediaUrl(image.thumbnailPath || image.path);
 
     return `
       <a href="/admin/media/images/${image.id}/edit" class="media-card">
         <div class="media-card__thumbnail">
           <img
-            src="${imgPath}"
+            src="${escapeHtml(imgPath)}"
             alt="${image.altText || image.title}"
           />
           <div class="media-card__details">

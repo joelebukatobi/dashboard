@@ -7,6 +7,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import crypto from 'crypto';
+import { resolveMediaFsPath, toPublicMediaUrl } from '../lib/media-paths.js';
 
 /**
  * Images Service
@@ -16,6 +17,8 @@ class ImagesService {
   constructor() {
     this.uploadDir = path.join(process.cwd(), 'public/uploads/images');
     this.thumbsDir = path.join(this.uploadDir, 'thumbs');
+    this.postsUploadDir = path.join(process.cwd(), 'public/uploads/posts');
+    this.postsThumbsDir = path.join(this.postsUploadDir, 'thumbs');
   }
 
   /**
@@ -209,6 +212,112 @@ class ImagesService {
   }
 
   /**
+   * Ensure post editor upload directories exist
+   */
+  async ensurePostUploadDirectories() {
+    for (const dir of [this.postsUploadDir, this.postsThumbsDir]) {
+      try {
+        await fs.access(dir);
+      } catch {
+        await fs.mkdir(dir, { recursive: true });
+      }
+    }
+  }
+
+  /**
+   * Upload image from post editor (inline / featured) with deduplication
+   * @param {Object} file - Multipart file
+   * @param {string} userId - Uploading user ID
+   * @returns {Promise<Object>} - { mediaItem, deduplicated, url }
+   */
+  async uploadForPost(file, userId) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      throw new Error('Invalid file type. Allowed: JPEG, PNG, WebP, GIF');
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+    const buffer = await file.toBuffer();
+    if (buffer.length > maxSize) {
+      throw new Error('File too large. Max size: 10MB');
+    }
+
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex');
+
+    const [existingImage] = await db
+      .select()
+      .from(mediaItems)
+      .where(eq(mediaItems.hash, hash))
+      .limit(1);
+
+    if (existingImage) {
+      return {
+        mediaItem: existingImage,
+        deduplicated: true,
+        url: toPublicMediaUrl(existingImage.path),
+      };
+    }
+
+    await this.ensurePostUploadDirectories();
+
+    const timestamp = Date.now();
+    const extension = file.filename.split('.').pop().toLowerCase();
+    const filename = `post-${timestamp}.${extension}`;
+    const filepath = path.join(this.postsUploadDir, filename);
+    const thumbFilename = `thumb-${filename}`;
+    const thumbpath = path.join(this.postsThumbsDir, thumbFilename);
+
+    await fs.writeFile(filepath, buffer);
+
+    let width;
+    let height;
+    try {
+      const image = sharp(filepath);
+      const metadata = await image.metadata();
+      width = metadata.width;
+      height = metadata.height;
+
+      await image
+        .resize(200, 200, { fit: 'cover' })
+        .toFile(thumbpath);
+    } catch (err) {
+      await fs.unlink(filepath).catch(() => {});
+      throw new Error(`Failed to process image: ${err.message}`);
+    }
+
+    const mediaId = crypto.randomUUID();
+
+    await db
+      .insert(mediaItems)
+      .values({
+        id: mediaId,
+        type: 'IMAGE',
+        filename,
+        originalName: file.filename,
+        mimeType: file.mimetype,
+        size: buffer.length,
+        width,
+        height,
+        path: `/public/uploads/posts/${filename}`,
+        thumbnailPath: `/public/uploads/posts/thumbs/${thumbFilename}`,
+        hash,
+        uploadedBy: userId,
+      });
+
+    const [mediaItem] = await db
+      .select()
+      .from(mediaItems)
+      .where(eq(mediaItems.id, mediaId))
+      .limit(1);
+
+    return {
+      mediaItem,
+      deduplicated: false,
+      url: toPublicMediaUrl(mediaItem.path),
+    };
+  }
+
+  /**
    * Update image metadata
    * @param {string} id - Image ID
    * @param {Object} data - Update data
@@ -243,6 +352,10 @@ class ImagesService {
     return image;
   }
 
+  resolveMediaFsPath(storedPath) {
+    return resolveMediaFsPath(storedPath);
+  }
+
   /**
    * Delete image
    * @param {string} id - Image ID
@@ -254,18 +367,27 @@ class ImagesService {
       throw new Error('Image not found');
     }
 
-    // Delete files
-    const filepath = path.join(process.cwd(), image.path.replace(/^\//, ''));
-    const thumbpath = image.thumbnailPath 
-      ? path.join(process.cwd(), image.thumbnailPath.replace(/^\//, ''))
-      : null;
+    // Clear references that block deletion (posts FK has no ON DELETE action)
+    await db
+      .update(posts)
+      .set({ featuredImageId: null, updatedAt: new Date() })
+      .where(eq(posts.featuredImageId, id));
 
-    await fs.unlink(filepath).catch(() => {});
+    await db
+      .update(albums)
+      .set({ coverImageId: null, updatedAt: new Date() })
+      .where(eq(albums.coverImageId, id));
+
+    const filepath = this.resolveMediaFsPath(image.path);
+    const thumbpath = this.resolveMediaFsPath(image.thumbnailPath);
+
+    if (filepath) {
+      await fs.unlink(filepath).catch(() => {});
+    }
     if (thumbpath) {
       await fs.unlink(thumbpath).catch(() => {});
     }
 
-    // Delete database record
     await db.delete(mediaItems).where(eq(mediaItems.id, id));
 
     return true;

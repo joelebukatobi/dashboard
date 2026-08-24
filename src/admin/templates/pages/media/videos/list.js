@@ -2,7 +2,7 @@
 
 import { DeleteModal } from '../../../components/delete-modal.js';
 import { listToolbar } from '../../../partials/list-toolbar.js';
-import { escapeHtml, paginationHtml, toastQueryScript } from '../../../utils/helpers.js';
+import { escapeHtml, paginationHtml, toastQueryScript, toPublicMediaUrl } from '../../../utils/helpers.js';
 import { videosService } from '../../../../../services/videos.service.js';
 
 /**
@@ -42,7 +42,7 @@ export function videosListContent({ videos, pagination, filters, toast }) {
               <a href="/admin/media/videos/${video.id}/edit" class="media-card">
                 <div class="media-card__thumbnail">
                   <img
-                    src="${(video.thumbnailPath || video.path).startsWith('/public') ? (video.thumbnailPath || video.path) : '/public' + (video.thumbnailPath || video.path)}"
+                    src="${escapeHtml(toPublicMediaUrl(video.thumbnailPath || video.path))}"
                     alt="${escapeHtml(video.altText || video.title)}"
                   />
                   <div class="media-card__thumbnail-badge">${video.durationFormatted}</div>
@@ -124,15 +124,13 @@ export function videosGridFragment({ videos }) {
     const sizeFormatted = formatFileSize(video.size);
     const extension = video.filename.split('.').pop().toUpperCase();
     const durationFormatted = videosService.formatDuration(video.duration);
-    const imgPath = (video.thumbnailPath || video.path).startsWith('/public')
-      ? (video.thumbnailPath || video.path)
-      : '/public' + (video.thumbnailPath || video.path);
+    const imgPath = toPublicMediaUrl(video.thumbnailPath || video.path);
 
     return `
       <a href="/admin/media/videos/${video.id}/edit" class="media-card">
         <div class="media-card__thumbnail">
           <img
-            src="${imgPath}"
+            src="${escapeHtml(imgPath)}"
             alt="${video.altText || video.title}"
           />
           <div class="media-card__thumbnail-badge">${durationFormatted}</div>

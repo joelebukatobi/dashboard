@@ -2,6 +2,8 @@
 // Users controller - handles user HTTP requests
 
 import { usersService } from '../../services/users.service.js';
+import { authService } from '../../services/auth.service.js';
+import { mailService } from '../../services/mail.service.js';
 import { isSettingEnabled } from '../../services/settings.service.js';
 import { isUserTotpEnabled, canDisableUserTotp } from '../../lib/user-totp.js';
 import {
@@ -9,9 +11,38 @@ import {
   renderFragment,
   renderEmpty,
   errorAlert,
+  errorFragment,
   successAlert,
+  toastResponse,
   htmxRedirect,
 } from '../render.js';
+
+function parseBodyValue(value) {
+  if (Array.isArray(value)) return value[value.length - 1];
+  return value;
+}
+
+async function resolveSettingsMap(request) {
+  if (request.siteSettingsMap) return request.siteSettingsMap;
+  return request.server.siteSettings.getMap();
+}
+
+async function sendUserInvitation(request, invitedUser, invitedByUser) {
+  const settingsMap = await resolveSettingsMap(request);
+  if (!mailService.isConfigured(settingsMap)) {
+    const error = new Error('SMTP is not configured. Save email settings before sending invitations.');
+    error.code = 'SMTP_NOT_CONFIGURED';
+    throw error;
+  }
+
+  const token = await authService.createInviteToken(invitedUser.id);
+  await mailService.sendInviteEmail(settingsMap, {
+    to: invitedUser.email,
+    token,
+    firstName: invitedUser.firstName,
+    invitedByName: invitedByUser ? `${invitedByUser.firstName} ${invitedByUser.lastName}`.trim() : '',
+  });
+}
 
 /**
  * Users Controller
@@ -130,9 +161,9 @@ class UsersController {
       const existingUser = await usersService.getUserByEmail(email);
       if (existingUser) {
         reply.code(400);
-        return renderFragment(reply, errorAlert({
+        return errorFragment(reply, {
           message: 'A user with this email already exists.',
-        }));
+        });
       }
 
       // Create user
@@ -144,22 +175,33 @@ class UsersController {
       };
 
       const newUser = await usersService.createUser(userData, currentUserId);
+      const sendInvite = parseBodyValue(request.body.sendInvite) !== 'false';
 
-      // Check if HTMX request
+      let redirectToast = 'created';
+      if (newUser.status === 'INVITED' && sendInvite) {
+        try {
+          await sendUserInvitation(request, newUser, request.user);
+          redirectToast = 'invite-sent';
+        } catch (mailError) {
+          request.log.error(mailError);
+          redirectToast = mailError.code === 'SMTP_NOT_CONFIGURED' ? 'invite-no-smtp' : 'invite-failed';
+        }
+      }
+
       const isHtmx = request.headers['hx-request'] === 'true';
 
       if (isHtmx) {
-        reply.header('HX-Redirect', '/admin/users?toast=created');
+        reply.header('HX-Redirect', `/admin/users?toast=${redirectToast}`);
         return renderFragment(reply, successAlert({ message: 'User created successfully.' }));
       }
 
-      return htmxRedirect(reply, '/admin/users?toast=created');
+      return htmxRedirect(reply, `/admin/users?toast=${redirectToast}`);
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return renderFragment(reply, errorAlert({
+      return errorFragment(reply, {
         message: 'Failed to create user.',
-      }));
+      });
     }
   }
 
@@ -227,7 +269,10 @@ class UsersController {
     try {
       const currentUserId = request.user?.id;
       const { id } = request.params;
-      const { firstName, lastName, email, role } = request.body;
+      const { firstName, lastName, email, role, newPassword, currentPassword } = request.body;
+      const isSelf = id === currentUserId;
+      const isAdmin = request.user?.role === 'ADMIN';
+      const trimmedNewPassword = String(newPassword || '').trim();
 
       // Get user
       const existingUser = await usersService.getUserById(id);
@@ -267,10 +312,54 @@ class UsersController {
       if (email) updateData.email = email.trim().toLowerCase();
       if (role) updateData.role = role;
 
+      if (trimmedNewPassword) {
+        if (isSelf) {
+          if (!String(currentPassword || '').trim()) {
+            reply.code(400);
+            return renderFragment(reply, errorAlert({
+              message: 'Current password is required to set a new password.',
+            }));
+          }
+
+          const passwordResult = await authService.changePassword(
+            id,
+            String(currentPassword).trim(),
+            trimmedNewPassword,
+          );
+
+          if (!passwordResult.success) {
+            reply.code(400);
+            return renderFragment(reply, errorAlert({
+              message: passwordResult.error || 'Failed to change password.',
+            }));
+          }
+        } else if (isAdmin) {
+          await authService.resetPassword(id, trimmedNewPassword);
+          if (existingUser.status === 'INVITED') {
+            await usersService.activateUser(id, currentUserId);
+          }
+        } else {
+          reply.code(403);
+          return renderFragment(reply, errorAlert({
+            message: 'You cannot change this user\'s password.',
+          }));
+        }
+      }
+
       await usersService.updateUser(id, updateData, currentUserId);
 
-      // Check if HTMX request
       const isHtmx = request.headers['hx-request'] === 'true';
+
+      if (isSelf && trimmedNewPassword) {
+        const redirectUrl = '/admin/auth/login?password=changed';
+        if (isHtmx) {
+          reply.header('HX-Redirect', redirectUrl);
+          return renderFragment(reply, successAlert({
+            message: 'Password updated. Please sign in again.',
+          }));
+        }
+        return htmxRedirect(reply, redirectUrl);
+      }
 
       if (isHtmx) {
         reply.header('HX-Redirect', '/admin/users?toast=updated');
@@ -417,9 +506,7 @@ class UsersController {
       const userToActivate = await usersService.getUserById(id);
       if (!userToActivate) {
         reply.code(404);
-        return renderFragment(reply, errorAlert({
-          message: 'User not found.',
-        }));
+        return toastResponse(reply, { message: 'User not found.', type: 'error' });
       }
 
       // Activate user
@@ -429,18 +516,17 @@ class UsersController {
       const isHtmx = request.headers['hx-request'] === 'true';
 
       if (isHtmx) {
-        return renderFragment(reply, successAlert({
+        return toastResponse(reply, {
           message: 'User activated successfully.',
-        }));
+          type: 'success',
+        });
       }
 
       return htmxRedirect(reply, '/admin/users?toast=activated');
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return renderFragment(reply, errorAlert({
-        message: 'Failed to activate user.',
-      }));
+      return toastResponse(reply, { message: 'Failed to activate user.', type: 'error' });
     }
   }
 
@@ -457,38 +543,42 @@ class UsersController {
       const userToInvite = await usersService.getUserById(id);
       if (!userToInvite) {
         reply.code(404);
-        return renderFragment(reply, errorAlert({
-          message: 'User not found.',
-        }));
+        return toastResponse(reply, { message: 'User not found.', type: 'error' });
       }
 
       // Only invited users can have invitation resent
       if (userToInvite.status !== 'INVITED') {
         reply.code(400);
-        return renderFragment(reply, errorAlert({
+        return toastResponse(reply, {
           message: 'Invitation can only be resent for users with invited status.',
-        }));
+          type: 'error',
+        });
       }
 
-      // Resend invite
       await usersService.resendInvite(id, currentUserId);
+      await sendUserInvitation(request, userToInvite, request.user);
 
-      // Check if HTMX request
       const isHtmx = request.headers['hx-request'] === 'true';
 
       if (isHtmx) {
-        return renderFragment(reply, successAlert({
+        return toastResponse(reply, {
           message: 'Invitation resent successfully.',
-        }));
+          type: 'success',
+        });
       }
 
       return htmxRedirect(reply, '/admin/users?toast=invite-resent');
     } catch (error) {
       request.log.error(error);
-      reply.code(500);
-      return renderFragment(reply, errorAlert({
-        message: 'Failed to resend invitation.',
-      }));
+
+      const message = error.code === 'SMTP_NOT_CONFIGURED'
+        ? error.message
+        : error.message?.includes('SMTP')
+          ? `Failed to send invitation email: ${error.message}`
+          : 'Failed to resend invitation.';
+
+      reply.code(error.code === 'SMTP_NOT_CONFIGURED' ? 400 : 500);
+      return toastResponse(reply, { message, type: 'error' });
     }
   }
 

@@ -3,6 +3,7 @@
 
 import { db, categories, posts, users, tags, postTags } from '../../../db/index.js';
 import { eq, and, desc, sql, count } from 'drizzle-orm';
+import { postsService } from '../../../services/posts.service.js';
 
 /**
  * Format category for API response
@@ -209,12 +210,15 @@ class CategoriesAPIController {
       });
 
       // Format posts
-      const formattedPosts = results.map(r => ({
-        ...r.post,
-        author: r.author,
-        category: r.category,
-        tags: tagsByPost[r.post.id] || [],
-      })).map(formatPostForAPI);
+      const postsWithImages = await postsService.attachFeaturedImageUrls(
+        results.map(r => ({
+          ...r.post,
+          author: r.author,
+          category: r.category,
+          tags: tagsByPost[r.post.id] || [],
+        })),
+      );
+      const formattedPosts = postsWithImages.map(formatPostForAPI);
 
       return reply.send({
         category: formatCategoryForAPI(category),

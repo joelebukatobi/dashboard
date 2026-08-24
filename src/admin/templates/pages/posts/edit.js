@@ -1,12 +1,17 @@
 // src/admin/templates/pages/posts/edit.js
 // Edit Post Page - Exact structure from edit-post.html
 
-import { escapeHtml } from '../../utils/helpers.js';
+import { escapeHtml, toastQueryScript } from '../../utils/helpers.js';
 
 /**
  * Edit Post page inner content (layout applied via fastify-html addLayout).
  */
-export function postEditContent({ categories, tags, post, user }) {
+export function postEditContent({ categories, tags, post, user, toast }) {
+  const toastScript = toastQueryScript(toast, {
+    draftSaved: 'Draft saved successfully!',
+    published: 'Post published successfully!',
+  });
+
   const content = `
     <div class="content content-main">
       <!-- Page Header -->
@@ -28,9 +33,11 @@ export function postEditContent({ categories, tags, post, user }) {
           <form
             class="form"
             id="editPostForm"
+            novalidate
             hx-put="/admin/posts/${post.id}"
             hx-target="#form-response"
             hx-swap="innerHTML"
+            hx-on:config-request="window.syncFormSelectValues(event.detail.elt)"
           >
             <!-- Featured Image -->
             <div class="form__group">
@@ -83,7 +90,7 @@ export function postEditContent({ categories, tags, post, user }) {
             <!-- Author, Category & Tags Row -->
             <div class="form__row form__row--3col">
               <!-- Author -->
-              <div class="form__group">
+              <div class="form__group form__group--ordered">
                 <label class="label label--required" for="postAuthor">Author</label>
                 <select
                   name="authorId"
@@ -101,7 +108,7 @@ export function postEditContent({ categories, tags, post, user }) {
               </div>
 
               <!-- Category -->
-              <div class="form__group">
+              <div class="form__group form__group--ordered">
                 <label class="label label--required" for="postCategory">Category</label>
                 <select
                   name="categoryId"
@@ -122,7 +129,7 @@ export function postEditContent({ categories, tags, post, user }) {
               </div>
 
               <!-- Tags -->
-              <div class="form__group">
+              <div class="form__group form__group--ordered">
                 <label class="label" for="postTags">Tags</label>
                 <select
                   name="tagIds"
@@ -337,7 +344,20 @@ export function postEditContent({ categories, tags, post, user }) {
         });
 
       // Submit form
+      function ensurePostSlug() {
+        const titleInput = document.getElementById('postTitle');
+        const slugInput = document.getElementById('postSlug');
+        if (!slugInput?.value?.trim() && titleInput?.value?.trim()) {
+          slugInput.value = titleInput.value
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        }
+      }
+
       function submitForm(status) {
+        ensurePostSlug();
+
         // Update content from CKEditor
         if (editor) {
           document.getElementById('contentInput').value = editor.getData();
@@ -501,6 +521,7 @@ export function postEditContent({ categories, tags, post, user }) {
         }
       });
     </script>
+    ${toastScript}
   `;
 
   return content;

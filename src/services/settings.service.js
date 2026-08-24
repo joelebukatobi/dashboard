@@ -4,6 +4,7 @@
 import { db, settings } from '../db/index.js';
 import { eq, and, inArray } from 'drizzle-orm';
 import crypto from 'crypto';
+import { normalizeSocialLinks } from '../lib/social-links.js';
 
 /**
  * Settings Service
@@ -226,11 +227,23 @@ class SettingsService {
       { key: 'requireStrongPasswords', value: 'true', group: 'SECURITY', type: 'BOOLEAN' },
       { key: 'twoFactorAuth', value: 'false', group: 'SECURITY', type: 'BOOLEAN' },
 
+      // Email / SMTP
+      { key: 'smtpHost', value: '', group: 'EMAIL', type: 'STRING' },
+      { key: 'smtpPort', value: '587', group: 'EMAIL', type: 'NUMBER' },
+      { key: 'smtpSecure', value: 'tls', group: 'EMAIL', type: 'STRING' },
+      { key: 'smtpUser', value: '', group: 'EMAIL', type: 'STRING' },
+      { key: 'smtpPassword', value: '', group: 'EMAIL', type: 'STRING' },
+      { key: 'emailFromName', value: '', group: 'EMAIL', type: 'STRING' },
+      { key: 'emailFromAddress', value: '', group: 'EMAIL', type: 'STRING' },
+      { key: 'emailReplyTo', value: '', group: 'EMAIL', type: 'STRING' },
+
       // Social
       { key: 'socialTwitter', value: '', group: 'SOCIAL', type: 'STRING' },
       { key: 'socialFacebook', value: '', group: 'SOCIAL', type: 'STRING' },
       { key: 'socialLinkedIn', value: '', group: 'SOCIAL', type: 'STRING' },
       { key: 'socialGitHub', value: '', group: 'SOCIAL', type: 'STRING' },
+      { key: 'socialLinks', value: '[]', group: 'SOCIAL', type: 'JSON' },
+      { key: 'socialHiddenPlatforms', value: '[]', group: 'SOCIAL', type: 'JSON' },
     ];
 
     for (const def of defaults) {
@@ -310,6 +323,7 @@ class SettingsService {
         facebook: s.socialFacebook ?? '',
         linkedIn: s.socialLinkedIn ?? '',
         github: s.socialGitHub ?? '',
+        links: normalizeSocialLinks(s.socialLinks),
       },
       postsPerPage: Number(s.postsPerPage) || 10,
       commentsEnabled: isSettingEnabled(s.enableComments),

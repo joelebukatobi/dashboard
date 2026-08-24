@@ -127,6 +127,16 @@
     @apply space-y-[2rem];
   }
 
+  .btn--primary {
+    @apply bg-[#181818] text-white border border-[#181818];
+    @apply hover:bg-[#212121] hover:border-[#212121] hover:text-white;
+    @apply focus:ring-[.08rem] focus:ring-grey-700 focus:ring-offset-2;
+
+    .dark & {
+      @apply bg-white text-grey-900 border-white hover:bg-grey-100 hover:text-grey-900;
+    }
+  }
+
   &__footer {
     @apply text-center text-body;
 

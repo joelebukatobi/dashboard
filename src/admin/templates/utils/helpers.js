@@ -3,6 +3,9 @@
 
 import { formatSiteDate } from '../../../lib/site-dates.js';
 import { getRequestSettings } from '../../../lib/settings-context.js';
+import { toPublicMediaUrl } from '../../../lib/media-paths.js';
+
+export { toPublicMediaUrl };
 
 /**
  * Get user initials from first and last name

@@ -13,6 +13,9 @@ import {
   setHtmxToast,
   htmxRedirect,
 } from '../render.js';
+import { parseSocialLinksFromBody, parseSocialHiddenPlatformsFromBody } from '../../lib/social-links.js';
+import { encryptSecret } from '../../lib/secret-crypto.js';
+import { mailService } from '../../services/mail.service.js';
 
 const BOOLEAN_KEYS = new Set([
   'enableComments',
@@ -92,6 +95,18 @@ class SettingsController {
       const body = { ...request.body };
       normalizeBooleanFields(body);
 
+      const hasCustomSocialFields = 'socialLinkLabel' in body || 'socialLinkUrl' in body;
+      const hasSocialHiddenField = 'socialHiddenPlatforms' in body;
+      const customSocialLinks = hasCustomSocialFields ? parseSocialLinksFromBody(body) : null;
+      const hiddenSocialPlatforms = hasSocialHiddenField ? parseSocialHiddenPlatformsFromBody(body) : null;
+      if (hasCustomSocialFields) {
+        delete body.socialLinkLabel;
+        delete body.socialLinkUrl;
+      }
+      if (hasSocialHiddenField) {
+        delete body.socialHiddenPlatforms;
+      }
+
       const generalSettings = {};
       const securitySettings = {};
       const contentSettings = {};
@@ -104,16 +119,33 @@ class SettingsController {
 
         if (key.startsWith('site') || ['timezone', 'dateFormat'].includes(key)) {
           generalSettings[key] = parsed;
+        } else if (key.includes('smtp') || key.startsWith('email')) {
+          emailSettings[key] = parsed;
         } else if (key.startsWith('session') || key.includes('Password') || key.includes('twoFactor')) {
           securitySettings[key] = parsed;
         } else if (key.startsWith('posts') || key.includes('Comments')) {
           contentSettings[key] = parsed;
-        } else if (key.includes('smtp') || key.includes('email')) {
-          emailSettings[key] = parsed;
         } else if (key.includes('social') || key.includes('twitter') || key.includes('facebook')) {
           socialSettings[key] = parsed;
         } else {
           generalSettings[key] = parsed;
+        }
+      }
+
+      if (hasCustomSocialFields) {
+        socialSettings.socialLinks = customSocialLinks;
+      }
+
+      if (hasSocialHiddenField) {
+        socialSettings.socialHiddenPlatforms = hiddenSocialPlatforms;
+      }
+
+      if ('smtpPassword' in emailSettings) {
+        const nextPassword = String(emailSettings.smtpPassword || '').trim();
+        if (!nextPassword) {
+          delete emailSettings.smtpPassword;
+        } else {
+          emailSettings.smtpPassword = encryptSecret(nextPassword);
         }
       }
 
@@ -270,6 +302,34 @@ class SettingsController {
   /** @deprecated use uploadSiteIcon */
   async uploadLogo(request, reply) {
     return this.uploadSiteIcon(request, reply);
+  }
+
+  /**
+   * POST /admin/settings/email/test
+   */
+  async sendTestEmail(request, reply) {
+    try {
+      const user = request.user;
+      if (user.role !== 'ADMIN') {
+        reply.code(403);
+        return renderFragment(reply, errorAlert({ message: 'Access denied. Admin only.' }));
+      }
+
+      const settingsMap = await request.server.siteSettings.getMap();
+      const to = String(parseBodyValue(request.body?.testEmailTo) || user.email).trim();
+
+      await mailService.sendTestEmail(settingsMap, to);
+
+      return renderEmpty(setHtmxToast(reply, {
+        message: `Test email sent to ${to}.`,
+      }));
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({
+        message: error.message || 'Failed to send test email.',
+      }));
+    }
   }
 }
 

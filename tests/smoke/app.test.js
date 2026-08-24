@@ -58,6 +58,7 @@ describe('app smoke', () => {
         facebook: expect.any(String),
         linkedIn: expect.any(String),
         github: expect.any(String),
+        links: expect.any(Array),
       },
     });
   });

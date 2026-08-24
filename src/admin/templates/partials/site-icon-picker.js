@@ -1,6 +1,6 @@
 // HTMX fragment: pick site icon from media library
 
-import { escapeHtml } from '../utils/helpers.js';
+import { escapeHtml, toPublicMediaUrl } from '../utils/helpers.js';
 
 /**
  * @param {{ images: Array<{ id: string, path: string, thumbnailPath?: string, title?: string }> }} options
@@ -31,7 +31,7 @@ export function siteIconPickerFragment({ images = [] }) {
             hx-swap="innerHTML"
             title="${escapeHtml(img.title || 'Select')}"
           >
-            <img src="${escapeHtml(img.thumbnailPath || img.path)}" alt="" />
+            <img src="${escapeHtml(toPublicMediaUrl(img.thumbnailPath || img.path))}" alt="" />
           </button>
         `).join('')}
       </div>

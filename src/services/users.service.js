@@ -1,6 +1,7 @@
 // src/services/users.service.js
 import { db, users, posts } from '../db/index.js';
 import { eq, and, like, desc, asc, sql } from 'drizzle-orm';
+import { activityService } from './activity.service.js';
 import { isUserTotpEnabled, isUserTotpPending } from '../lib/user-totp.js';
 import { promises as fs } from 'fs';
 import path from 'path';
@@ -356,6 +357,7 @@ class UsersService {
       .update(users)
       .set({
         status: 'ACTIVE',
+        invitedAt: null,
         updatedAt: new Date(),
       })
       .where(eq(users.id, id));

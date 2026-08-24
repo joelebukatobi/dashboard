@@ -12,6 +12,7 @@ import { escapeHtml, formatDate, paginationHtml, toastQueryScript } from '../../
  */
 export function categoriesListContent({ categories, total, page, totalPages, filters, user, toast }) {
   const toastScript = toastQueryScript(toast, {
+    created: 'Category created successfully!',
     deleted: 'Category deleted successfully!',
   });
 
