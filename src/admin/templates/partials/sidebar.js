@@ -2,6 +2,7 @@
 // Sidebar navigation component
 
 import { escapeHtml } from '../utils/helpers.js';
+import { projectNavItems, projectNavTitle } from '../../nav.project.js';
 
 /**
  * Sidebar Partial
@@ -13,6 +14,43 @@ import { escapeHtml } from '../utils/helpers.js';
  * @param {string} options.user.email - User email
  * @returns {string} Sidebar HTML
  */
+/**
+ * Renders the fork-owned sidebar group.
+ * Returns an empty string when a fork supplies no items, so dashboard's
+ * sidebar is byte-identical to what it rendered before this seam existed.
+ *
+ * @param {Object} options
+ * @param {Array<{href: string, label: string, icon: string}>} options.items
+ * @param {string} options.title - Group heading
+ * @param {(route: string) => string} options.isActive
+ * @returns {string} Sidebar group HTML, or ''
+ */
+export function renderProjectNav({ items = [], title = 'Project', isActive }) {
+  if (items.length === 0) return '';
+
+  const entries = items
+    .map(
+      (item) => `
+            <li>
+              <a href="${escapeHtml(item.href)}" class="sidebar__item ${isActive(item.href)}">
+                <span class="sidebar__item-icon">
+                  <i data-lucide="${escapeHtml(item.icon)}"></i>
+                </span>
+                <span class="sidebar__item-text">${escapeHtml(item.label)}</span>
+              </a>
+            </li>`,
+    )
+    .join('');
+
+  return `
+        <!-- Project Group -->
+        <div class="sidebar__group sidebar__group--project">
+          <div class="sidebar__group-title">${escapeHtml(title)}</div>
+          <ul class="sidebar__menu">${entries}
+          </ul>
+        </div>`;
+}
+
 export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIcon = '' } = {}) {
   const isActive = (route) => {
     // Exact match for dashboard (just /admin or /admin/)
@@ -174,7 +212,7 @@ export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIco
             </li>
             ` : ''}
           </ul>
-        </div>
+        </div>${renderProjectNav({ items: projectNavItems, title: projectNavTitle, isActive })}
       </nav>
     </aside>
   `;
