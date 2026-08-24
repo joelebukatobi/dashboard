@@ -1,6 +1,12 @@
 // src/admin/templates/pages/setup-wizard.js
 // Setup wizard page template
 
+import { escapeHtml, fieldErrorHtml } from '../utils/helpers.js';
+
+function formGroupClass(errors, field) {
+  return errors[field] ? 'form__group form__group--error' : 'form__group';
+}
+
 /**
  * Page metadata for setup wizard (consumed via setTemplateMeta).
  */
@@ -57,17 +63,14 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
     `;
   }
 
-  const firstNameError = errors.firstName ? `<span class="form__error">${errors.firstName}</span>` : '';
-  const lastNameError = errors.lastName ? `<span class="form__error">${errors.lastName}</span>` : '';
-  const emailError = errors.email ? `<span class="form__error">${errors.email}</span>` : '';
-  const passwordError = errors.password ? `<span class="form__error">${errors.password}</span>` : '';
-  const confirmPasswordError = errors.confirmPassword ? `<span class="form__error">${errors.confirmPassword}</span>` : '';
-
-  const firstNameClass = errors.firstName ? 'input input--lg input--error' : 'input input--lg';
-  const lastNameClass = errors.lastName ? 'input input--lg input--error' : 'input input--lg';
-  const emailClass = errors.email ? 'input input--lg input--error' : 'input input--lg';
-  const passwordClass = errors.password ? 'input input--lg input--error' : 'input input--lg';
-  const confirmPasswordClass = errors.confirmPassword ? 'input input--lg input--error' : 'input input--lg';
+  const firstNameError = fieldErrorHtml(errors.firstName);
+  const lastNameError = fieldErrorHtml(errors.lastName);
+  const emailError = fieldErrorHtml(errors.email);
+  const passwordError = fieldErrorHtml(errors.password);
+  const confirmPasswordError = fieldErrorHtml(errors.confirmPassword);
+  const passwordHint = errors.password
+    ? ''
+    : '<p class="form-feedback form-feedback--hint">Min 8 characters, uppercase, lowercase, number &amp; special character</p>';
 
   return `
     <div class="auth-card">
@@ -76,66 +79,66 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
         <p class="auth-card__subtitle">Create Your Admin Account To Get Started</p>
       </div>
 
-      ${error ? `<div class="alert alert--danger">${error}</div>` : ''}
+      ${error ? `<div class="alert alert--danger">${escapeHtml(error)}</div>` : ''}
 
       <div class="setup-wizard__token-info">
         <i data-lucide="clock"></i>
         <span>Token Expires In: <strong id="countdown" class="setup-wizard__countdown">${formatCountdown(expiresIn)}</strong></span>
       </div>
 
-      <form class="auth-card__form" method="POST" action="/setup?token=${token}">
+      <form class="auth-card__form" method="POST" action="/setup?token=${escapeHtml(token)}">
         <div class="form__row form__row--2col">
-          <div class="form__group">
+          <div class="${formGroupClass(errors, 'firstName')}">
             <label class="label" for="firstName">First Name</label>
             <input
               type="text"
               id="firstName"
               name="firstName"
-              class="${firstNameClass}"
+              class="input input--lg"
               placeholder="John"
-              value="${values.firstName || ''}"
+              value="${escapeHtml(values.firstName || '')}"
               required
             />
             ${firstNameError}
           </div>
 
-          <div class="form__group">
+          <div class="${formGroupClass(errors, 'lastName')}">
             <label class="label" for="lastName">Last Name</label>
             <input
               type="text"
               id="lastName"
               name="lastName"
-              class="${lastNameClass}"
+              class="input input--lg"
               placeholder="Doe"
-              value="${values.lastName || ''}"
+              value="${escapeHtml(values.lastName || '')}"
               required
             />
             ${lastNameError}
           </div>
         </div>
 
-        <div class="form__group">
+        <div class="${formGroupClass(errors, 'email')}">
           <label class="label" for="email">Email Address</label>
           <input
             type="email"
             id="email"
             name="email"
-            class="${emailClass}"
+            class="input input--lg"
             placeholder="admin@example.com"
-            value="${values.email || ''}"
+            value="${escapeHtml(values.email || '')}"
             required
           />
           ${emailError}
         </div>
 
-        <div class="form__group">
+        <div class="${formGroupClass(errors, 'password')}">
           <label class="label" for="password">Password</label>
           <div class="form__wrapper">
             <input
               type="password"
               id="password"
               name="password"
-              class="${passwordClass} input--icon-right"
+              class="input input--lg input--icon-right"
               placeholder="Create a strong password"
               required
             />
@@ -144,19 +147,24 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
             </button>
           </div>
           ${passwordError}
-          <span class="form__hint">Min 8 characters, uppercase, lowercase, number & special character</span>
+          ${passwordHint}
         </div>
 
-        <div class="form__group">
+        <div class="${formGroupClass(errors, 'confirmPassword')}">
           <label class="label" for="confirmPassword">Confirm Password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            class="${confirmPasswordClass}"
-            placeholder="Confirm your password"
-            required
-          />
+          <div class="form__wrapper">
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              class="input input--lg input--icon-right"
+              placeholder="Confirm your password"
+              required
+            />
+            <button type="button" class="input__addon" onclick="togglePassword('confirmPassword', 'confirmPassword-icon')">
+              <i data-lucide="eye" id="confirmPassword-icon"></i>
+            </button>
+          </div>
           ${confirmPasswordError}
         </div>
 
@@ -225,21 +233,6 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
 
       updateCountdown();
       setInterval(updateCountdown, 1000);
-
-      function togglePassword(inputId, iconId) {
-        const passwordInput = document.getElementById(inputId);
-        const passwordIcon = document.getElementById(iconId);
-
-        if (passwordInput.type === 'password') {
-          passwordInput.type = 'text';
-          passwordIcon.setAttribute('data-lucide', 'eye-off');
-        } else {
-          passwordInput.type = 'password';
-          passwordIcon.setAttribute('data-lucide', 'eye');
-        }
-
-        lucide.createIcons();
-      }
     </script>
   `;
 }

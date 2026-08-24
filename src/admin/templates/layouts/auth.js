@@ -103,9 +103,13 @@ export function buildAuthShell({
         alert('Email copied to clipboard!');
       }
 
-      function togglePassword() {
-        const passwordInput = document.getElementById('password');
-        const passwordIcon = document.getElementById('password-icon');
+      function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId || 'password');
+        const passwordIcon = document.getElementById(iconId || 'password-icon');
+
+        if (!passwordInput || !passwordIcon) {
+          return;
+        }
 
         if (passwordInput.type === 'password') {
           passwordInput.type = 'text';
@@ -119,6 +123,19 @@ export function buildAuthShell({
       }
 
       // HTMX event handlers
+      document.body.addEventListener('htmx:beforeSwap', function(evt) {
+        const xhr = evt.detail.xhr;
+        // Auth forms return 400 with inline error HTML; swap it into the target.
+        if (xhr.status >= 400 && xhr.status < 500 && xhr.responseText) {
+          evt.detail.shouldSwap = true;
+          evt.detail.isError = false;
+        }
+      });
+
+      document.body.addEventListener('htmx:afterSwap', function() {
+        lucide.createIcons();
+      });
+
       document.body.addEventListener('htmx:afterRequest', function(evt) {
         // Handle redirect from server
         const redirectUrl = evt.detail.xhr.getResponseHeader('HX-Redirect');

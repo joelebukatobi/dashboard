@@ -8,6 +8,16 @@ import { toPublicMediaUrl } from '../../../lib/media-paths.js';
 export { toPublicMediaUrl };
 
 /**
+ * Inline field validation error below a form input.
+ * @param {string} [message]
+ * @returns {string}
+ */
+export function fieldErrorHtml(message) {
+  if (!message) return '';
+  return `<p class="form-feedback form-feedback--error" role="alert">${escapeHtml(message)}</p>`;
+}
+
+/**
  * Get user initials from first and last name
  * @param {string} firstName - First name
  * @param {string} lastName - Last name

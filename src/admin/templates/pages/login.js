@@ -71,7 +71,7 @@ export function loginPanelContent({ error = '', email = '', rememberMe = false }
             />
             <label for="remember">Remember Me</label>
           </div>
-          <a href="#" data-hs-overlay="#forgot-password-modal">Forgot Password?</a>
+          <a href="/admin/auth/forgot-password">Forgot Password?</a>
         </div>
 
         <button type="submit" class="btn btn--primary btn--xl btn--full">
@@ -100,52 +100,6 @@ export function loginContent({ flashMessage = '' } = {}) {
           <div id="login-panel">
             ${flashHtml}
             ${loginPanelContent()}
-          </div>
-        </div>
-
-        <!-- MODAL: Forgot Password -->
-        <div
-          id="forgot-password-modal"
-          class="login__modal hs-overlay hidden"
-          role="dialog"
-          tabindex="-1"
-          aria-labelledby="forgot-password-modal-label"
-        >
-          <div class="login__modal-backdrop"></div>
-          <div class="login__modal-content">
-            <div class="auth-card">
-              <div class="auth-card__header">
-                <h2 class="auth-card__title" id="forgot-password-modal-label">Reset password</h2>
-                <p class="auth-card__subtitle">Enter your email and we'll send you a reset link</p>
-              </div>
-
-              <div id="forgot-password-response"></div>
-
-              <form 
-                class="auth-card__form"
-                hx-post="/admin/auth/forgot-password"
-                hx-target="#forgot-password-response"
-                hx-swap="innerHTML"
-              >
-                <div class="form__group">
-                  <label class="label" for="reset-email">Email address</label>
-                  <input
-                    type="email"
-                    id="reset-email"
-                    name="email"
-                    class="input input--lg"
-                    placeholder="you@example.com"
-                    required
-                  />
-                </div>
-
-                <button type="submit" class="btn btn--primary btn--xl btn--full">Send reset link</button>
-              </form>
-
-              <div class="auth-card__footer">
-                <a href="#" data-hs-overlay="#forgot-password-modal">← Back to login</a>
-              </div>
-            </div>
           </div>
         </div>
 

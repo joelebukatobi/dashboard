@@ -55,7 +55,7 @@ export function resetPasswordContent({ token, error = '' } = {}) {
                     minlength="8"
                     required
                   />
-                  <button type="button" class="input__addon" onclick="togglePassword()">
+                  <button type="button" class="input__addon" onclick="togglePassword('password', 'password-icon')">
                     <i data-lucide="eye" id="password-icon"></i>
                   </button>
                 </div>
@@ -64,19 +64,24 @@ export function resetPasswordContent({ token, error = '' } = {}) {
               <!-- Confirm Password -->
               <div class="form__group">
                 <label class="label" for="confirmPassword">Confirm Password</label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  class="input input--lg"
-                  placeholder="Confirm new password"
-                  minlength="8"
-                  required
-                />
+                <div class="form__wrapper">
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    class="input input--lg input--icon-right"
+                    placeholder="Confirm new password"
+                    minlength="8"
+                    required
+                  />
+                  <button type="button" class="input__addon" onclick="togglePassword('confirmPassword', 'confirmPassword-icon')">
+                    <i data-lucide="eye" id="confirmPassword-icon"></i>
+                  </button>
+                </div>
               </div>
 
               <!-- Submit button -->
-              <button type="submit" class="btn btn--primary btn--lg btn--full">Reset Password</button>
+              <button type="submit" class="btn btn--primary btn--xl btn--full">Reset Password</button>
             </form>
 
             <!-- Footer -->
