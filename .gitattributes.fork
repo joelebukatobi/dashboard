@@ -1,0 +1,14 @@
+# Rename to .gitattributes in a fork, then run once:
+#   git config merge.ours.driver true
+#
+# These paths are fork-owned. Marking them merge=ours means a
+# `git merge upstream/<tag>` keeps the fork's version even when dashboard
+# changed the same path.
+
+src/app/**                   merge=ours
+scss/app/**                  merge=ours
+src/db/schema/project.js     merge=ours
+src/admin/nav.project.js     merge=ours
+src/admin/routes/project/**  merge=ours
+src/db/migrations/project/** merge=ours
+package.json                 merge=ours
