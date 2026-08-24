@@ -5,6 +5,7 @@
 import { sidebar } from '../partials/sidebar.js';
 import { header } from '../partials/header.js';
 import { escapeHtml } from '../utils/helpers.js';
+import { assetUrl } from '../../../lib/asset-version.js';
 
 /**
  * Main Dashboard Layout Template
@@ -69,13 +70,13 @@ export function buildDashboardShell({
     />
 
     <!-- Compiled CSS -->
-    <link rel="stylesheet" href="/dist/css/admin.css" />
+    <link rel="stylesheet" href="${assetUrl('/dist/css/admin.css')}" />
 
     <!-- Lucide Icons -->
-    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="${assetUrl('/dist/js/lucide.js')}"></script>
 
     <!-- HTMX -->
-    <script src="/vendor/htmx/htmx.min.js"></script>
+    <script src="${assetUrl('/dist/js/htmx.js')}"></script>
   </head>
   <body>
     <!-- Admin Namespace Wrapper -->
@@ -103,11 +104,11 @@ export function buildDashboardShell({
     ${modals}
 
     <!-- ApexCharts CSS & JS -->
-    <link rel="stylesheet" href="/vendor/apexcharts/apexcharts.css">
-    <script src="/vendor/apexcharts/apexcharts.min.js"></script>
+    <link rel="stylesheet" href="${assetUrl('/dist/js/apexcharts.css')}">
+    <script src="${assetUrl('/dist/js/apexcharts.js')}"></script>
 
     <!-- Preline UI JS (includes vanilla-calendar-pro bundled) -->
-    <script src="/vendor/preline/preline.js"></script>
+    <script src="${assetUrl('/dist/js/preline.js')}"></script>
 
     <!-- Dashboard JavaScript -->
     <script>
