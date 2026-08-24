@@ -5,10 +5,14 @@ import app from '../../src/app.js';
 describe('app smoke', () => {
   /** @type {import('fastify').FastifyInstance} */
   let server;
+  /** Full URLs of every route registered during boot. */
+  const routeUrls = new Set();
 
   beforeAll(async () => {
     server = Fastify({ logger: false });
+    server.addHook('onRoute', (route) => routeUrls.add(route.url));
     await server.register(app);
+    await server.ready();
   });
 
   afterAll(async () => {
@@ -104,5 +108,47 @@ describe('app smoke', () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json()).toMatchObject({ error: expect.any(String) });
+  });
+
+  it('registers every admin page route under its expected prefix', () => {
+    for (const path of [
+      '/admin',
+      '/admin/posts',
+      '/admin/posts/:postId/comments',
+      '/admin/categories',
+      '/admin/tags',
+      '/admin/users',
+      '/admin/subscribers',
+      '/admin/media/images',
+      '/admin/media/videos',
+      '/admin/media/albums',
+      '/admin/settings',
+      '/admin/auth/login',
+      '/setup',
+    ]) {
+      expect(routeUrls.has(path), `missing route ${path}`).toBe(true);
+    }
+  });
+
+  it('registers every API route under its expected prefix', () => {
+    for (const path of [
+      '/api/v1/posts',
+      '/api/v1/categories',
+      '/api/v1/tags',
+      '/api/v1/images',
+      '/api/v1/videos',
+      '/api/v1/settings',
+      '/api/v1/comments',
+      '/api/v1/subscribe',
+    ]) {
+      expect(routeUrls.has(path), `missing route ${path}`).toBe(true);
+    }
+  });
+
+  it('registers no route twice', () => {
+    // The autoloader must not double-register auth or setup, which are
+    // registered outside adminPlugin.
+    expect(routeUrls.has('/admin/auth/login')).toBe(true);
+    expect(routeUrls.has('/setup')).toBe(true);
   });
 });
