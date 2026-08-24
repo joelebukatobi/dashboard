@@ -89,6 +89,29 @@ export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIco
           </ul>
         </div>
 
+        <!--
+        OLD MEDIA DROPDOWN (for reference)
+        <li>
+          <div class="sidebar__item sidebar__item--has-submenu ${isActive('/admin/media') ? 'sidebar__item--active' : ''}">
+            <span class="sidebar__item-icon">
+              <i data-lucide="image"></i>
+            </span>
+            <span class="sidebar__item-text">Media</span>
+            <span class="sidebar__item-arrow">
+              <i data-lucide="chevron-right"></i>
+            </span>
+          </div>
+          <ul class="sidebar__submenu ${isActive('/admin/media') ? 'sidebar__submenu--open' : ''}">
+            <li>
+              <a href="/admin/media/images" class="sidebar__submenu-item">Images</a>
+            </li>
+            <li>
+              <a href="/admin/media/videos" class="sidebar__submenu-item">Videos</a>
+            </li>
+          </ul>
+        </li>
+        -->
+
         <!-- Media Group -->
         <div class="sidebar__group">
           <div class="sidebar__group-title">Media</div>
