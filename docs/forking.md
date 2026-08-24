@@ -115,3 +115,21 @@ git cherry-pick <sha-from-fork>
 ```
 
 Only works cleanly for commits that touch core files exclusively.
+
+## Rehearsing a deploy locally
+
+`npm run deploy:rehearse` runs the cPanel deploy pipeline against local
+stand-in containers — Passenger + nginx + sshd for the hosting account,
+pure-ftpd for the upload, and a throwaway MySQL. Requires Docker.
+
+It proves: path resolution, that the exclude list keeps `node_modules`,
+`.env*`, and `.git` off the server, `npm ci --omit=dev`, connectivity to a
+fresh database, the full migration chain, that `tmp/restart.txt` restarts the
+app under Passenger, and that the restarted app answers `/health`.
+
+It does not prove: LiteSpeed/`.htaccess` routing, shared-hosting resource
+limits, FTPS/TLS negotiation, or `SamKirkland/FTP-Deploy-Action` itself — the
+rehearsal uploads with a stand-in whose exclude semantics are pinned by
+`tests/unit/deploy/exclude-list.test.js`.
+
+Tear down with `npm run deploy:rehearse:down`.

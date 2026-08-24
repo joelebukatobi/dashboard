@@ -1,0 +1,11 @@
+**/public/uploads/**
+**/.git*/**
+**/.git*
+**/node_modules/**
+**/.env*
+**/.github/**
+**/.DS_Store
+**/tmp/**
+**/.vscode/**
+**/.idea/**
+**/.build/**

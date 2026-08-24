@@ -40,58 +40,11 @@ jobs:
           npm run build:css
 
       - name: Validate required deploy secrets
-        run: |
-          set -e
-          if [ -z "$CPANEL_FTP_HOST" ]; then
-            echo "::error::Missing secret: CPANEL_FTP_HOST"
-            exit 1
-          fi
-          if [ -z "$CPANEL_FTP_USER" ]; then
-            echo "::error::Missing secret: CPANEL_FTP_USER"
-            exit 1
-          fi
-          if [ -z "$CPANEL_FTP_PASSWORD" ]; then
-            echo "::error::Missing secret: CPANEL_FTP_PASSWORD"
-            exit 1
-          fi
-          if [ -z "$DEPLOY_PATH" ]; then
-            echo "::error::Missing secret: DEPLOY_PATH"
-            exit 1
-          fi
+        run: bash scripts/deploy/validate-secrets.sh CPANEL_FTP_HOST CPANEL_FTP_USER CPANEL_FTP_PASSWORD DEPLOY_PATH
 
       - name: Resolve deploy paths
         id: paths
-        run: |
-          set -e
-          DEPLOY_DIR="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r' | sed 's/^ *//;s/ *$//')"
-          if [ -z "$DEPLOY_DIR" ]; then
-            echo "::error::DEPLOY_PATH resolved to empty value"
-            exit 1
-          fi
-
-          FTP_DIR="$DEPLOY_DIR"
-          HOME_PREFIX="/home/$CPANEL_FTP_USER"
-          if [ "${FTP_DIR#${HOME_PREFIX}}" != "$FTP_DIR" ]; then
-            FTP_DIR="${FTP_DIR#${HOME_PREFIX}}"
-          fi
-
-          if [ -z "$FTP_DIR" ]; then
-            FTP_DIR="/"
-          fi
-
-          case "$FTP_DIR" in
-            /*) ;;
-            *) FTP_DIR="/$FTP_DIR" ;;
-          esac
-
-          case "$FTP_DIR" in
-            */) ;;
-            *) FTP_DIR="$FTP_DIR/" ;;
-          esac
-
-          echo "deploy_dir=$DEPLOY_DIR" >> "$GITHUB_OUTPUT"
-          echo "ftp_dir=$FTP_DIR" >> "$GITHUB_OUTPUT"
-          echo "Using FTP directory: $FTP_DIR"
+        run: bash scripts/deploy/resolve-paths.sh >> "$GITHUB_OUTPUT"
 
       - name: Detect SSH configuration
         id: ssh_check
