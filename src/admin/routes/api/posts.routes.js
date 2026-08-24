@@ -15,4 +15,9 @@ export default async function postsAPIRoutes(fastify) {
     preHandler: validateParams(slugParamSchema),
     handler: postsAPIController.getBySlug.bind(postsAPIController),
   });
+
+  fastify.post('/:slug/like', {
+    preHandler: validateParams(slugParamSchema),
+    handler: postsAPIController.like.bind(postsAPIController),
+  });
 }

@@ -1,7 +1,9 @@
 // src/admin/controllers/api/posts.controller.js
 // Public API controller for posts - serves JSON for frontend consumption
 
+import crypto from 'crypto';
 import { postsService } from '../../../services/posts.service.js';
+import { postLikesService } from '../../../services/post-likes.service.js';
 import { getPublicPageLimit } from '../../../lib/site-pagination.js';
 import { db, posts, categories, users, tags, postTags } from '../../../db/index.js';
 import { eq, and, desc, asc, sql, count, inArray } from 'drizzle-orm';
@@ -11,7 +13,7 @@ import { eq, and, desc, asc, sql, count, inArray } from 'drizzle-orm';
  * @param {Object} post - Raw post data
  * @returns {Object} - Formatted post object
  */
-function formatPostForAPI(post) {
+function formatPostForAPI(post, { likedByViewer = false } = {}) {
   return {
     id: post.id,
     title: post.title,
@@ -20,6 +22,8 @@ function formatPostForAPI(post) {
     post: post.content,
     image: post.featuredImageUrl || null,
     views: post.viewCount || 0,
+    likes: post.likeCount || 0,
+    liked_by_viewer: likedByViewer,
     created_at: post.createdAt?.toISOString() || null,
     updated_at: post.updatedAt?.toISOString() || null,
     category: post.category ? {
@@ -263,7 +267,10 @@ class PostsAPIController {
       // Increment view count
       await postsService.incrementViewCount(post.id);
 
-      return reply.send(formatPostForAPI(postWithRelations));
+      const visitorId = request.cookies.visitor_id;
+      const likedByViewer = visitorId ? await postLikesService.hasLiked(post.id, visitorId) : false;
+
+      return reply.send(formatPostForAPI(postWithRelations, { likedByViewer }));
     } catch (error) {
       request.log.error(error);
       reply.code(500);
@@ -271,6 +278,51 @@ class PostsAPIController {
         statusCode: 500,
         error: 'Internal Server Error',
         message: 'Failed to fetch post',
+      });
+    }
+  }
+
+  /**
+   * POST /api/v1/posts/:slug/like
+   * Toggle the requesting visitor's like on a post
+   */
+  async like(request, reply) {
+    try {
+      const { slug } = request.params;
+      const post = await postsService.getPostBySlug(slug);
+
+      if (!post || post.status !== 'PUBLISHED') {
+        reply.code(404);
+        return reply.send({
+          statusCode: 404,
+          error: 'Not Found',
+          message: `Post with slug '${slug}' not found`,
+        });
+      }
+
+      const visitorId = request.cookies.visitor_id || crypto.randomUUID();
+      const { liked, likeCount } = await postLikesService.toggle(post.id, visitorId);
+
+      // Lazy cookie: only ever set at the moment someone actually likes something,
+      // never on a passive page load — keeps this tied to an opt-in interaction.
+      if (liked && !request.cookies.visitor_id) {
+        reply.setCookie('visitor_id', visitorId, {
+          path: '/',
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 365 * 24 * 60 * 60, // @fastify/cookie's maxAge is in seconds, not ms
+        });
+      }
+
+      return reply.send({ liked, likeCount });
+    } catch (error) {
+      request.log.error(error);
+      reply.code(500);
+      return reply.send({
+        statusCode: 500,
+        error: 'Internal Server Error',
+        message: 'Failed to update like',
       });
     }
   }
