@@ -179,6 +179,7 @@ export const posts = mysqlTable('posts', {
   status: mysqlEnum('status', postStatusEnum).default('DRAFT').notNull(),
   viewCount: int('view_count').default(0).notNull(),
   commentCount: int('comment_count').default(0).notNull(),
+  likeCount: int('like_count').default(0).notNull(),
   metaTitle: varchar('meta_title', { length: 60 }),
   metaDescription: varchar('meta_description', { length: 160 }),
   publishedAt: timestamp('published_at'),
@@ -230,6 +231,22 @@ export const postTagsRelations = relations(postTags, ({ one }) => ({
     references: [tags.id],
   }),
 }));
+
+// ============================================
+// POST LIKES (Junction Table)
+// ============================================
+
+export const postLikes = mysqlTable(
+  'post_likes',
+  {
+    postId: idColumn('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+    visitorId: varchar('visitor_id', { length: 36 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.postId, table.visitorId] }),
+  }),
+);
 
 // ============================================
 // COMMENTS
