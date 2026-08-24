@@ -13,6 +13,8 @@ import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { checkSetupStatus } from './middleware/setup-check.js';
 import { ensureDatabaseUrl } from '../env.js';
+import { buildApiManifest } from './admin/routes/manifest.js';
+import { projectApiPrefixes } from './admin/routes/project/prefixes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -185,15 +187,10 @@ export default async function app(fastify, opts) {
    await fastify.register(import('./admin/auth-plugin.js'));
    await fastify.register(import('./admin/plugin.js'));
 
-  // Register public API routes (v1)
-  await fastify.register(import('./admin/routes/api/posts.routes.js'), { prefix: '/api/v1/posts' });
-  await fastify.register(import('./admin/routes/api/categories.routes.js'), { prefix: '/api/v1/categories' });
-  await fastify.register(import('./admin/routes/api/tags.routes.js'), { prefix: '/api/v1/tags' });
-  await fastify.register(import('./admin/routes/api/comments.routes.js'), { prefix: '/api/v1' });
-   await fastify.register(import('./admin/routes/api/images.routes.js'), { prefix: '/api/v1/images' });
-   await fastify.register(import('./admin/routes/api/videos.routes.js'), { prefix: '/api/v1/videos' });
-   await fastify.register(import('./admin/routes/api/subscribers.routes.js'), { prefix: '/api/v1' });
-  await fastify.register(import('./admin/routes/api/settings.routes.js'), { prefix: '/api/v1' });
+  // Public API routes (v1), autoloaded from src/admin/routes/api/*.routes.js.
+  for (const route of buildApiManifest(projectApiPrefixes)) {
+    await fastify.register(import(route.url), { prefix: route.prefix });
+  }
 
   // Register public app routes (fastify-html layout scoped per plugin)
   await fastify.register(import('./app/plugin.js'));
