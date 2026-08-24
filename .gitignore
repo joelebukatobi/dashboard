@@ -94,3 +94,7 @@ public/vendor/
 /*.png
 admin-*.yml
 home-page-snapshot.txt
+
+# Python bytecode from scripts/deploy helpers
+__pycache__/
+*.pyc

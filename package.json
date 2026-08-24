@@ -23,6 +23,8 @@
     "test:smoke": "vitest run tests/smoke",
     "check": "node scripts/check.js && vitest run",
     "test:e2e": "playwright test",
+    "deploy:rehearse": "bash scripts/deploy/rehearse.sh",
+    "deploy:rehearse:down": "docker compose -f docker-compose.deploy-test.yml down -v",
     "db:test": "node scripts/cli.js db test",
     "setup:token": "node scripts/cli.js setup-token",
     "simulate:day": "node scripts/cli.js analytics day",
