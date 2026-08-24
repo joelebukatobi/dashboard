@@ -14,10 +14,13 @@ export default async function settingsRoutes(fastify, opts) {
     handler: settingsController.showSettings.bind(settingsController),
   });
 
-  fastify.put('/', {
+  const updateSettingsRoute = {
     preHandler: [auth, validateBody(settingsUpdateSchema)],
     handler: settingsController.updateSettings.bind(settingsController),
-  });
+  };
+
+  fastify.put('/', updateSettingsRoute);
+  fastify.post('/', updateSettingsRoute);
 
   fastify.post('/icon', {
     preHandler: auth,
