@@ -62,6 +62,10 @@ export const apiPaginationQuerySchema = z.object({
 
 export const blogListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),
+  category: z.string().max(255).optional(),
+  tag: z.string().max(255).optional(),
+  year: z.coerce.number().int().optional(),
+  search: z.string().max(255).optional(),
 });
 
 export const apiCommentsQuerySchema = z.object({
@@ -75,4 +79,23 @@ export function formatZodError(error) {
       return path ? `${path}: ${err.message}` : err.message;
     })
     .join(', ');
+}
+
+/**
+ * Map Zod issues to field error messages (joins multiple issues per field).
+ * @param {import('zod').ZodError} error
+ * @returns {Record<string, string>}
+ */
+export function mapZodErrorsToFields(error) {
+  /** @type {Record<string, string>} */
+  const errors = {};
+
+  for (const issue of error.errors) {
+    const key = issue.path[0];
+    if (typeof key === 'string') {
+      errors[key] = errors[key] ? `${errors[key]}. ${issue.message}` : issue.message;
+    }
+  }
+
+  return errors;
 }

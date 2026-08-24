@@ -4,16 +4,35 @@ import { authenticate, optionalAuth } from '../../middleware/authenticate.js';
 import { requireAdmin } from '../../middleware/authorize.js';
 import { loginContent, loginMeta } from '../templates/pages/login.js';
 import { resetPasswordContent, resetPasswordMeta } from '../templates/pages/reset-password.js';
-import { acceptInviteContent, acceptInviteMeta } from '../templates/pages/accept-invite.js';
+import { forgotPasswordContent, forgotPasswordMeta, forgotPasswordPanel } from '../templates/pages/forgot-password.js';
+import { acceptInviteContent, acceptInviteMeta, acceptInvitePanel } from '../templates/pages/accept-invite.js';
 import { renderAdminPage } from '../render.js';
 import { validateBody } from '../middleware/validate.js';
 import { loginSchema } from '../../utils/validators.js';
 import { forgotPasswordSchema, resetPasswordSchema, verifyTotpSchema } from '../schemas/auth.schema.js';
-import { errorAlert } from '../render.js';
+import { mapZodErrorsToFields } from '../schemas/common.schema.js';
+import { errorAlert, successAlert } from '../render.js';
 
 function authFormValidationFail(request, reply, message) {
   reply.code(400);
   return reply.html`!${errorAlert({ message })}`;
+}
+
+function acceptInviteValidationFail(request, reply, _message, zodError) {
+  const token = String(request.body?.token ?? '');
+  reply.code(400);
+  return reply.html`!${acceptInvitePanel({
+    token,
+    errors: mapZodErrorsToFields(zodError),
+  })}`;
+}
+
+function forgotPasswordValidationFail(request, reply, _message, zodError) {
+  reply.code(400);
+  return reply.html`!${forgotPasswordPanel({
+    email: String(request.body?.email ?? ''),
+    errors: mapZodErrorsToFields(zodError),
+  })}`;
 }
 
 export default async function authRoutes(fastify) {
@@ -39,7 +58,7 @@ export default async function authRoutes(fastify) {
     preHandler: validateBody(verifyTotpSchema),
     handler: authController.verifyTotpSetup.bind(authController),
   });
-  
+
   // GET /admin/auth/login
   // Serve login page (HTML)
   fastify.get('/login', {
@@ -54,7 +73,7 @@ export default async function authRoutes(fastify) {
           // Token invalid, show login page
         }
       }
-      
+
       const { reset, invite, password } = request.query;
       let flashMessage = '';
       if (reset === 'success') {
@@ -68,35 +87,42 @@ export default async function authRoutes(fastify) {
       return renderAdminPage(request, reply, loginMeta({}), loginContent({ flashMessage }));
     }
   });
-  
+
   // POST /admin/auth/logout
   // Protected - requires auth
   fastify.post('/logout', {
     preHandler: authenticate,
     handler: authController.logout.bind(authController)
   });
-  
+
   // GET /admin/auth/me
   // Protected - get current user
   fastify.get('/me', {
     preHandler: authenticate,
     handler: authController.getCurrentUser.bind(authController)
   });
-  
+
   // POST /admin/auth/forgot-password
   // Public - request password reset
   fastify.post('/forgot-password', {
-    preHandler: validateBody(forgotPasswordSchema, { onFail: authFormValidationFail }),
+    preHandler: validateBody(forgotPasswordSchema, { onFail: forgotPasswordValidationFail }),
     handler: authController.forgotPassword.bind(authController),
   });
-  
+
+  // GET /admin/auth/forgot-password
+  fastify.get('/forgot-password', {
+    handler: async (request, reply) => {
+      return renderAdminPage(request, reply, forgotPasswordMeta({}), forgotPasswordContent());
+    },
+  });
+
   // POST /admin/auth/reset-password
   // Public - reset password with token
   fastify.post('/reset-password', {
     preHandler: validateBody(resetPasswordSchema, { onFail: authFormValidationFail }),
     handler: authController.resetPassword.bind(authController),
   });
-  
+
   // GET /admin/auth/reset-password
   // Serve reset password page (HTML)
   fastify.get('/reset-password', {
@@ -112,7 +138,7 @@ export default async function authRoutes(fastify) {
   });
 
   fastify.post('/accept-invite', {
-    preHandler: validateBody(resetPasswordSchema, { onFail: authFormValidationFail }),
+    preHandler: validateBody(resetPasswordSchema, { onFail: acceptInviteValidationFail }),
     handler: authController.acceptInvite.bind(authController),
   });
 

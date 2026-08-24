@@ -7,6 +7,8 @@ import { getLoginTotpAction, isUserTotpEnabled } from '../../lib/user-totp.js';
 import { usersService } from '../../services/users.service.js';
 import { mailService } from '../../services/mail.service.js';
 import { errorAlert, successAlert, htmxRedirect, renderAdminPage } from '../render.js';
+import { acceptInvitePanel } from '../templates/pages/accept-invite.js';
+import { forgotPasswordPanel } from '../templates/pages/forgot-password.js';
 import {
   loginPanelContent,
   totpPageContent,
@@ -414,14 +416,16 @@ class AuthController {
         }
       }
 
-      return reply.html`!${successAlert({
-        message: 'If an account exists with this email, you will receive reset instructions.',
+      return reply.html`!${forgotPasswordPanel({
+        email,
+        success: 'If an account exists with this email, you will receive reset instructions.',
       })}`;
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.html`!${errorAlert({
-        message: 'An error occurred. Please try again.',
+      return reply.html`!${forgotPasswordPanel({
+        email: request.body?.email ?? '',
+        alert: 'An error occurred. Please try again.',
       })}`;
     }
   }
@@ -477,17 +481,9 @@ class AuthController {
 
       if (!resetData || resetData.user.status !== 'INVITED') {
         reply.code(400);
-        return reply.html`!${errorAlert({
-          message: 'This invitation link is invalid or has expired.',
-        })}`;
-      }
-
-      const requireStrong = getRequestSettings().requireStrongPasswords !== false;
-      const strength = validatePasswordStrength(password, { requireStrong });
-      if (!strength.valid) {
-        reply.code(400);
-        return reply.html`!${errorAlert({
-          message: strength.errors.join('. '),
+        return reply.html`!${acceptInvitePanel({
+          token,
+          alert: 'This invitation link is invalid or has expired.',
         })}`;
       }
 
@@ -497,14 +493,16 @@ class AuthController {
       });
 
       reply.header('HX-Redirect', '/admin/auth/login?invite=accepted');
-      return reply.html`!${successAlert({
-        message: 'Your account is active. You can sign in now.',
+      return reply.html`!${acceptInvitePanel({
+        token,
+        success: 'Your account is active. You can sign in now.',
       })}`;
     } catch (error) {
       request.log.error(error);
       reply.code(500);
-      return reply.html`!${errorAlert({
-        message: 'An error occurred. Please try again.',
+      return reply.html`!${acceptInvitePanel({
+        token: request.body?.token ?? '',
+        alert: 'An error occurred. Please try again.',
       })}`;
     }
   }
