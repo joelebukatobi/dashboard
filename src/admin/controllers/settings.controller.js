@@ -114,7 +114,7 @@ class SettingsController {
       const socialSettings = {};
 
       for (const [key, value] of Object.entries(body)) {
-        if (key === '_csrf') continue;
+        if (key === '_csrf' || key === 'testEmailTo') continue;
         const parsed = parseBodyValue(value);
 
         if (key.startsWith('site') || ['timezone', 'dateFormat'].includes(key)) {
@@ -185,9 +185,13 @@ class SettingsController {
       );
     } catch (error) {
       request.log.error(error);
-      reply.code(500);
+      const isClientError = error.message?.includes('encrypt secrets')
+        || error.message?.includes('APP_ENCRYPTION_KEY');
+      reply.code(isClientError ? 400 : 500);
       return renderFragment(reply, errorAlert({
-        message: 'Failed to save settings.',
+        message: isClientError
+          ? 'Could not save SMTP password. Set JWT_SECRET in your hosting environment variables.'
+          : 'Failed to save settings.',
       }));
     }
   }
