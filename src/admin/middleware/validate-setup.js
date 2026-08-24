@@ -1,4 +1,5 @@
-import { setupBodySchema, mapZodErrorsToFields, pickSetupValues } from '../schemas/setup.schema.js';
+import { setupBodySchema, pickSetupValues } from '../schemas/setup.schema.js';
+import { mapZodErrorsToFields } from '../schemas/common.schema.js';
 import { renderSetupPage } from '../controllers/setup.controller.js';
 
 /**
