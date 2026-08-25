@@ -1,12 +1,9 @@
 name: Deploy Production
 
 on:
-  # Push trigger is intentionally disabled while production hosting is down.
-  # Restore it by uncommenting the block below once the host is back:
-  #
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
