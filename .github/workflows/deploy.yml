@@ -1,12 +1,13 @@
 name: Deploy
 
 on:
-  # Dashboard is a base template and deploys nowhere, so this never runs
-  # automatically here. A fork with real hosting adds its own trigger:
-  #
-  # push:
-  #   branches:
-  #     - dev
+  # dev and main deploy to the same place. Dashboard is a base template, and
+  # this deployment is the reference proving the pipeline forks inherit
+  # actually works.
+  push:
+    branches:
+      - dev
+      - main
   workflow_dispatch:
 
 concurrency:
