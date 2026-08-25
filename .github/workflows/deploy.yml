@@ -169,11 +169,11 @@ jobs:
           echo "Waiting for app to start..."
           sleep 10
 
-          if [ -z "${{ secrets.SANDBOX_URL }}" ]; then
-            echo "::error::Missing secret: SANDBOX_URL — set it to this site's base URL"
+          if [ -z "${{ secrets.URL }}" ]; then
+            echo "::error::Missing secret: URL — set it to this site's base URL"
             exit 1
           fi
-          HEALTH_URL="${{ secrets.SANDBOX_URL }}/health"
+          HEALTH_URL="${{ secrets.URL }}/health"
           echo "Checking health at: $HEALTH_URL"
 
           # Retry up to 3 times with 5 second intervals
