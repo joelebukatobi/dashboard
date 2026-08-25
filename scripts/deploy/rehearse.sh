@@ -11,8 +11,9 @@
 #   - touching tmp/restart.txt restarts the app under Passenger
 #   - the restarted app answers /health
 #
-# The deploy workflows themselves are parked in .github/workflows-disabled/
-# while hosting is down; this rehearsal is how their logic stays exercised.
+# Dashboard itself is not deployed — it is a base that forks clone. The
+# deploy workflows were removed from this repo for that reason. What stays
+# here is the pipeline logic a fork needs, kept honest by this rehearsal.
 #
 # What it does not prove: LiteSpeed/.htaccess routing, shared-hosting
 # resource limits, FTPS/TLS negotiation, or SamKirkland/FTP-Deploy-Action
