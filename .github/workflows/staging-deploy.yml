@@ -1,15 +1,15 @@
-name: Deploy
+name: Deploy Staging
 
 on:
-  # main only. dev is the working branch and does not deploy; the deployment
-  # exists to prove the pipeline forks inherit actually works.
+  # staging is the only branch with a deployment. dev is where work happens;
+  # main is a release pointer forks clone and never deploys.
   push:
     branches:
-      - main
+      - staging
   workflow_dispatch:
 
 concurrency:
-  group: deploy
+  group: deploy-staging
   cancel-in-progress: true
 
 jobs:
