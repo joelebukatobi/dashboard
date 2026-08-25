@@ -128,7 +128,7 @@ prove the pipeline works; in a fork it is the fork's own hosting, configured
 entirely through repository secrets.
 
 Required repository secrets: `CPANEL_FTP_HOST`, `CPANEL_FTP_USER`,
-`CPANEL_FTP_PASSWORD`, `DEPLOY_PATH`, `DATABASE_URL`, `SANDBOX_URL`, and
-`CPANEL_SSH_KEY` for the restart step. `SANDBOX_URL` must be the fork's own
+`CPANEL_FTP_PASSWORD`, `DEPLOY_PATH`, `DATABASE_URL`, `URL`, and
+`CPANEL_SSH_KEY` for the restart step. `URL` must be the fork's own
 base URL — the deploy fails loudly if it is unset rather than checking
 somebody else's site.
