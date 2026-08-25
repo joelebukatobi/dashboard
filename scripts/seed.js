@@ -834,5 +834,19 @@ export async function seedDemoData(options = {}) {
 
 // Run seed if called directly (not imported)
 if (import.meta.url === `file://${process.argv[1]}`) {
-  seed();
+  // The mysql2 pool keeps the event loop alive, so the process must close it
+  // explicitly. Without this the script hangs forever after seeding
+  // successfully — invisible locally, fatal in CI where the job would run to
+  // its timeout.
+  seed()
+    .then(async () => {
+      const { closePool } = await import('../src/db/index.js');
+      await closePool();
+      process.exit(0);
+    })
+    .catch(async (error) => {
+      console.error('\n❌ SEED FAILED:');
+      console.error(error);
+      process.exit(1);
+    });
 }

@@ -9,7 +9,7 @@ const envFile = process.env.NODE_ENV === 'production'
 
 config({ path: resolve(process.cwd(), envFile) });
 
-const parsedDatabaseUrl = new URL(process.env.DATABASE_URL || 'mysql://blogcms_app:password@127.0.0.1:3306/blogcms_app');
+const parsedDatabaseUrl = new URL(process.env.DATABASE_URL || 'mysql://blogcms_dev:password@127.0.0.1:3306/blogcms_app');
 
 export default defineConfig({
   schema: './src/db/schema.js',
