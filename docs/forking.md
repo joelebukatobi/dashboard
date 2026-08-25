@@ -118,14 +118,15 @@ Only works cleanly for commits that touch core files exclusively.
 
 ## Deploying a fork
 
-`.github/workflows/deploy.yml` is the cPanel pipeline: build assets, upload
-over FTPS, then `npm ci --omit=dev`, migrations, and a restart over SSH,
-finishing with a `/health` check.
+`.github/workflows/staging-deploy.yml` is the cPanel pipeline: build assets,
+upload over FTPS, then `npm ci --omit=dev`, migrations, and a restart over
+SSH, finishing with a `/health` check.
 
-It fires on push to `main` only — `dev` is the working branch and does not
-deploy. In dashboard the target is a reference deployment whose job is to
-prove the pipeline works; in a fork it is the fork's own hosting, configured
-entirely through repository secrets.
+It fires on push to `staging` only. `dev` is where work happens, `staging` is
+the deployed proving ground, and `main` is a release pointer that never
+deploys — it is what a fork clones and what tags point at. In a fork the
+target is the fork's own hosting, configured entirely through repository
+secrets.
 
 Required repository secrets: `CPANEL_FTP_HOST`, `CPANEL_FTP_USER`,
 `CPANEL_FTP_PASSWORD`, `DEPLOY_PATH`, `DATABASE_URL`, `URL`, and
