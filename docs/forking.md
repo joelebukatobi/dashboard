@@ -122,10 +122,10 @@ Only works cleanly for commits that touch core files exclusively.
 over FTPS, then `npm ci --omit=dev`, migrations, and a restart over SSH,
 finishing with a `/health` check.
 
-It fires on push to `dev` and to `main`, both deploying to the same target.
-In dashboard that target is a reference deployment whose job is to prove the
-pipeline works; in a fork it is the fork's own hosting, configured entirely
-through repository secrets.
+It fires on push to `main` only — `dev` is the working branch and does not
+deploy. In dashboard the target is a reference deployment whose job is to
+prove the pipeline works; in a fork it is the fork's own hosting, configured
+entirely through repository secrets.
 
 Required repository secrets: `CPANEL_FTP_HOST`, `CPANEL_FTP_USER`,
 `CPANEL_FTP_PASSWORD`, `DEPLOY_PATH`, `DATABASE_URL`, `SANDBOX_URL`, and
