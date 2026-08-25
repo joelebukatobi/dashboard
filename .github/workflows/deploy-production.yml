@@ -1,9 +1,12 @@
 name: Deploy Production
 
 on:
-  push:
-    branches:
-      - main
+  # Push trigger is intentionally disabled while production hosting is down.
+  # Restore it by uncommenting the block below once the host is back:
+  #
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 concurrency:
@@ -78,7 +81,6 @@ jobs:
             **/.vscode/**
             **/.idea/**
             **/.build/**
-            **/dist/css/**
 
       - name: Install production dependencies and restart app
         if: steps.ssh_check.outputs.enabled == 'true'
