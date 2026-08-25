@@ -11,6 +11,9 @@
 #   - touching tmp/restart.txt restarts the app under Passenger
 #   - the restarted app answers /health
 #
+# The deploy workflows themselves are parked in .github/workflows-disabled/
+# while hosting is down; this rehearsal is how their logic stays exercised.
+#
 # What it does not prove: LiteSpeed/.htaccess routing, shared-hosting
 # resource limits, FTPS/TLS negotiation, or SamKirkland/FTP-Deploy-Action
 # itself (the uploader here is a stand-in; its exclude semantics are pinned
