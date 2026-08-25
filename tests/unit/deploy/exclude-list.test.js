@@ -26,14 +26,11 @@ describe('deploy exclude list', () => {
     expect(patternsOf('.github/workflows/deploy-sandbox.yml')).toEqual(sharedList);
   });
 
-  // Production carries one extra pattern, **/dist/css/**, which excludes the
-  // two files `npm run build:css` produces. FTP sync does not delete excluded
-  // files, so production keeps serving whatever CSS was on the server when
-  // that line was added. This test pins the difference so it stays visible
-  // rather than silently drifting further.
-  it('documents the production-only dist/css exclusion', () => {
-    const production = patternsOf('.github/workflows/deploy-production.yml');
-    expect(production).toEqual([...sharedList, '**/dist/css/**']);
+  it('matches the production workflow', () => {
+    // Both branches ship identical code, so both pipelines must ship an
+    // identical file set. Production previously excluded **/dist/css/**,
+    // which dropped the two files `npm run build:css` produces.
+    expect(patternsOf('.github/workflows/deploy-production.yml')).toEqual(sharedList);
   });
 
   it('excludes the things that must never reach a server', () => {
