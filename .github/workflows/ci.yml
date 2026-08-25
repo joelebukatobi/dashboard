@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    # dev is the working branch and main is only ever fast-forwarded from it,
+    # so dev being green is the release gate. It has to be checked.
+    branches: [main, dev]
   pull_request:
 
 jobs:
@@ -14,7 +16,9 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          # Must match the Node version the deploy workflows run on the
+          # server, or tests never run on the shipping runtime.
+          node-version: '24'
           cache: npm
 
       - name: Install dependencies
