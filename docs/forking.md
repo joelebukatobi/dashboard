@@ -116,6 +116,22 @@ git cherry-pick <sha-from-fork>
 
 Only works cleanly for commits that touch core files exclusively.
 
+## Deploying a fork
+
+`.github/workflows/deploy.yml` is the cPanel pipeline: build assets, upload
+over FTPS, then `npm ci --omit=dev`, migrations, and a restart over SSH,
+finishing with a `/health` check.
+
+It ships set to `workflow_dispatch` only, because dashboard itself deploys
+nowhere. A fork with real hosting uncomments the push trigger at the top of
+the file.
+
+Required repository secrets: `CPANEL_FTP_HOST`, `CPANEL_FTP_USER`,
+`CPANEL_FTP_PASSWORD`, `DEPLOY_PATH`, `DATABASE_URL`, `SANDBOX_URL`, and
+`CPANEL_SSH_KEY` for the restart step. `SANDBOX_URL` must be the fork's own
+base URL — the deploy fails loudly if it is unset rather than checking
+somebody else's site.
+
 ## Rehearsing a deploy locally
 
 `npm run deploy:rehearse` runs the cPanel deploy pipeline against local
