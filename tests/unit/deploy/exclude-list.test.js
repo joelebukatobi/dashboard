@@ -2,39 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-// The deploy workflows live in .github/workflows-disabled/ while hosting is
-// down — GitHub only reads .github/workflows/, so they are inert there.
-const patternsOf = (yamlPath) => {
-  const yaml = readFileSync(yamlPath, 'utf8');
-  const start = yaml.indexOf('          exclude: |');
-  if (start === -1) return null;
-  const lines = yaml.slice(start).split('\n').slice(1);
-  const out = [];
-  for (const line of lines) {
-    if (!line.startsWith('            ')) break;
-    const value = line.trim();
-    if (value) out.push(value);
-  }
-  return out;
-};
-
 const sharedList = readFileSync('scripts/deploy/exclude.txt', 'utf8')
   .split('\n')
   .map((l) => l.trim())
   .filter((l) => l && !l.startsWith('#'));
 
+// The deploy workflows were removed from dashboard — they are a fork
+// concern, not a base-template one. This list now documents what must never
+// reach a server and backs the local rehearsal.
 describe('deploy exclude list', () => {
-  it('matches the sandbox workflow', () => {
-    expect(patternsOf('.github/workflows-disabled/deploy-sandbox.yml')).toEqual(sharedList);
-  });
-
-  it('matches the production workflow', () => {
-    // Both branches ship identical code, so both pipelines must ship an
-    // identical file set. Production previously excluded **/dist/css/**,
-    // which dropped the two files `npm run build:css` produces.
-    expect(patternsOf('.github/workflows-disabled/deploy-production.yml')).toEqual(sharedList);
-  });
-
   it('excludes the things that must never reach a server', () => {
     for (const pattern of ['**/node_modules/**', '**/.env*', '**/.git*', '**/.github/**']) {
       expect(sharedList, `missing ${pattern}`).toContain(pattern);
