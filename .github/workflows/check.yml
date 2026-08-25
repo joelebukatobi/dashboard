@@ -2,10 +2,12 @@ name: Checks
 
 on:
   push:
-    # dev is the working branch and main is only ever fast-forwarded from it,
-    # so dev being green is the release gate. It has to be checked.
-    branches: [main, staging, dev]
+    # staging is deliberately absent: staging-deploy.yml calls this workflow
+    # as its gate, so a push to staging would otherwise produce two runs.
+    branches: [main, dev]
   pull_request:
+  # Callable as a gate by other workflows.
+  workflow_call:
 
 jobs:
   check:
