@@ -305,20 +305,6 @@ async function simulateSubscribers(db, subscribers, activities) {
   return { subscribersAdded };
 }
 
-export async function aggregateDailyViews() {
-  ensureDatabaseUrl({ scriptName: 'cli analytics aggregate' });
-
-  console.log('Running daily view aggregation...\n');
-
-  const { analyticsService } = await import('../../../src/services/analytics.service.js');
-  const result = await analyticsService.aggregateDailyViews();
-
-  console.log('Aggregation complete');
-  console.log(`  Date: ${result.date.toISOString().split('T')[0]}`);
-  console.log(`  Total views: ${result.totalViews.toLocaleString()}`);
-  console.log(`  Action: ${result.action}`);
-}
-
 export async function runScheduler() {
   const cron = (await import('node-cron')).default;
 

@@ -8,7 +8,6 @@
  *   node scripts/cli.js setup-token [--json]
  *   node scripts/cli.js analytics day [--days=N] [--backdate] [--force]
  *   node scripts/cli.js analytics run
- *   node scripts/cli.js analytics aggregate
  *   node scripts/cli.js analytics scheduler
  *   node scripts/cli.js media thumbnails [--regenerate]
  *   node scripts/cli.js media clear
@@ -30,7 +29,6 @@ Maintenance CLI
   analytics
     day [flags]           Simulate daily analytics (--days, --backdate, --force)
     run                   Run one day of the 7-day simulation engine
-    aggregate             Aggregate views into daily_page_views
     scheduler             Cron scheduler for analytics run (blocking)
 
   media
@@ -80,7 +78,6 @@ async function main() {
       const analytics = await import('./lib/tasks/analytics.js');
       if (subcommand === 'day') return run(analytics.simulateDay, args);
       if (subcommand === 'run') return run(analytics.runSimulation);
-      if (subcommand === 'aggregate') return run(analytics.aggregateDailyViews);
       if (subcommand === 'scheduler') return run(analytics.runScheduler);
       break;
     }
