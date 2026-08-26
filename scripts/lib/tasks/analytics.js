@@ -2,6 +2,7 @@ import { ensureDatabaseUrl } from '../../../env.js';
 import { eq, sql } from 'drizzle-orm';
 import crypto from 'crypto';
 import config from '../simulation.config.js';
+import { toDateKey } from '../../../src/lib/date-key.js';
 
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -68,7 +69,7 @@ export async function simulateDay(args = []) {
   let totalEvents = 0;
 
   for (const simDate of dates) {
-    const dateStr = simDate.toISOString().split('T')[0];
+    const dateStr = toDateKey(simDate);
     console.log(`Simulating: ${dateStr}`);
 
     const existingData = await db.select().from(dailyPageViews).where(eq(dailyPageViews.date, dateStr));
@@ -212,7 +213,7 @@ async function simulateViews(db, day, allPosts, posts, dailyPageViews) {
   today.setDate(today.getDate() - (config.duration - day));
 
   await db.insert(dailyPageViews).values({
-    date: today.toISOString().split('T')[0],
+    date: toDateKey(today),
     totalViews,
     uniqueVisitors: Math.floor(totalViews * 0.6),
     createdAt: new Date(),
