@@ -2,6 +2,7 @@
 import { db, posts, categories, tags, postTags, users, mediaItems, comments } from '../db/index.js';
 import { eq, and, desc, asc, like, sql, gte, lt, inArray } from 'drizzle-orm';
 import { activityService } from './activity.service.js';
+import { analyticsService } from './analytics.service.js';
 import { commentsService } from './comments.service.js';
 import { mediaItemPublicUrl } from '../lib/media-paths.js';
 import { normalizeOptionalId } from '../lib/post-input.js';
@@ -690,7 +691,15 @@ class PostsService {
         viewCount: sql`${posts.viewCount} + 1`,
       })
       .where(eq(posts.id, id));
-    
+
+    // Analytics must never break page rendering, so a failure here is logged
+    // and swallowed rather than propagated.
+    try {
+      await analyticsService.recordDailyView();
+    } catch (error) {
+      console.error('Failed to record daily page view:', error);
+    }
+
     return true;
   }
 
