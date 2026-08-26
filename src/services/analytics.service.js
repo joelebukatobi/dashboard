@@ -6,14 +6,19 @@ import { db, posts, dailyPageViews } from '../db/index.js';
 import { eq, gte, lte, desc, sql, sum, and } from 'drizzle-orm';
 
 /**
- * Midnight-normalised YYYY-MM-DD key for the daily counter.
+ * Local-midnight YYYY-MM-DD key for the daily counter.
+ * Built from local date components rather than `toISOString()`, which
+ * converts to UTC and would shift the key back a day for any positive
+ * UTC offset (e.g. Asia/Tokyo) — do not reintroduce it.
  * @param {Date} [date]
  * @returns {string}
  */
-function toDateKey(date = new Date()) {
-  const normalized = new Date(date);
-  normalized.setHours(0, 0, 0, 0);
-  return normalized.toISOString().split('T')[0];
+export function toDateKey(date = new Date()) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -110,8 +115,8 @@ class AnalyticsService {
   }
 
   /**
-   * Get traffic data for a date range
-   * Combines historical daily aggregates + today's calculated partial data
+   * Get traffic data for a date range from daily_page_views, including
+   * today's live-recorded row.
    * @param {Object} options - Query options
    * @param {number} options.days - Number of days to fetch (default: 30)
    * @returns {Promise<Array>} - Array of daily traffic data
@@ -124,12 +129,7 @@ class AnalyticsService {
     startDate.setDate(startDate.getDate() - days + 1);
     startDate.setHours(0, 0, 0, 0);
 
-    // Get yesterday's date for boundary
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-
-    // Fetch historical data from daily_page_views (up to yesterday)
+    // Fetch historical data from daily_page_views, including today's live row
     const historicalData = await db
       .select({
         date: dailyPageViews.date,
@@ -152,23 +152,6 @@ class AnalyticsService {
         date: record.date,
         views: record.totalViews,
         uniqueVisitors: record.uniqueVisitors || Math.floor(record.totalViews * 0.7), // Estimate 70% unique
-      });
-    }
-
-    // Add today's data only if there's historical data
-    if (endDate >= yesterday && historicalData.length > 0) {
-      const recentDays = historicalData.slice(-7); // Last 7 days
-      const avgRecentViews = recentDays.length > 0
-        ? recentDays.reduce((sum, d) => sum + d.totalViews, 0) / recentDays.length
-        : 0;
-
-      // Today's views: average of recent days (no random variation)
-      const todayViews = Math.max(0, Math.round(avgRecentViews));
-
-      result.push({
-        date: new Date(),
-        views: todayViews,
-        uniqueVisitors: Math.floor(todayViews * 0.5),
       });
     }
 
