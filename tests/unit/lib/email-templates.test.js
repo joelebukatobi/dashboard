@@ -44,7 +44,7 @@ describe('email templates', () => {
       actionUrl: 'https://example.com/admin',
     });
 
-    expect(html).toContain('Smtp Test Successful');
+    expect(html).toContain('SMTP Test Successful');
     expect(html).toContain('Open Dashboard');
     expect(html).toContain('background:#ea580c');
     expect(html).toContain('https://example.com/admin');
@@ -71,5 +71,18 @@ describe('email templates', () => {
 
     expect(html).not.toContain('<script>');
     expect(html).toContain('Evil &amp; Co');
+  });
+});
+
+describe('title casing', () => {
+  it('preserves acronyms rather than lowercasing them', () => {
+    const rendered = renderTestEmail(
+      { siteName: 'Test Site' },
+      { actionUrl: 'https://example.com' },
+    );
+    const html = typeof rendered === 'string' ? rendered : rendered.html;
+
+    expect(html).toContain('SMTP Test Successful');
+    expect(html).not.toContain('Smtp');
   });
 });

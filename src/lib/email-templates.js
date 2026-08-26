@@ -30,10 +30,14 @@ function escapeHtml(value) {
 function toTitleCase(value) {
   return String(value ?? '')
     .trim()
-    .toLowerCase()
     .split(/\s+/)
     .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => {
+      // An all-caps word of more than one character is an acronym — SMTP,
+      // API, URL — and lowercasing it first would destroy it.
+      if (word === word.toUpperCase() && word.length > 1) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
     .join(' ');
 }
 
@@ -185,7 +189,7 @@ export function renderTestEmail(settingsMap, { actionUrl }) {
   return renderBrandedEmail({
     settingsMap,
     iconKey: 'test',
-    headline: 'smtp test successful',
+    headline: 'SMTP test successful',
     bodyHtml: `<p style="margin:0;">This is a test email from <strong>${siteName}</strong>. Your SMTP settings are working correctly.</p>`,
     ctaLabel: 'open dashboard',
     ctaUrl: actionUrl,
