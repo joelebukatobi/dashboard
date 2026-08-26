@@ -15,6 +15,13 @@ const { eq } = await import('drizzle-orm');
 // through unnoticed.
 const todayKey = () => toDateKey();
 
+// dailyPageViews.date round-trips through mysql2 as a UTC-midnight Date
+// object representing a plain calendar date (no timezone attached) — reading
+// it back with toDateKey()'s *local* getters would shift it a day for any
+// negative UTC offset. Use UTC components here; that's the correct read for
+// a value that was never a local instant to begin with.
+const dbDateKey = (date) => new Date(date).toISOString().split('T')[0];
+
 describe('recordDailyView', () => {
   beforeEach(async () => {
     await db.delete(dailyPageViews).where(eq(dailyPageViews.date, todayKey()));
@@ -57,14 +64,19 @@ describe('toDateKey', () => {
     process.env.TZ = 'Asia/Tokyo';
 
     try {
-      // Local noon in Tokyo — nowhere near a UTC day boundary either way,
-      // so this only passes if toDateKey reads local getFullYear/Month/Date
-      // instead of converting through toISOString() (which would read back
-      // the previous day for any positive UTC offset).
-      const localDate = new Date(2026, 2, 15, 12, 0, 0);
+      // Local early morning in Tokyo — past local midnight but still the
+      // previous day in UTC, so this only passes if toDateKey reads local
+      // getFullYear/Month/Date instead of converting through toISOString()
+      // (bare or with setHours(0,0,0,0)), which would read back the previous
+      // day for any positive UTC offset.
+      const localDate = new Date(2026, 2, 15, 1, 0, 0);
       expect(toDateKey(localDate)).toBe('2026-03-15');
     } finally {
-      process.env.TZ = originalTz;
+      if (originalTz === undefined) {
+        delete process.env.TZ;
+      } else {
+        process.env.TZ = originalTz;
+      }
     }
   });
 });
@@ -83,7 +95,7 @@ describe('getTrafficData', () => {
 
     const data = await analyticsService.getTrafficData({ days: 30 });
     const todaysEntries = data.filter(
-      (entry) => toDateKey(entry.date) === todayKey(),
+      (entry) => dbDateKey(entry.date) === todayKey(),
     );
 
     expect(todaysEntries).toHaveLength(1);
