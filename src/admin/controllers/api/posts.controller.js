@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { postsService } from '../../../services/posts.service.js';
 import { postLikesService } from '../../../services/post-likes.service.js';
 import { getPublicPageLimit } from '../../../lib/site-pagination.js';
+import { rewriteContentMediaUrls } from '../../../lib/media-paths.js';
 import { db, posts, categories, users, tags, postTags } from '../../../db/index.js';
 import { eq, and, desc, asc, sql, count, inArray } from 'drizzle-orm';
 
@@ -13,13 +14,13 @@ import { eq, and, desc, asc, sql, count, inArray } from 'drizzle-orm';
  * @param {Object} post - Raw post data
  * @returns {Object} - Formatted post object
  */
-function formatPostForAPI(post, { likedByViewer = false } = {}) {
+export function formatPostForAPI(post, { likedByViewer = false } = {}) {
   return {
     id: post.id,
     title: post.title,
     slug: post.slug,
     description: post.excerpt || '',
-    post: post.content,
+    post: rewriteContentMediaUrls(post.content),
     image: post.featuredImageUrl || null,
     views: post.viewCount || 0,
     likes: post.likeCount || 0,
