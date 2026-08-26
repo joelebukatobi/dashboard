@@ -4,6 +4,18 @@
 import path from 'path';
 
 /**
+ * True when a URL points at this app on localhost or a loopback address.
+ * The admin editor stores absolute URLs, so content authored against a local
+ * server carries dead links into production without this.
+ * @param {string} value
+ * @returns {boolean}
+ */
+export function isLocalDevMediaUrl(value) {
+  if (!value || typeof value !== 'string') return false;
+  return /^https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?\//i.test(value.trim());
+}
+
+/**
  * Convert a stored media path to a browser URL under /public/.
  * Handles legacy values: public/..., /public/..., uploads/..., /uploads/...
  * @param {string|null|undefined} storedPath
@@ -14,6 +26,14 @@ export function toPublicMediaUrl(storedPath) {
 
   const value = String(storedPath).trim();
   if (!value) return '';
+
+  if (isLocalDevMediaUrl(value)) {
+    try {
+      return toPublicMediaUrl(new URL(value).pathname);
+    } catch {
+      return '';
+    }
+  }
 
   if (/^https?:\/\//i.test(value)) {
     return value;
