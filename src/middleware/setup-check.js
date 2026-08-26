@@ -12,7 +12,6 @@ export async function checkSetupStatus(fastify) {
 
     // Skip check for static assets and API routes
     if (pathname.startsWith('/dist/') ||
-        pathname.startsWith('/vendor/') ||
         pathname.startsWith('/public/') ||
         pathname.startsWith('/api/') ||
         pathname.startsWith('/health') ||
