@@ -8,6 +8,7 @@ import { dirname, join } from 'path';
 import { readdirSync, statSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import sharp from 'sharp';
 import crypto from 'crypto';
+import { toDateKey } from '../src/lib/date-key.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -484,7 +485,7 @@ async function seed() {
       const dailyVisitors = Math.floor(dailyViews * 0.5);
 
       dailyData.push({
-        date: date.toISOString().split('T')[0],
+        date: toDateKey(date),
         totalViews: dailyViews,
         uniqueVisitors: dailyVisitors,
         createdAt: new Date(),
