@@ -6,6 +6,17 @@ import { db, posts, dailyPageViews } from '../db/index.js';
 import { eq, gte, lte, desc, sql, sum, and } from 'drizzle-orm';
 
 /**
+ * Midnight-normalised YYYY-MM-DD key for the daily counter.
+ * @param {Date} [date]
+ * @returns {string}
+ */
+function toDateKey(date = new Date()) {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized.toISOString().split('T')[0];
+}
+
+/**
  * Analytics Service
  * Handles traffic analytics with shared-hosting-friendly approach:
  * - Daily cron aggregates historical data
@@ -74,6 +85,31 @@ class AnalyticsService {
   }
 
   /**
+   * Increment today's view counter. Called on every post view, so it must be
+   * cheap and must never throw into the request path — callers guard it.
+   * @returns {Promise<void>}
+   */
+  async recordDailyView() {
+    const todayKey = toDateKey();
+
+    await db
+      .insert(dailyPageViews)
+      .values({
+        date: todayKey,
+        totalViews: 1,
+        uniqueVisitors: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onDuplicateKeyUpdate({
+        set: {
+          totalViews: sql`${dailyPageViews.totalViews} + 1`,
+          updatedAt: new Date(),
+        },
+      });
+  }
+
+  /**
    * Get traffic data for a date range
    * Combines historical daily aggregates + today's calculated partial data
    * @param {Object} options - Query options
@@ -103,7 +139,7 @@ class AnalyticsService {
       .from(dailyPageViews)
       .where(and(
         gte(dailyPageViews.date, startDate),
-        lte(dailyPageViews.date, yesterday)
+        lte(dailyPageViews.date, endDate)
       ))
       .orderBy(dailyPageViews.date);
 
