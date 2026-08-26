@@ -105,6 +105,28 @@ with `DROP TABLE board_members` and `DROP TABLE events` because it was
 generated against a downstream database whose schema snapshot still held those
 tables. It failed on every fresh database until it was repaired.
 
+## Behaviour changes that affect existing installs
+
+**Daily analytics changed meaning.** `daily_page_views.total_views` used to
+hold a cumulative snapshot of every post view ever, written by
+`scripts/cli.js analytics aggregate`. It now holds a per-day count,
+incremented as views happen. Rows written under the old model are not
+comparable with new ones, so clear them once when upgrading:
+
+```sql
+TRUNCATE TABLE daily_page_views;
+```
+
+`aggregateDailyViews()` remains available as a backfill tool, and the
+simulation commands (`npm run simulate:day`, `npm run simulate:days`) still
+populate a fresh install with plausible data.
+
+**A secret is now required in production.** The app refuses to start when
+neither `APP_ENCRYPTION_KEY` nor `JWT_SECRET` is set and `NODE_ENV` is
+`production`. Previously it fell back to a value published in this
+repository, which meant a fork that forgot the variable shipped a forgeable
+session secret. Set one in your hosting environment before deploying.
+
 ## Sending a fix back up
 
 Rare, and unsupported by tooling on purpose:
