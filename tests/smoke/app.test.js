@@ -151,4 +151,21 @@ describe('app smoke', () => {
     expect(routeUrls.has('/admin/auth/login')).toBe(true);
     expect(routeUrls.has('/setup')).toBe(true);
   });
+
+  it('no longer serves libraries straight from node_modules', () => {
+    for (const path of [
+      '/vendor/htmx/htmx.min.js',
+      '/vendor/preline/preline.js',
+      '/vendor/apexcharts/apexcharts.min.js',
+    ]) {
+      expect(
+        [...routeUrls].some((url) => url.startsWith(path.split('/').slice(0, 3).join('/'))),
+        `${path} should no longer be registered`,
+      ).toBe(false);
+    }
+  });
+
+  it('still serves the built bundles', () => {
+    expect([...routeUrls].some((url) => url.startsWith('/dist/'))).toBe(true);
+  });
 });
