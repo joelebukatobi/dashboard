@@ -4,6 +4,7 @@ import { eq, and, desc, asc, like, sql, gte, lt, inArray } from 'drizzle-orm';
 import { activityService } from './activity.service.js';
 import { commentsService } from './comments.service.js';
 import { mediaItemPublicUrl } from '../lib/media-paths.js';
+import { normalizeOptionalId } from '../lib/post-input.js';
 import crypto from 'crypto';
 
 /**
@@ -248,12 +249,12 @@ class PostsService {
         slug,
         content,
         excerpt,
-        categoryId,
+        categoryId: normalizeOptionalId(categoryId),
         authorId: userId,
         status,
         metaTitle,
         metaDescription,
-        featuredImageId,
+        featuredImageId: normalizeOptionalId(featuredImageId),
         publishedAt: status === 'PUBLISHED' ? new Date() : null,
       });
 
@@ -326,11 +327,11 @@ class PostsService {
         slug: slug || post.slug,
         content: content || post.content,
         excerpt: excerpt !== undefined ? excerpt : post.excerpt,
-        categoryId: categoryId || post.categoryId,
+        categoryId: categoryId !== undefined ? normalizeOptionalId(categoryId) : post.categoryId,
         status: status || post.status,
         metaTitle: metaTitle !== undefined ? metaTitle : post.metaTitle,
         metaDescription: metaDescription !== undefined ? metaDescription : post.metaDescription,
-        featuredImageId: featuredImageId !== undefined ? featuredImageId : post.featuredImageId,
+        featuredImageId: featuredImageId !== undefined ? normalizeOptionalId(featuredImageId) : post.featuredImageId,
         publishedAt: isPublishing ? new Date() : post.publishedAt,
         updatedAt: new Date(),
       })
