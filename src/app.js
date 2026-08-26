@@ -38,6 +38,13 @@ export default async function app(fastify, opts) {
             'https://fonts.googleapis.com',
           ],
           scriptSrc: ["'self'", "'unsafe-inline'"],
+          // Helmet defaults script-src-attr to 'none', which blocks inline
+          // event handler attributes. 'unsafe-inline' on script-src permits
+          // inline <script> blocks but not onclick= and friends — a separate
+          // directive governs those. The admin templates use ~94 inline
+          // handlers, so without this every one of them silently does
+          // nothing in production while working fine in development.
+          scriptSrcAttr: ["'unsafe-inline'"],
           imgSrc: ["'self'", 'data:', 'blob:', 'https://images.unsplash.com'],
           connectSrc: ["'self'"],
           fontSrc: ["'self'", 'https://fonts.gstatic.com'],
