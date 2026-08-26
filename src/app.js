@@ -13,6 +13,7 @@ import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { checkSetupStatus } from './middleware/setup-check.js';
 import { ensureDatabaseUrl } from '../env.js';
+import { getAppSecret } from './lib/app-secrets.js';
 import { buildApiManifest } from './admin/routes/manifest.js';
 import { projectApiPrefixes } from './admin/routes/project/prefixes.js';
 
@@ -74,7 +75,7 @@ export default async function app(fastify, opts) {
   }
 
   await fastify.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
+    secret: getAppSecret(),
     cookie: {
       cookieName: 'token',
       signed: false,

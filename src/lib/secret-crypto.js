@@ -1,13 +1,11 @@
 import crypto from 'crypto';
+import { getAppSecret } from './app-secrets.js';
 
 const ALGORITHM = 'aes-256-gcm';
 const PREFIX = 'enc:v1:';
 
 function getEncryptionKey() {
-  const secret = process.env.APP_ENCRYPTION_KEY || process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('APP_ENCRYPTION_KEY or JWT_SECRET is required to encrypt secrets');
-  }
+  const secret = getAppSecret();
   return crypto.createHash('sha256').update(secret).digest();
 }
 
