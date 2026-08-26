@@ -46,6 +46,10 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run build:css
+          # dist/ is gitignored, so anything not built here never reaches the
+          # server. Templates load htmx, preline, lucide and alpine from
+          # /dist/js/, so skipping this ships a site with no JavaScript.
+          npm run build:js
 
       - name: Validate required deploy secrets
         run: bash scripts/deploy/validate-secrets.sh CPANEL_FTP_HOST CPANEL_FTP_USER CPANEL_FTP_PASSWORD DEPLOY_PATH
