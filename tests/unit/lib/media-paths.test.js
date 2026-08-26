@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { toPublicMediaUrl, mediaItemPublicUrl, isLocalDevMediaUrl } from '../../../src/lib/media-paths.js';
+import {
+  toPublicMediaUrl,
+  mediaItemPublicUrl,
+  isLocalDevMediaUrl,
+  rewriteContentMediaUrls,
+} from '../../../src/lib/media-paths.js';
 
 describe('toPublicMediaUrl', () => {
   it('normalizes legacy public/ paths without leading slash', () => {
@@ -79,5 +84,33 @@ describe('toPublicMediaUrl with localhost urls', () => {
   it('still passes a genuine external url through unchanged', () => {
     expect(toPublicMediaUrl('https://images.unsplash.com/photo-1.jpg'))
       .toBe('https://images.unsplash.com/photo-1.jpg');
+  });
+});
+
+describe('rewriteContentMediaUrls', () => {
+  it('rewrites an <img> localhost src to its public path', () => {
+    const html = '<img src="http://localhost:7000/public/uploads/a.jpg">';
+    expect(rewriteContentMediaUrls(html)).toBe(
+      '<img src="/public/uploads/a.jpg">',
+    );
+  });
+
+  it('rewrites <video> and <source> localhost src attributes', () => {
+    const html =
+      '<video src="http://localhost:7000/public/uploads/v.mp4"></video>' +
+      '<source src="http://127.0.0.1:7000/public/uploads/s.mp4">';
+    expect(rewriteContentMediaUrls(html)).toBe(
+      '<video src="/public/uploads/v.mp4"></video><source src="/public/uploads/s.mp4">',
+    );
+  });
+
+  it('leaves external URLs untouched', () => {
+    const html = '<img src="https://images.unsplash.com/photo-1.jpg">';
+    expect(rewriteContentMediaUrls(html)).toBe(html);
+  });
+
+  it('returns empty string for null/empty input', () => {
+    expect(rewriteContentMediaUrls(null)).toBe('');
+    expect(rewriteContentMediaUrls('')).toBe('');
   });
 });
