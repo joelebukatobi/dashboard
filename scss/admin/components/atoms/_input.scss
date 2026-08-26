@@ -120,19 +120,19 @@
   @apply transition-colors duration-200;
 
   &:hover {
-    @apply text-grey-600 bg-grey-100;
+    @apply text-grey-600;
   }
 
   .dark & {
     @apply text-grey-500;
 
     &:hover {
-      @apply text-grey-300 bg-grey-800;
+      @apply text-grey-300;
     }
   }
 
   svg {
-    @apply w-[2rem] h-[2rem];
+    @apply w-[2rem] h-[2rem] stroke-1;
   }
 }
 
