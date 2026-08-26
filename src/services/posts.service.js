@@ -4,7 +4,7 @@ import { eq, and, desc, asc, like, sql, gte, lt, inArray } from 'drizzle-orm';
 import { activityService } from './activity.service.js';
 import { analyticsService } from './analytics.service.js';
 import { commentsService } from './comments.service.js';
-import { mediaItemPublicUrl } from '../lib/media-paths.js';
+import { mediaItemPublicUrl, rewriteContentMediaUrls } from '../lib/media-paths.js';
 import { normalizeOptionalId } from '../lib/post-input.js';
 import crypto from 'crypto';
 
@@ -195,6 +195,7 @@ class PostsService {
       author: result[0].author,
       category: result[0].category,
       tags: tagsResult,
+      content: rewriteContentMediaUrls(result[0].post.content),
     });
   }
 
@@ -210,7 +211,9 @@ class PostsService {
       .where(eq(posts.slug, slug))
       .limit(1);
 
-    return result[0] || null;
+    if (!result[0]) return null;
+
+    return { ...result[0], content: rewriteContentMediaUrls(result[0].content) };
   }
 
   /**

@@ -70,6 +70,23 @@ export function mediaItemPublicUrl(item) {
 }
 
 /**
+ * Rewrite localhost media URLs embedded in post HTML to /public/... paths.
+ * The editor can save absolute localhost URLs in <img>/<video>/<source> src
+ * attributes; those are dead links once the post is served from anywhere
+ * else, so rewrite them to the relative path this app actually serves.
+ * @param {string|null|undefined} html
+ * @returns {string}
+ */
+export function rewriteContentMediaUrls(html) {
+  if (!html || typeof html !== 'string') return '';
+
+  return html.replace(
+    /(<(?:img|source|video)\b[^>]*\ssrc=["'])(https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0)(?::\d+)?)(\/[^"']*)(["'])/gi,
+    (_, before, _origin, pathname, after) => `${before}${toPublicMediaUrl(pathname)}${after}`,
+  );
+}
+
+/**
  * Resolve stored media path to an absolute filesystem path.
  * @param {string|null|undefined} storedPath
  * @returns {string|null}
