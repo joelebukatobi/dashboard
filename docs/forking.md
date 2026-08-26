@@ -117,7 +117,9 @@ comparable with new ones, so clear them once when upgrading:
 TRUNCATE TABLE daily_page_views;
 ```
 
-`aggregateDailyViews()` remains available as a backfill tool, and the
+The old aggregation function is gone entirely — it summed an all-time
+counter into a single day's row, which cannot produce per-day data by
+construction, so there is no backfill tool for pre-upgrade rows. The
 simulation commands (`npm run simulate:day`, `npm run simulate:days`) still
 populate a fresh install with plausible data.
 

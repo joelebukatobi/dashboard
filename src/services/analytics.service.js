@@ -29,67 +29,6 @@ export function toDateKey(date = new Date()) {
  */
 class AnalyticsService {
   /**
-   * Aggregate yesterday's views into daily_page_views table
-   * Called by daily cron job
-   * @returns {Promise<Object>} - Aggregation result
-   */
-  async aggregateDailyViews() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Get total views from all posts as of yesterday
-    const yesterdayResult = await db
-      .select({
-        totalViews: sum(posts.viewCount),
-      })
-      .from(posts);
-
-    const yesterdayTotalViews = Number(yesterdayResult[0]?.totalViews || 0);
-
-    // Check if we already have data for yesterday
-    const existing = await db
-      .select()
-      .from(dailyPageViews)
-      .where(eq(dailyPageViews.date, yesterday));
-
-    if (existing.length > 0) {
-      // Update existing record
-      await db
-        .update(dailyPageViews)
-        .set({
-          totalViews: yesterdayTotalViews,
-          updatedAt: new Date(),
-        })
-        .where(eq(dailyPageViews.date, yesterday));
-
-      return {
-        date: yesterday,
-        totalViews: yesterdayTotalViews,
-        action: 'updated',
-      };
-    } else {
-      // Create new record
-      await db.insert(dailyPageViews).values({
-        date: yesterday,
-        totalViews: yesterdayTotalViews,
-        uniqueVisitors: 0, // Would need more complex tracking for real unique visitors
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-
-      return {
-        date: yesterday,
-        totalViews: yesterdayTotalViews,
-        action: 'created',
-      };
-    }
-  }
-
-  /**
    * Increment today's view counter. Called on every post view, so it must be
    * cheap and must never throw into the request path — callers guard it.
    * @returns {Promise<void>}
