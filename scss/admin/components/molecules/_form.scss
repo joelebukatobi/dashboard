@@ -68,7 +68,19 @@
     }
 
     &:has([data-hs-select]) {
-      @apply relative;
+      @apply relative flex flex-col;
+
+      .label {
+        @apply order-1;
+      }
+
+      > *:not(.label) {
+        @apply order-2;
+      }
+
+      .form-feedback {
+        @apply order-3;
+      }
 
       &:has(.hs-select.open),
       &:has(.hs-select.active) {
@@ -76,7 +88,7 @@
       }
     }
 
-    // Force label-first ordering regardless of DOM manipulation (Preline/HTMX)
+    // Alias kept for templates that already opt in explicitly
     &--ordered {
       @apply flex flex-col;
 
@@ -116,7 +128,7 @@
     @apply grid gap-[1.6rem] mb-[1.6rem];
 
     &--2col {
-      @apply grid-cols-1 md:grid-cols-2;
+      @apply grid-cols-1 items-start md:grid-cols-2;
 
       > .form__group {
         @apply mb-0;
@@ -124,7 +136,7 @@
     }
 
     &--3col {
-      @apply grid-cols-1 md:grid-cols-3;
+      @apply grid-cols-1 items-start md:grid-cols-3;
 
       > .form__group {
         @apply mb-0;
