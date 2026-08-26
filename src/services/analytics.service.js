@@ -4,22 +4,9 @@
 
 import { db, posts, dailyPageViews } from '../db/index.js';
 import { eq, gte, lte, desc, sql, sum, and } from 'drizzle-orm';
+import { toDateKey } from '../lib/date-key.js';
 
-/**
- * Local-midnight YYYY-MM-DD key for the daily counter.
- * Built from local date components rather than `toISOString()`, which
- * converts to UTC and would shift the key back a day for any positive
- * UTC offset (e.g. Asia/Tokyo) — do not reintroduce it.
- * @param {Date} [date]
- * @returns {string}
- */
-export function toDateKey(date = new Date()) {
-  const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+export { toDateKey };
 
 /**
  * Analytics Service
@@ -230,7 +217,7 @@ class AnalyticsService {
       const uniqueVisitors = Math.floor(views * (0.6 + Math.random() * 0.2));
 
       data.push({
-        date: date.toISOString().split('T')[0],
+        date: toDateKey(date),
         views,
         uniqueVisitors,
       });
