@@ -8,20 +8,22 @@ import { comingSoonContent } from '../admin/templates/pages/coming-soon.js';
 
 export async function checkSetupStatus(fastify) {
   fastify.addHook('onRequest', async (request, reply) => {
+    const pathname = request.url.split('?')[0];
+
     // Skip check for static assets and API routes
-    if (request.url.startsWith('/dist/') || 
-        request.url.startsWith('/vendor/') ||
-        request.url.startsWith('/public/') ||
-        request.url.startsWith('/api/') ||
-        request.url.startsWith('/health') ||
-        request.url.startsWith('/admin/auth/') ||
-        request.url === '/favicon.ico' ||
-        request.url === '/favicon.svg') {
+    if (pathname.startsWith('/dist/') ||
+        pathname.startsWith('/vendor/') ||
+        pathname.startsWith('/public/') ||
+        pathname.startsWith('/api/') ||
+        pathname.startsWith('/health') ||
+        pathname.startsWith('/admin/auth/') ||
+        pathname === '/favicon.ico' ||
+        pathname === '/favicon.svg') {
       return;
     }
 
     // Skip check for setup routes themselves
-    if (request.url.startsWith('/setup')) {
+    if (pathname.startsWith('/setup')) {
       return;
     }
 
@@ -34,7 +36,7 @@ export async function checkSetupStatus(fastify) {
 
       if (userCount === 0) {
         // No admin configured - show coming soon page for homepage
-        if (request.url === '/' || request.url === '') {
+        if (pathname === '/' || pathname === '') {
           return reply.html`!${buildComingSoonShell({ content: comingSoonContent() })}`;
         }
         // All other routes redirect to homepage
