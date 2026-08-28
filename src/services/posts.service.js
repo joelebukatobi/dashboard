@@ -169,6 +169,35 @@ class PostsService {
    * @returns {Promise<Object|null>} - Post with relations or null
    */
   async getPostById(id) {
+    return this.getPostWithRelations({ id });
+  }
+
+  /**
+   * Fetch one post with its author, category and tags.
+   *
+   * The single definition of that query. The public API used to carry its own
+   * copy, which is how rewriteContentMediaUrls reached the admin preview but
+   * not the published site. Selects the superset of columns both callers
+   * need — the API maps author avatars and the created/updated timestamps of
+   * every relation, which the admin does not use but which cost nothing to
+   * carry.
+   *
+   * @param {Object} options
+   * @param {string} [options.id] - Look up by id.
+   * @param {string} [options.slug] - Look up by slug. One of id or slug is required.
+   * @param {string} [options.status] - Restrict to posts in this status.
+   * @returns {Promise<Object|null>} Post with relations, or null.
+   */
+  async getPostWithRelations({ id, slug, status } = {}) {
+    if (!id && !slug) {
+      throw new Error('getPostWithRelations requires an id or a slug');
+    }
+
+    const conditions = [id ? eq(posts.id, id) : eq(posts.slug, slug)];
+    if (status) {
+      conditions.push(eq(posts.status, status));
+    }
+
     const result = await db
       .select({
         post: posts,
@@ -177,31 +206,38 @@ class PostsService {
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
+          avatarUrl: users.avatarUrl,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
         },
         category: {
           id: categories.id,
           title: categories.title,
           slug: categories.slug,
+          description: categories.description,
+          createdAt: categories.createdAt,
+          updatedAt: categories.updatedAt,
         },
       })
       .from(posts)
       .leftJoin(users, eq(posts.authorId, users.id))
       .leftJoin(categories, eq(posts.categoryId, categories.id))
-      .where(eq(posts.id, id))
+      .where(and(...conditions))
       .limit(1);
 
     if (!result[0]) return null;
 
-    // Get tags for this post
     const tagsResult = await db
       .select({
         id: tags.id,
         name: tags.name,
         slug: tags.slug,
+        createdAt: tags.createdAt,
+        updatedAt: tags.updatedAt,
       })
       .from(postTags)
       .innerJoin(tags, eq(postTags.tagId, tags.id))
-      .where(eq(postTags.postId, id));
+      .where(eq(postTags.postId, result[0].post.id));
 
     return this.attachFeaturedImageUrls({
       ...result[0].post,
