@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { ensureDatabaseUrl } from '../../env.js';
 
 // This test hits src/db/index.js directly (not through src/app.js), and that
@@ -22,14 +22,35 @@ const todayKey = () => toDateKey();
 // a value that was never a local instant to begin with.
 const dbDateKey = (date) => new Date(date).toISOString().split('T')[0];
 
-describe('recordDailyView', () => {
-  beforeEach(async () => {
-    await db.delete(dailyPageViews).where(eq(dailyPageViews.date, todayKey()));
-  });
+// These tests need today's counter to start from a known value, but locally
+// that row belongs to the developer's own database and holds real views.
+// Snapshot it, work on a clean row, and put it back — so the suite is
+// non-destructive wherever it runs rather than only against a throwaway CI
+// database.
+let savedRow = null;
 
-  afterAll(async () => {
-    await db.delete(dailyPageViews).where(eq(dailyPageViews.date, todayKey()));
-  });
+// Snapshot exactly once, before any test has had a chance to write. Doing it
+// in beforeEach would capture a row a previous test had just created and
+// restore that instead of the developer's real data.
+beforeAll(async () => {
+  const [existing] = await db
+    .select()
+    .from(dailyPageViews)
+    .where(eq(dailyPageViews.date, todayKey()));
+  savedRow = existing ?? null;
+});
+
+async function clearTodaysRow() {
+  await db.delete(dailyPageViews).where(eq(dailyPageViews.date, todayKey()));
+}
+
+afterAll(async () => {
+  await clearTodaysRow();
+  if (savedRow) await db.insert(dailyPageViews).values(savedRow);
+});
+
+describe('recordDailyView', () => {
+  beforeEach(clearTodaysRow);
 
   it('creates a row for today with a count of one', async () => {
     await analyticsService.recordDailyView();
@@ -82,13 +103,7 @@ describe('toDateKey', () => {
 });
 
 describe('getTrafficData', () => {
-  beforeEach(async () => {
-    await db.delete(dailyPageViews).where(eq(dailyPageViews.date, todayKey()));
-  });
-
-  afterAll(async () => {
-    await db.delete(dailyPageViews).where(eq(dailyPageViews.date, todayKey()));
-  });
+  beforeEach(clearTodaysRow);
 
   it('returns exactly one entry for today after recordDailyView() runs', async () => {
     await analyticsService.recordDailyView();
