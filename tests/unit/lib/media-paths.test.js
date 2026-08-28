@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
-  toPublicMediaUrl,
-  mediaItemPublicUrl,
   isLocalDevMediaUrl,
+  mediaItemPublicUrl,
+  mediaItemThumbnailUrl,
   rewriteContentMediaUrls,
+  toPublicMediaUrl,
 } from '../../../src/lib/media-paths.js';
 
 describe('toPublicMediaUrl', () => {
@@ -36,13 +37,16 @@ describe('toPublicMediaUrl', () => {
 });
 
 describe('mediaItemPublicUrl', () => {
-  it('prefers thumbnail over full path', () => {
+  // Changed deliberately: this used to prefer the thumbnail, which meant the
+  // public API served thumbnail-sized hero images. Callers wanting a thumbnail
+  // now ask for one via mediaItemThumbnailUrl.
+  it('prefers the full path over the thumbnail', () => {
     expect(
       mediaItemPublicUrl({
         path: 'public/uploads/posts/full.jpg',
         thumbnailPath: '/public/uploads/posts/thumbs/thumb.jpg',
       }),
-    ).toBe('/public/uploads/posts/thumbs/thumb.jpg');
+    ).toBe('/public/uploads/posts/full.jpg');
   });
 
   it('returns null for missing item', () => {
@@ -112,5 +116,34 @@ describe('rewriteContentMediaUrls', () => {
   it('returns empty string for null/empty input', () => {
     expect(rewriteContentMediaUrls(null)).toBe('');
     expect(rewriteContentMediaUrls('')).toBe('');
+  });
+});
+
+// One helper serving two intents meant the public API returned thumbnail-sized
+// hero images. These two exist so the caller states which it wants.
+describe('mediaItemPublicUrl vs mediaItemThumbnailUrl', () => {
+  const item = {
+    path: '/public/uploads/posts/full.jpg',
+    thumbnailPath: '/public/uploads/posts/thumb.jpg',
+  };
+
+  it('mediaItemPublicUrl prefers the full image', () => {
+    expect(mediaItemPublicUrl(item)).toBe('/public/uploads/posts/full.jpg');
+  });
+
+  it('mediaItemThumbnailUrl prefers the thumbnail', () => {
+    expect(mediaItemThumbnailUrl(item)).toBe('/public/uploads/posts/thumb.jpg');
+  });
+
+  it('each falls back to the other when its preferred path is missing', () => {
+    expect(mediaItemPublicUrl({ thumbnailPath: '/public/uploads/t.jpg' }))
+      .toBe('/public/uploads/t.jpg');
+    expect(mediaItemThumbnailUrl({ path: '/public/uploads/f.jpg' }))
+      .toBe('/public/uploads/f.jpg');
+  });
+
+  it('both return null for a missing item', () => {
+    expect(mediaItemPublicUrl(null)).toBeNull();
+    expect(mediaItemThumbnailUrl(undefined)).toBeNull();
   });
 });
