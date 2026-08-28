@@ -244,7 +244,10 @@ class AnalyticsService {
         uniqueVisitors: day.uniqueVisitors,
         createdAt: new Date(),
         updatedAt: new Date(),
-      }).onConflictDoNothing();
+        // MySQL has no "do nothing" upsert in drizzle; setting a column to
+        // itself is the standard idiom for an insert that must not fail on a
+        // duplicate key.
+      }).onDuplicateKeyUpdate({ set: { date: sql`date` } });
     }
 
     return mockData.length;
