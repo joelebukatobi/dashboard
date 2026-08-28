@@ -186,11 +186,11 @@ class SettingsController {
     } catch (error) {
       request.log.error(error);
       const isClientError = error.message?.includes('encrypt secrets')
-        || error.message?.includes('APP_ENCRYPTION_KEY');
+        || error.message?.includes('JWT_SECRET');
       reply.code(isClientError ? 400 : 500);
       return renderFragment(reply, errorAlert({
         message: isClientError
-          ? 'Could not save SMTP password. Set APP_ENCRYPTION_KEY (or JWT_SECRET) in your hosting environment variables.'
+          ? 'Could not save SMTP password. Set JWT_SECRET in your hosting environment variables.'
           : 'Failed to save settings.',
       }));
     }
