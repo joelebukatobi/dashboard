@@ -203,38 +203,12 @@ class PostsAPIController {
     try {
       const { slug } = request.params;
 
-      // Get post with relations
-      const result = await db
-        .select({
-          post: posts,
-          author: {
-            id: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            email: users.email,
-            avatarUrl: users.avatarUrl,
-            createdAt: users.createdAt,
-            updatedAt: users.updatedAt,
-          },
-          category: {
-            id: categories.id,
-            title: categories.title,
-            slug: categories.slug,
-            description: categories.description,
-            createdAt: categories.createdAt,
-            updatedAt: categories.updatedAt,
-          },
-        })
-        .from(posts)
-        .leftJoin(users, eq(posts.authorId, users.id))
-        .leftJoin(categories, eq(posts.categoryId, categories.id))
-        .where(and(
-          eq(posts.slug, slug),
-          eq(posts.status, 'PUBLISHED')
-        ))
-        .limit(1);
+      const postWithRelations = await postsService.getPostWithRelations({
+        slug,
+        status: 'PUBLISHED',
+      });
 
-      if (result.length === 0) {
+      if (!postWithRelations) {
         reply.code(404);
         return reply.send({
           statusCode: 404,
@@ -243,27 +217,7 @@ class PostsAPIController {
         });
       }
 
-      const { post, author, category } = result[0];
-
-      // Get tags
-      const tagsData = await db
-        .select({
-          id: tags.id,
-          name: tags.name,
-          slug: tags.slug,
-          createdAt: tags.createdAt,
-          updatedAt: tags.updatedAt,
-        })
-        .from(postTags)
-        .innerJoin(tags, eq(postTags.tagId, tags.id))
-        .where(eq(postTags.postId, post.id));
-
-      const postWithRelations = await postsService.attachFeaturedImageUrls({
-        ...post,
-        author,
-        category,
-        tags: tagsData,
-      });
+      const post = postWithRelations;
 
       // Increment view count
       await postsService.incrementViewCount(post.id);
