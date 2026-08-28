@@ -190,7 +190,7 @@ class SettingsController {
       reply.code(isClientError ? 400 : 500);
       return renderFragment(reply, errorAlert({
         message: isClientError
-          ? 'Could not save SMTP password. Set JWT_SECRET in your hosting environment variables.'
+          ? 'Could not save SMTP password. Set APP_ENCRYPTION_KEY (or JWT_SECRET) in your hosting environment variables.'
           : 'Failed to save settings.',
       }));
     }
