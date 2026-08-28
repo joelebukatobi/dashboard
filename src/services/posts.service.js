@@ -4,7 +4,7 @@ import { eq, and, desc, asc, like, sql, gte, lt, inArray } from 'drizzle-orm';
 import { activityService } from './activity.service.js';
 import { analyticsService } from './analytics.service.js';
 import { commentsService } from './comments.service.js';
-import { mediaItemPublicUrl, rewriteContentMediaUrls } from '../lib/media-paths.js';
+import { mediaItemPublicUrl, mediaItemThumbnailUrl, rewriteContentMediaUrls } from '../lib/media-paths.js';
 import { normalizeOptionalId } from '../lib/post-input.js';
 import crypto from 'crypto';
 
@@ -27,7 +27,11 @@ class PostsService {
 
     const ids = [...new Set(list.map((p) => p.featuredImageId).filter(Boolean))];
     if (ids.length === 0) {
-      const empty = list.map((p) => ({ ...p, featuredImageUrl: null }));
+      const empty = list.map((p) => ({
+        ...p,
+        featuredImageUrl: null,
+        featuredImageThumbnailUrl: null,
+      }));
       return Array.isArray(items) ? empty : empty[0];
     }
 
@@ -36,13 +40,22 @@ class PostsService {
       .from(mediaItems)
       .where(inArray(mediaItems.id, ids));
 
+    // Two URLs from the same row: readers get the full image, admin grids
+    // and previews get the thumbnail. One field serving both meant the public
+    // API returned thumbnail-sized hero images.
     const urlById = Object.fromEntries(
       images.map((img) => [img.id, mediaItemPublicUrl(img)]),
+    );
+    const thumbById = Object.fromEntries(
+      images.map((img) => [img.id, mediaItemThumbnailUrl(img)]),
     );
 
     const enriched = list.map((p) => ({
       ...p,
       featuredImageUrl: p.featuredImageId ? urlById[p.featuredImageId] || null : null,
+      featuredImageThumbnailUrl: p.featuredImageId
+        ? thumbById[p.featuredImageId] || null
+        : null,
     }));
 
     return Array.isArray(items) ? enriched : enriched[0];

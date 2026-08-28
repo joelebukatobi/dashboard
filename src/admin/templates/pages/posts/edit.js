@@ -14,7 +14,7 @@ export function postEditContent({ categories, tags, post, user, toast }) {
     published: 'Post published successfully!',
   });
   const placeholderImage = escapeHtml(DEFAULT_PLACEHOLDER_IMAGE_URL);
-  const featuredPreviewSrc = escapeHtml(post.featuredImageUrl || DEFAULT_PLACEHOLDER_IMAGE_URL);
+  const featuredPreviewSrc = escapeHtml(post.featuredImageThumbnailUrl || post.featuredImageUrl || DEFAULT_PLACEHOLDER_IMAGE_URL);
 
   const content = `
     <div class="content content-main">

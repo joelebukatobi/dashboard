@@ -87,7 +87,7 @@ class DashboardController {
         author: post.author ? `${post.author.firstName} ${post.author.lastName}` : 'Unknown',
         date: formatDashboardDate(post.publishedAt || post.createdAt),
         status: post.status,
-        thumbnail: post.featuredImageUrl || 'https://picsum.photos/seed/post' + post.id + '/200/150',
+        thumbnail: post.featuredImageThumbnailUrl || 'https://picsum.photos/seed/post' + post.id + '/200/150',
       }));
 
       // Get top posts by view count with trend data
