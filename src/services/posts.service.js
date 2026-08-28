@@ -116,11 +116,17 @@ class PostsService {
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
+          avatarUrl: users.avatarUrl,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
         },
         category: {
           id: categories.id,
           title: categories.title,
           slug: categories.slug,
+          description: categories.description,
+          createdAt: categories.createdAt,
+          updatedAt: categories.updatedAt,
         },
       })
       .from(posts)
@@ -143,17 +149,44 @@ class PostsService {
 
     const results = await query;
 
-    // Get comment counts for these posts
     const postIds = results.map(r => r.post.id);
     const commentCounts = await commentsService.getCommentCountsForPosts(postIds);
 
-    // Format results
-    const formattedPosts = results.map(r => ({
-      ...r.post,
-      author: r.author,
-      category: r.category,
-      commentsCount: commentCounts[r.post.id] || 0,
-    }));
+    // Tags in one batched query rather than one per post. The public API
+    // renders these; the admin list ignores them, and an unused array costs
+    // nothing next to a second copy of this query living in the controller.
+    const tagsByPost = {};
+    if (postIds.length > 0) {
+      const tagsData = await db
+        .select({
+          postId: postTags.postId,
+          tag: {
+            id: tags.id,
+            name: tags.name,
+            slug: tags.slug,
+            createdAt: tags.createdAt,
+            updatedAt: tags.updatedAt,
+          },
+        })
+        .from(postTags)
+        .innerJoin(tags, eq(postTags.tagId, tags.id))
+        .where(inArray(postTags.postId, postIds));
+
+      for (const { postId, tag } of tagsData) {
+        if (!tagsByPost[postId]) tagsByPost[postId] = [];
+        tagsByPost[postId].push(tag);
+      }
+    }
+
+    const formattedPosts = await this.attachFeaturedImageUrls(
+      results.map(r => ({
+        ...r.post,
+        author: r.author,
+        category: r.category,
+        tags: tagsByPost[r.post.id] || [],
+        commentsCount: commentCounts[r.post.id] || 0,
+      })),
+    );
 
     return {
       posts: formattedPosts,

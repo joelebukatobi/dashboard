@@ -6,8 +6,8 @@ import { postsService } from '../../../services/posts.service.js';
 import { postLikesService } from '../../../services/post-likes.service.js';
 import { getPublicPageLimit } from '../../../lib/site-pagination.js';
 import { rewriteContentMediaUrls } from '../../../lib/media-paths.js';
-import { db, posts, categories, users, tags, postTags } from '../../../db/index.js';
-import { eq, and, desc, asc, sql, count, inArray } from 'drizzle-orm';
+import { db, categories } from '../../../db/index.js';
+import { eq } from 'drizzle-orm';
 
 /**
  * Format post for API response (matches existing website structure)
@@ -75,97 +75,33 @@ class PostsAPIController {
       const limitNum = getPublicPageLimit(siteMap, limit);
       const offset = (pageNum - 1) * limitNum;
 
-      // Build conditions
-      const conditions = [eq(posts.status, 'PUBLISHED')];
-
-      // Filter by category slug if provided
+      // The public API filters by category slug; the service filters by id.
+      let categoryId;
       if (category) {
         const categoryData = await db
           .select({ id: categories.id })
           .from(categories)
           .where(eq(categories.slug, category))
           .limit(1);
-        
+
         if (categoryData.length > 0) {
-          conditions.push(eq(posts.categoryId, categoryData[0].id));
+          categoryId = categoryData[0].id;
         }
       }
 
-      // Get total count
-      const [{ count: total }] = await db
-        .select({ count: count() })
-        .from(posts)
-        .where(and(...conditions));
+      // One query definition, in the service. The controller keeps only what
+      // is genuinely API-specific: resolving a category slug to an id, and
+      // the response envelope.
+      const { posts: rows, total } = await postsService.getAllPosts({
+        status: 'PUBLISHED',
+        categoryId,
+        page: pageNum,
+        limit: limitNum,
+        sortBy: 'publishedAt',
+        sortOrder: 'desc',
+      });
 
-      // Get posts with relations
-      let postsQuery = db
-        .select({
-          post: posts,
-          author: {
-            id: users.id,
-            firstName: users.firstName,
-            lastName: users.lastName,
-            email: users.email,
-            avatarUrl: users.avatarUrl,
-            createdAt: users.createdAt,
-            updatedAt: users.updatedAt,
-          },
-          category: {
-            id: categories.id,
-            title: categories.title,
-            slug: categories.slug,
-            description: categories.description,
-            createdAt: categories.createdAt,
-            updatedAt: categories.updatedAt,
-          },
-        })
-        .from(posts)
-        .leftJoin(users, eq(posts.authorId, users.id))
-        .leftJoin(categories, eq(posts.categoryId, categories.id))
-        .where(and(...conditions))
-        .orderBy(desc(posts.publishedAt))
-        .limit(limitNum)
-        .offset(offset);
-
-      const results = await postsQuery;
-
-      // Get tags for each post (skip if no posts)
-      const postIds = results.map(r => r.post.id);
-      const tagsByPost = {};
-      
-      if (postIds.length > 0) {
-        const tagsData = await db
-          .select({
-            postId: postTags.postId,
-            tag: {
-              id: tags.id,
-              name: tags.name,
-              slug: tags.slug,
-              createdAt: tags.createdAt,
-              updatedAt: tags.updatedAt,
-            },
-          })
-          .from(postTags)
-          .innerJoin(tags, eq(postTags.tagId, tags.id))
-          .where(inArray(postTags.postId, postIds));
-
-        // Group tags by post
-        tagsData.forEach(({ postId, tag }) => {
-          if (!tagsByPost[postId]) tagsByPost[postId] = [];
-          tagsByPost[postId].push(tag);
-        });
-      }
-
-      // Format posts
-      const postsWithImages = await postsService.attachFeaturedImageUrls(
-        results.map(r => ({
-          ...r.post,
-          author: r.author,
-          category: r.category,
-          tags: tagsByPost[r.post.id] || [],
-        })),
-      );
-      const formattedPosts = postsWithImages.map(formatPostForAPI);
+      const formattedPosts = rows.map((row) => formatPostForAPI(row));
 
       // Filter by tag if provided (do this after fetching)
       let filteredPosts = formattedPosts;
