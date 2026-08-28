@@ -175,12 +175,8 @@ class AnalyticsService {
       trend = 'down';
     }
 
-    // Add small random variation (-3% to +3%) for realism
-    const variation = Math.floor(Math.random() * 7) - 3;
-    change = Math.max(0, change + variation);
-
     // Ensure change is reasonable
-    change = Math.min(change, 99);
+    change = Math.max(0, Math.min(change, 99));
 
     return { trend, change };
   }
