@@ -6,8 +6,6 @@ import { postsService } from '../../../services/posts.service.js';
 import { postLikesService } from '../../../services/post-likes.service.js';
 import { getPublicPageLimit } from '../../../lib/site-pagination.js';
 import { rewriteContentMediaUrls } from '../../../lib/media-paths.js';
-import { db, categories } from '../../../db/index.js';
-import { eq } from 'drizzle-orm';
 
 /**
  * Format post for API response (matches existing website structure)
@@ -73,28 +71,13 @@ class PostsAPIController {
       const pageNum = parseInt(page, 10) || 1;
       const siteMap = request.siteSettingsMap ?? {};
       const limitNum = getPublicPageLimit(siteMap, limit);
-      const offset = (pageNum - 1) * limitNum;
 
-      // The public API filters by category slug; the service filters by id.
-      let categoryId;
-      if (category) {
-        const categoryData = await db
-          .select({ id: categories.id })
-          .from(categories)
-          .where(eq(categories.slug, category))
-          .limit(1);
-
-        if (categoryData.length > 0) {
-          categoryId = categoryData[0].id;
-        }
-      }
-
-      // One query definition, in the service. The controller keeps only what
-      // is genuinely API-specific: resolving a category slug to an id, and
-      // the response envelope.
+      // Both filters are applied in the query, so the page and the count agree
+      // and an unknown slug returns nothing rather than everything.
       const { posts: rows, total } = await postsService.getAllPosts({
         status: 'PUBLISHED',
-        categoryId,
+        categorySlug: category,
+        tagSlug: tag,
         page: pageNum,
         limit: limitNum,
         sortBy: 'publishedAt',
@@ -103,16 +86,8 @@ class PostsAPIController {
 
       const formattedPosts = rows.map((row) => formatPostForAPI(row));
 
-      // Filter by tag if provided (do this after fetching)
-      let filteredPosts = formattedPosts;
-      if (tag) {
-        filteredPosts = formattedPosts.filter(post => 
-          post.tags.some(t => t.slug === tag)
-        );
-      }
-
       return reply.send({
-        data: filteredPosts,
+        data: formattedPosts,
         meta: {
           current_page: pageNum,
           per_page: limitNum,
