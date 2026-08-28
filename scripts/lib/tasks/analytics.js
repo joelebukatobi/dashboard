@@ -32,7 +32,7 @@ export async function simulateDay(args = []) {
 
   console.log('Starting analytics simulation...\n');
 
-  const { db, dailyPageViews, analyticsEvents, posts, activities, users } = await import('../../../src/db/index.js');
+  const { db, dailyPageViews, analyticsEvents, posts } = await import('../../../src/db/index.js');
 
   const dateArg = args.find((arg) => arg.startsWith('--date='))?.split('=')[1];
   const daysArg = parseInt(args.find((arg) => arg.startsWith('--days='))?.split('=')[1] || '1', 10);
@@ -86,8 +86,7 @@ export async function simulateDay(args = []) {
       date: dateStr,
       totalViews: baseViews,
       uniqueVisitors,
-    }).onConflictDoUpdate({
-      target: dailyPageViews.date,
+    }).onDuplicateKeyUpdate({
       set: { totalViews: baseViews, uniqueVisitors, updatedAt: new Date() },
     });
 
@@ -126,19 +125,12 @@ export async function simulateDay(args = []) {
     console.log(`  ${baseViews} views, ${uniqueVisitors} unique visitors, ${eventCount} events`);
   }
 
-  const adminUser = await db.select().from(users).where(eq(users.email, 'admin@example.com')).limit(1);
-  if (adminUser.length > 0) {
-    await db.insert(activities).values({
-      userId: adminUser[0].id,
-      type: 'SIMULATION_RUN',
-      description: `Simulated ${dates.length} day(s) of analytics data`,
-      metadata: {
-        dates: dates.map((d) => d.toISOString().split('T')[0]),
-        totalViews,
-        totalEvents,
-      },
-    });
-  }
+  // Deliberately not written to the activities feed. 'SIMULATION_RUN' is not
+  // in activityTypeEnum, and adding it would mean a migration every fork
+  // inherits so that dev tooling can post into a user-facing activity log.
+  console.log(
+    `Simulated ${dates.length} day(s): ${totalViews} views, ${totalEvents} events`,
+  );
 
   console.log('\nSimulation complete');
   console.log(`  Days: ${dates.length}`);
@@ -218,7 +210,10 @@ async function simulateViews(db, day, allPosts, posts, dailyPageViews) {
     uniqueVisitors: Math.floor(totalViews * 0.6),
     createdAt: new Date(),
     updatedAt: new Date(),
-  }).onConflictDoNothing();
+    // MySQL has no "do nothing" upsert in drizzle; setting a column to
+    // itself is the standard idiom for an insert that must not fail on a
+    // duplicate key.
+  }).onDuplicateKeyUpdate({ set: { date: sql`date` } });
 
   return { totalViews, postsUpdated: viewUpdates.length };
 }
