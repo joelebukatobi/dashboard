@@ -72,3 +72,36 @@ describe('getPostWithRelations', () => {
     expect(post).toHaveProperty('featuredImageThumbnailUrl');
   });
 });
+
+// getAllPosts is the single definition of the "page of posts plus relations"
+// query. The public API used to carry its own copy with a wider column set,
+// which is the same split that let a media-URL fix reach one path and not the
+// other. These pin the columns and relations the API depends on.
+describe('getAllPosts', () => {
+  it('returns the author columns the public API maps', async () => {
+    const { posts: rows } = await postsService.getAllPosts({ limit: 1, page: 1 });
+    if (rows.length === 0) return;
+
+    expect(Object.keys(rows[0].author ?? {})).toEqual(
+      expect.arrayContaining([
+        'id', 'firstName', 'lastName', 'email', 'avatarUrl', 'createdAt', 'updatedAt',
+      ]),
+    );
+  });
+
+  it('attaches tags and image urls, which the API needs and the admin ignores', async () => {
+    const { posts: rows } = await postsService.getAllPosts({ limit: 1, page: 1 });
+    if (rows.length === 0) return;
+
+    expect(Array.isArray(rows[0].tags)).toBe(true);
+    expect(rows[0]).toHaveProperty('featuredImageUrl');
+    expect(rows[0]).toHaveProperty('featuredImageThumbnailUrl');
+  });
+
+  it('keeps the shape the admin posts list destructures', async () => {
+    const result = await postsService.getAllPosts({ limit: 1, page: 1 });
+    expect(result).toHaveProperty('posts');
+    expect(result).toHaveProperty('total');
+    expect(result).toHaveProperty('totalPages');
+  });
+});
