@@ -2,6 +2,7 @@
 // Dashboard controller - handles dashboard HTTP requests
 
 import { postsService } from '../../services/posts.service.js';
+import { formatDbDate } from '../../lib/date-key.js';
 import { activityService } from '../../services/activity.service.js';
 import { analyticsService } from '../../services/analytics.service.js';
 import { subscribersService } from '../../services/subscribers.service.js';
@@ -333,8 +334,8 @@ function chartFragment({ range, data }) {
     aggregatedData = data.map(day => ({
       views: day.views,
       visitors: day.uniqueVisitors,
-      label: new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' }),
-      dateRange: new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      label: formatDbDate(day.date, { weekday: 'short' }),
+      dateRange: formatDbDate(day.date, { month: 'short', day: 'numeric' })
     }));
   } else if (data.length <= 30) {
     // 30 days: Aggregate into 4 weeks
@@ -351,9 +352,7 @@ function chartFragment({ range, data }) {
       const weekViews = weekData.reduce((sum, day) => sum + day.views, 0);
       const weekVisitors = weekData.reduce((sum, day) => sum + day.uniqueVisitors, 0);
       
-      const startDate = new Date(weekData[0].date);
-      const endDate = new Date(weekData[weekData.length - 1].date);
-      const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      const dateRange = `${formatDbDate(weekData[0].date, { month: 'short', day: 'numeric' })} - ${formatDbDate(weekData[weekData.length - 1].date, { month: 'short', day: 'numeric' })}`;
       
       aggregatedData.push({
         views: weekViews,
@@ -367,15 +366,14 @@ function chartFragment({ range, data }) {
     const months = {};
     
     data.forEach(day => {
-      const date = new Date(day.date);
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const monthKey = formatDbDate(day.date, { month: 'short', year: 'numeric' });
       
       if (!months[monthKey]) {
         months[monthKey] = {
           views: 0,
           visitors: 0,
           days: [],
-          monthName: date.toLocaleDateString('en-US', { month: 'short' })
+          monthName: formatDbDate(day.date, { month: 'short' })
         };
       }
       
@@ -387,9 +385,7 @@ function chartFragment({ range, data }) {
     // Convert to array and create date ranges
     Object.keys(months).forEach(monthKey => {
       const month = months[monthKey];
-      const startDate = new Date(month.days[0].date);
-      const endDate = new Date(month.days[month.days.length - 1].date);
-      const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+      const dateRange = `${formatDbDate(month.days[0].date, { month: 'short', day: 'numeric' })} - ${formatDbDate(month.days[month.days.length - 1].date, { month: 'short', day: 'numeric' })}`;
       
       aggregatedData.push({
         views: month.views,
@@ -403,9 +399,11 @@ function chartFragment({ range, data }) {
     const quarterGroups = {};
     
     data.forEach(day => {
+      // UTC getters: a DATE column is midnight UTC, so local getters would
+      // bucket a boundary day into the previous month or quarter.
       const date = new Date(day.date);
-      const year = date.getFullYear();
-      const month = date.getMonth();
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth();
       const quarter = Math.floor(month / 3) + 1; // 1, 2, 3, 4
       const quarterKey = `Q${quarter} ${year}`;
       
@@ -437,9 +435,7 @@ function chartFragment({ range, data }) {
     sortedQuarters.forEach(quarterKey => {
       const q = quarterGroups[quarterKey];
       if (q.days.length > 0) {
-        const startDate = new Date(q.days[0].date);
-        const endDate = new Date(q.days[q.days.length - 1].date);
-        const dateRange = `${startDate.toLocaleDateString('en-US', { month: 'short' })} - ${endDate.toLocaleDateString('en-US', { month: 'short' })}`;
+        const dateRange = `${formatDbDate(q.days[0].date, { month: 'short' })} - ${formatDbDate(q.days[q.days.length - 1].date, { month: 'short' })}`;
         
         aggregatedData.push({
           views: q.views,
