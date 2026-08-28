@@ -124,7 +124,7 @@ simulation commands (`npm run simulate:day`, `npm run simulate:days`) still
 populate a fresh install with plausible data.
 
 **A secret is now required in production.** The app refuses to start when
-neither `APP_ENCRYPTION_KEY` nor `JWT_SECRET` is set and `NODE_ENV` is
+`JWT_SECRET` is not set and `NODE_ENV` is
 `production`. Previously it fell back to a value published in this
 repository, which meant a fork that forgot the variable shipped a forgeable
 session secret. Set one in your hosting environment before deploying.

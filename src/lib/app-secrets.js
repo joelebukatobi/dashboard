@@ -3,6 +3,10 @@
 // Both must agree: a token signed with one value cannot be verified with
 // another, and settings encrypted under one key cannot be decrypted under a
 // different one.
+//
+// One secret, one name. An earlier APP_ENCRYPTION_KEY alias implied that
+// signing and encryption used separate keys when they never did — which gave
+// neither the clarity of a single name nor the safety of real key separation.
 
 export const FALLBACK_APP_SECRET = 'dev-secret-change-in-production';
 
@@ -11,7 +15,7 @@ export const FALLBACK_APP_SECRET = 'dev-secret-change-in-production';
  * @throws {Error} In production when no secret is configured.
  */
 export function getAppSecret() {
-  const configured = process.env.APP_ENCRYPTION_KEY || process.env.JWT_SECRET;
+  const configured = process.env.JWT_SECRET;
 
   if (!configured) {
     // Dashboard is a base template. A fork that forgets this variable would
@@ -19,8 +23,8 @@ export function getAppSecret() {
     // production refuses to start rather than doing that silently.
     if (process.env.NODE_ENV === 'production') {
       throw new Error(
-        'APP_ENCRYPTION_KEY or JWT_SECRET is required in production. ' +
-          'Set one in your hosting environment before deploying.',
+        'JWT_SECRET is required in production. ' +
+          'Set it in your hosting environment before deploying.',
       );
     }
     return FALLBACK_APP_SECRET;
