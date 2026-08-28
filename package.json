@@ -84,7 +84,7 @@
     "fastify",
     "htmx",
     "drizzle",
-    "postgresql"
+    "mysql"
   ],
   "author": "",
   "license": "MIT",
