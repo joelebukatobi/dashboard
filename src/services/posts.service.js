@@ -1,6 +1,6 @@
 // src/services/posts.service.js
 import { db, posts, categories, tags, postTags, users, mediaItems, comments } from '../db/index.js';
-import { eq, and, desc, asc, like, sql, gte, lt, inArray } from 'drizzle-orm';
+import { eq, and, desc, asc, like, sql, gte, lt, inArray, exists } from 'drizzle-orm';
 import { activityService } from './activity.service.js';
 import { analyticsService } from './analytics.service.js';
 import { commentsService } from './comments.service.js';
@@ -77,6 +77,8 @@ class PostsService {
     const {
       status,
       categoryId,
+      categorySlug,
+      tagSlug,
       search,
       page = 1,
       limit = 10,
@@ -93,6 +95,34 @@ class PostsService {
     
     if (categoryId) {
       whereConditions.push(eq(posts.categoryId, categoryId));
+    }
+
+    // Slug filters are resolved here rather than by the caller, so an unknown
+    // slug matches nothing instead of silently dropping the filter and
+    // returning every post.
+    if (categorySlug) {
+      whereConditions.push(
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(categories)
+            .where(and(eq(categories.id, posts.categoryId), eq(categories.slug, categorySlug))),
+        ),
+      );
+    }
+
+    // EXISTS rather than a join: a post with several tags would otherwise
+    // appear once per matching row, inflating both the page and the count.
+    if (tagSlug) {
+      whereConditions.push(
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(postTags)
+            .innerJoin(tags, eq(postTags.tagId, tags.id))
+            .where(and(eq(postTags.postId, posts.id), eq(tags.slug, tagSlug))),
+        ),
+      );
     }
     
     if (search) {
@@ -139,9 +169,9 @@ class PostsService {
 
     // Sorting
     const sortColumn = posts[sortBy] || posts.createdAt;
-    query = sortOrder === 'asc' 
-      ? query.orderBy(asc(sortColumn))
-      : query.orderBy(desc(sortColumn));
+    query = sortOrder === 'asc'
+      ? query.orderBy(asc(sortColumn), asc(posts.id))
+      : query.orderBy(desc(sortColumn), desc(posts.id));
 
     // Pagination
     const offset = (page - 1) * limit;

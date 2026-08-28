@@ -105,3 +105,65 @@ describe('getAllPosts', () => {
     expect(result).toHaveProperty('totalPages');
   });
 });
+
+// The public API used to filter by tag in JavaScript after the page was
+// fetched, so a tag filter could only remove rows from the rows already in
+// hand, and meta.total counted unfiltered rows. An unknown category slug was
+// worse: the filter was silently dropped and every post came back.
+describe('getAllPosts filtering', () => {
+  it('returns nothing for a category slug that does not exist', async () => {
+    const { posts: rows, total } = await postsService.getAllPosts({
+      status: 'PUBLISHED',
+      categorySlug: 'definitely-not-a-real-category',
+      limit: 10,
+      page: 1,
+    });
+    expect(rows).toHaveLength(0);
+    expect(total).toBe(0);
+  });
+
+  it('returns nothing for a tag slug that does not exist', async () => {
+    const { posts: rows, total } = await postsService.getAllPosts({
+      status: 'PUBLISHED',
+      tagSlug: 'definitely-not-a-real-tag',
+      limit: 10,
+      page: 1,
+    });
+    expect(rows).toHaveLength(0);
+    expect(total).toBe(0);
+  });
+
+  it('counts the filtered rows, so pagination reflects the filter', async () => {
+    const { total: unfiltered } = await postsService.getAllPosts({
+      status: 'PUBLISHED',
+      limit: 1,
+      page: 1,
+    });
+    const { total: filtered } = await postsService.getAllPosts({
+      status: 'PUBLISHED',
+      categorySlug: 'definitely-not-a-real-category',
+      limit: 1,
+      page: 1,
+    });
+
+    expect(filtered).toBe(0);
+    expect(filtered).not.toBe(unfiltered);
+  });
+
+  it('never returns a post twice when it carries several tags', async () => {
+    const { db } = await import('../../src/db/index.js');
+    const { tags } = await import('../../src/db/schema.js');
+    const [tag] = await db.select().from(tags).limit(1);
+    if (!tag) return;
+
+    // EXISTS rather than a join: joining would emit one row per matching tag.
+    const { posts: rows } = await postsService.getAllPosts({
+      status: 'PUBLISHED',
+      tagSlug: tag.slug,
+      limit: 50,
+      page: 1,
+    });
+    const ids = rows.map((r) => r.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+});
