@@ -36,6 +36,7 @@
   --color-muted: #8a8a8a;
 
   /* Custom font families */
+  --font-sans: 'Schibsted Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-forum: 'Forum', serif;
   --font-lato: 'Lato', system-ui, sans-serif;
   --font-heading: 'Forum', serif;
