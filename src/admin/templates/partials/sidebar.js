@@ -61,8 +61,15 @@ export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIco
     return activeRoute.startsWith(route) ? 'sidebar__item--active' : '';
   };
 
+  // A configured icon is rendered alongside a hidden fallback rather than
+  // instead of it. The settings row and the uploaded file can drift apart —
+  // a database restored without its uploads, or a fork inheriting settings —
+  // and without this the sidebar shows a broken image rather than falling
+  // back to the icon sitting right here.
   const logoIcon = siteIcon
-    ? `<img src="${escapeHtml(siteIcon)}" alt="" class="sidebar__logo-icon-img" />`
+    ? `<img src="${escapeHtml(siteIcon)}" alt="" class="sidebar__logo-icon-img"
+           onerror="this.hidden = true; this.nextElementSibling.hidden = false;" />
+       <span class="sidebar__logo-icon-fallback" hidden><i data-lucide="square-library"></i></span>`
     : `<i data-lucide="square-library"></i>`;
 
   return `
