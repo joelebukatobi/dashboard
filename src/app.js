@@ -15,6 +15,7 @@ import { checkSetupStatus } from './middleware/setup-check.js';
 import { ensureDatabaseUrl } from '../env.js';
 import { getAppSecret } from './lib/app-secrets.js';
 import { buildApiManifest } from './admin/routes/manifest.js';
+import { buildHealthReport } from './lib/health-check.js';
 import { projectApiPrefixes } from './admin/routes/project/prefixes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -161,13 +162,13 @@ export default async function app(fastify, opts) {
   fastify.get('/favicon.ico', (request, reply) => sendFavicon(request, reply, 'favicon.ico'));
 
   // Health check endpoint
-  fastify.get('/health', async () => {
-    return {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV || 'development',
-    };
+  fastify.get('/health', async (_request, reply) => {
+    const report = await buildHealthReport();
+    // 503 so load balancers, uptime monitors and the deploy's own health
+    // step treat a degraded app as degraded. Returning 200 regardless is
+    // what made this endpoint decorative.
+    reply.code(report.status === 'healthy' ? 200 : 503);
+    return report;
   });
 
    // Register admin routes (fastify-html layouts scoped per plugin)
