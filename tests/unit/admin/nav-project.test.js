@@ -59,3 +59,35 @@ describe('sidebar', () => {
     expect(html).not.toContain('sidebar__group--project');
   });
 });
+
+// The settings row holding siteIcon and the uploaded file can drift apart —
+// a database restored without its uploads, or a fork inheriting settings.
+// Without a fallback the sidebar renders a broken image instead of the icon
+// it already has for the no-icon case.
+describe('sidebar logo fallback', () => {
+  it('renders a hidden fallback alongside a configured icon', () => {
+    const html = sidebar({
+      activeRoute: '/admin',
+      user: { role: 'ADMIN' },
+      siteName: 'Test',
+      siteIcon: '/public/uploads/site/icon.svg',
+    });
+
+    expect(html).toContain('<img');
+    expect(html).toContain('sidebar__logo-icon-fallback');
+    expect(html, 'a missing file must swap to the fallback rather than showing a broken image')
+      .toMatch(/onerror="[^"]*nextElementSibling\.hidden = false/);
+  });
+
+  it('renders only the lucide icon when no site icon is configured', () => {
+    const html = sidebar({ activeRoute: '/admin', user: { role: 'ADMIN' }, siteName: 'Test', siteIcon: '' });
+
+    expect(html).not.toContain('sidebar__logo-icon-img');
+    expect(html).toContain('data-lucide="square-library"');
+  });
+
+  it('escapes a hostile site icon value', () => {
+    const html = sidebar({ siteIcon: '"><script>alert(1)</script>' });
+    expect(html).not.toContain('<script>alert(1)</script>');
+  });
+});
