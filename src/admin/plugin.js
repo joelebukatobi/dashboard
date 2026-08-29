@@ -17,7 +17,11 @@ export default async function adminPlugin(fastify) {
     const siteName = String(siteMap.siteName || 'BlogCMS');
     const siteIcon = String(siteMap.siteIcon || '');
     const siteUrl = String(siteMap.siteUrl || '/').trim() || '/';
-    const favicon = siteIcon || '/favicon.svg';
+    // Always point at the route, never at the stored path. /favicon.svg
+    // resolves the configured icon and falls back to the bundled one when
+    // that file is missing (src/app.js sendFavicon) — embedding the raw
+    // siteIcon here bypassed that, so a stale setting meant no favicon at all.
+    const favicon = '/favicon.svg';
     const resolved = resolvePageMeta(siteMap, {
       title: pageMeta.title,
       description: pageMeta.description,

@@ -12,7 +12,9 @@ export default async function adminAuthPlugin(fastify) {
     const pageMeta = reply.request.templateMeta ?? {};
     const siteMap = reply.request.siteSettingsMap ?? {};
     const siteName = String(siteMap.siteName || 'BlogCMS');
-    const favicon = String(siteMap.siteIcon || '/favicon.svg');
+    // See src/admin/plugin.js: the route resolves the configured icon and
+    // falls back when the file is missing.
+    const favicon = '/favicon.svg';
     const resolved = resolvePageMeta(siteMap, {
       title: pageMeta.title,
       description: pageMeta.description,
