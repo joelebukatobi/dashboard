@@ -150,8 +150,14 @@ export function settingsContent({ user, settings, toast }) {
   const userEnrolled = user?.totpEnabled === true;
   const userPending = user?.totpPending === true;
   const safeUserId = escapeHtml(user?.id || '');
+  // Rendered alongside a hidden fallback rather than instead of it: the
+  // settings row and the uploaded file can drift apart, and a broken preview
+  // here is worse than elsewhere because this is the screen you would visit
+  // to fix it.
   const siteIconPreview = siteIcon
-    ? `<img src="${escapeHtml(siteIcon)}" alt="Site icon" class="site-icon-field__preview-img" />`
+    ? `<img src="${escapeHtml(siteIcon)}" alt="Site icon" class="site-icon-field__preview-img"
+           onerror="this.hidden = true; this.nextElementSibling.hidden = false;" />
+       <span hidden><i data-lucide="square-library" class="site-icon-field__preview-icon"></i></span>`
     : `<i data-lucide="square-library" class="site-icon-field__preview-icon"></i>`;
 
   const socialLinks = normalizeSocialLinks(getSetting('SOCIAL', 'socialLinks', []));
