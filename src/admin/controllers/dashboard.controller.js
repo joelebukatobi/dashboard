@@ -495,6 +495,14 @@ function chartFragment({ range, data }) {
           }
           
           const isDark = document.documentElement.classList.contains('dark');
+
+          // Read the theme's own font stack rather than restating one here.
+          // This previously hardcoded 'Inter, ui-sans-serif' — Inter is not
+          // loaded by this app, and ui-sans-serif has no plain sans-serif
+          // after it, so labels fell through to the browser default serif.
+          const themeFont = getComputedStyle(document.documentElement)
+            .getPropertyValue('--font-sans').trim()
+            || 'ui-sans-serif, system-ui, sans-serif';
           
           try {
             const chart = new ApexCharts(chartElement, {
@@ -506,7 +514,7 @@ function chartFragment({ range, data }) {
             },
                 toolbar: { show: false },
                 zoom: { enabled: false },
-                fontFamily: 'Inter, ui-sans-serif',
+                fontFamily: themeFont,
               },
               series: [
                 {
