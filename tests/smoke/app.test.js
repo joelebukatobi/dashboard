@@ -29,6 +29,11 @@ describe('app smoke', () => {
     const body = response.json();
     expect(body.status).toBe('healthy');
     expect(body.timestamp).toBeDefined();
+
+    // The endpoint used to return healthy unconditionally, which made it
+    // useless to every uptime monitor above it. It must actually report on
+    // its dependencies, and answer 503 when one of them is down.
+    expect(body.checks).toEqual({ database: 'ok', dependencies: 'ok' });
   });
 
   it('GET /admin/auth/login returns login page HTML', async () => {

@@ -39,13 +39,15 @@ export async function closePool() {
 }
 
 // Test connection helper
-export async function testConnection() {
+export async function testConnection({ quiet = false } = {}) {
   try {
     const [rows] = await pool.query('SELECT NOW() AS now');
-    console.log('✅ Database connected:', rows[0]?.now);
+    if (!quiet) console.log('✅ Database connected:', rows[0]?.now);
     return true;
   } catch (err) {
-    console.error('❌ Database connection failed:', err.message);
+    // Quiet mode exists for the health endpoint, which may be polled every
+    // few seconds — logging each failure would bury everything else.
+    if (!quiet) console.error('❌ Database connection failed:', err.message);
     return false;
   }
 }
