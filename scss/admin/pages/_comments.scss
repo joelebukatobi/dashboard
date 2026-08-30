@@ -72,9 +72,7 @@
   }
 
   &__actions {
-    @apply flex items-center gap-[0.4rem] mt-[0.4rem];
-    // Cancel the ghost buttons' padding so Reply lines up with the body text
-    @apply -ml-[1.2rem];
+    @apply flex items-center gap-[0.8rem] mt-[0.8rem];
   }
 
   &__body {
