@@ -216,19 +216,19 @@ function renderComment(comment, currentUser, depth = 0) {
 
           <div class="comment__actions">
             <button
-              class="btn btn--outline btn--xs"
+              class="btn btn--outline btn--sm"
               onclick="toggleReplyForm('${comment.id}')"
             >
               Reply
             </button>
             <button
-              class="btn btn--outline btn--xs"
+              class="btn btn--outline btn--sm"
               onclick="toggleEditForm('${comment.id}')"
             >
               Edit
             </button>
             <button
-              class="btn btn--danger btn--xs"
+              class="btn btn--danger btn--sm"
               data-comment-id="${comment.id}"
               data-author-name="${escapeHtml(comment.authorName || 'Anonymous')}"
               onclick="openDeleteModal(this)"
