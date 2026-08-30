@@ -29,7 +29,6 @@
 
   &__header {
     @apply flex flex-wrap items-center justify-between gap-[0.8rem];
-    @apply mb-[0.4rem];
   }
 
   &__meta {
@@ -74,6 +73,8 @@
 
   &__actions {
     @apply flex items-center gap-[0.4rem];
+    // Keep the 2.4rem buttons from inflating the header row past the meta text
+    @apply -my-[0.4rem];
     @apply opacity-0 transition-opacity duration-200;
 
     .comment:hover & {
