@@ -228,7 +228,7 @@ function renderComment(comment, currentUser, depth = 0) {
               Edit
             </button>
             <button
-              class="btn btn--ghost btn--danger btn--xs"
+              class="btn btn--danger btn--xs"
               data-comment-id="${comment.id}"
               data-author-name="${escapeHtml(comment.authorName || 'Anonymous')}"
               onclick="openDeleteModal(this)"
