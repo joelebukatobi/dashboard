@@ -15,13 +15,18 @@
   }
 
   &__header {
-    // Horizontal margin rather than padding, so the rule below the header
-    // stops short of the card edges and the content lines up with the body
-    @apply flex items-center justify-between mx-[2.4rem] py-[1.6rem];
-    @apply border-b border-grey-100;
+    // Full-width box so variants can paint edge to edge, with the dividing
+    // rule drawn inset instead of as a border, and content aligned to the
+    // 2.4rem body padding
+    @apply relative flex items-center justify-between px-[2.4rem] py-[1.6rem];
 
-    .dark & {
-      @apply border-grey-700;
+    &::after {
+      @apply absolute bottom-0 left-[2.4rem] right-[2.4rem] h-px content-[''];
+      @apply bg-grey-100;
+
+      .dark & {
+        @apply bg-grey-700;
+      }
     }
 
     &-group {
