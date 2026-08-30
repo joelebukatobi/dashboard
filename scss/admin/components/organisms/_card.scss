@@ -15,18 +15,12 @@
   }
 
   &__header {
-    // Full-width box so variants can paint edge to edge, with the dividing
-    // rule drawn inset instead of as a border, and content aligned to the
-    // 2.4rem body padding
-    @apply relative flex items-center justify-between px-[2.4rem] py-[1.6rem];
+    // Horizontal padding matches the body, so header content lines up with it
+    @apply flex items-center justify-between px-[2.4rem] py-[1.6rem];
+    @apply border-b border-grey-100;
 
-    &::after {
-      @apply absolute bottom-0 left-[2.4rem] right-[2.4rem] h-px content-[''];
-      @apply bg-grey-100;
-
-      .dark & {
-        @apply bg-grey-700;
-      }
+    .dark & {
+      @apply border-grey-700;
     }
 
     &-group {
