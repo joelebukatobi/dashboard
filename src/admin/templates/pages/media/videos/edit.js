@@ -144,7 +144,6 @@ export function videosEditContent({ user, video, posts, albums = [], toast }) {
               <div class="card__footer">
                 <div class="form__field-group">
                   <button type="submit" form="editForm" class="btn btn--primary">
-                    <i data-lucide="check"></i>
                     Save
                   </button>
                   <a href="/admin/media/videos" class="btn btn--outline btn--cancel">Cancel</a>
@@ -153,7 +152,6 @@ export function videosEditContent({ user, video, posts, albums = [], toast }) {
                     class="btn btn--danger btn--outline"
                     onclick="openDeleteModal(event)"
                   >
-                    <i data-lucide="trash-2"></i>
                     Delete Video
                   </button>
                 </div>

@@ -54,7 +54,6 @@ export function listToolbar({
   const addButtonHtml = hasAddButton
     ? `
     <a href="${addButtonUrl}" class="btn btn--primary list-toolbar__add-btn">
-      <i data-lucide="plus"></i>
       <span>${addButtonText}</span>
     </a>
   `
@@ -101,7 +100,6 @@ export function listToolbarMinimal({
   const addButtonHtml = hasAddButton
     ? `
     <a href="${addButtonUrl}" class="btn btn--primary list-toolbar__add-btn">
-      <i data-lucide="plus"></i>
       <span>${addButtonText}</span>
     </a>
   `

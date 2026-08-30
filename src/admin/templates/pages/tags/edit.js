@@ -83,7 +83,6 @@ export function tagEditContent({ tag, user, errors = {} }) {
         <div class="card__footer">
           <div class="form__field-group">
             <button type="button" class="btn btn--primary" onclick="submitForm()">
-              <i data-lucide="check"></i>
               Save
             </button>
             <a href="/admin/tags" class="btn btn--outline btn--cancel">Cancel</a>

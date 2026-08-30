@@ -34,7 +34,6 @@ export function imagesListContent({ images, pagination, filters, toast }) {
           addButtonText: 'Upload Image',
           extraButtons: `
             <a href="/admin/media/images/batch" class="btn btn--primary list-toolbar__add-btn">
-              <i data-lucide="images"></i>
               <span>Batch Upload</span>
             </a>
           `,

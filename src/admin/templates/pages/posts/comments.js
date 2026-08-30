@@ -213,14 +213,12 @@ function renderComment(comment, currentUser, depth = 0) {
                 class="btn btn--ghost btn--xs" 
                 onclick="toggleReplyForm('${comment.id}')"
               >
-                <i data-lucide="reply" stroke-width="1"></i>
                 Reply
               </button>
               <button 
                 class="btn btn--ghost btn--xs"
                 onclick="toggleEditForm('${comment.id}')"
               >
-                <i data-lucide="edit" stroke-width="1"></i>
                 Edit
               </button>
               <button 
@@ -229,7 +227,6 @@ function renderComment(comment, currentUser, depth = 0) {
                 data-author-name="${escapeHtml(comment.authorName || 'Anonymous')}"
                 onclick="openDeleteModal(this)"
               >
-                <i data-lucide="trash-2" stroke-width="1"></i>
                 Delete
               </button>
             </div>
@@ -255,7 +252,6 @@ function renderComment(comment, currentUser, depth = 0) {
               >${escapeHtml(comment.content)}</textarea>
               <div class="form__actions form__actions--right">
                 <button type="submit" class="btn btn--primary btn--sm">
-                  <i data-lucide="save" stroke-width="1"></i>
                   Save Changes
                 </button>
                 <button type="button" class="btn btn--outline btn--sm" onclick="toggleEditForm('${comment.id}')">
@@ -283,7 +279,6 @@ function renderComment(comment, currentUser, depth = 0) {
               ></textarea>
               <div class="form__actions form__actions--right">
                 <button type="submit" class="btn btn--primary btn--sm">
-                  <i data-lucide="send" stroke-width="1"></i>
                   Post Reply
                 </button>
                 <button type="button" class="btn btn--outline btn--sm" onclick="toggleReplyForm('${comment.id}')">

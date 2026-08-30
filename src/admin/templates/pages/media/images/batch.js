@@ -85,7 +85,6 @@ export function imagesBatchContent({ user, albums }) {
           <!-- Submit Button -->
           <div class="batch-actions">
             <button type="submit" class="btn btn--primary" id="batchSubmitBtn" disabled>
-              <i data-lucide="upload"></i>
               Upload Images
             </button>
             <a href="/admin/media/images" class="btn btn--outline btn--cancel">Cancel</a>
