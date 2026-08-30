@@ -239,7 +239,7 @@ export function settingsContent({ user, settings, toast }) {
                     </label>
                     <div class="site-icon-field__info">
                       <span class="site-icon-field__title">Site Icon</span>
-                      <p class="form-feedback form-feedback--hint">Used in the sidebar and as the default favicon. Falls back to the library icon when empty.</p>
+                      <p class="form-feedback form-feedback--hint">Used in the sidebar and as the default favicon. Click the icon on the left to change it, or leave it empty to fall back to the library icon.</p>
                     </div>
                   </div>
                 </div>
