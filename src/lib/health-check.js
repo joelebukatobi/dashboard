@@ -7,6 +7,7 @@
 // believes the lie.
 
 import { createRequire } from 'module';
+import { testConnection } from '../db/index.js';
 import { getAssetVersion } from './asset-version.js';
 
 const require = createRequire(import.meta.url);
@@ -32,14 +33,6 @@ function checkDependencies() {
  */
 export async function buildHealthReport() {
   const dependenciesOk = checkDependencies();
-
-  // Imported lazily on purpose. src/db/index.js builds its pool from
-  // process.env.DATABASE_URL at module evaluation, and src/app.js populates
-  // that in its body — so a static import here would pull the database module
-  // into app.js's import graph ahead of the env being loaded, and the pool
-  // would be built with no connection string.
-  const { testConnection } = await import('../db/index.js');
-
   const databaseOk = process.env.DATABASE_URL
     ? await testConnection({ quiet: true })
     : false;
