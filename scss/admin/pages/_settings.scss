@@ -26,7 +26,8 @@
   @apply mb-0;
 
   &__row {
-    @apply flex items-stretch gap-[1.6rem];
+    // Same gap as the icon box and title in the accordion headers
+    @apply flex items-stretch gap-[1.2rem];
   }
 
   &__trigger {
@@ -73,10 +74,6 @@
 
     .form-feedback {
       @apply m-0 leading-snug;
-    }
-
-    .form-feedback--hint {
-      @apply line-clamp-2;
     }
   }
 
