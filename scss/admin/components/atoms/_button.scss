@@ -120,9 +120,9 @@
 
   // Sizes
   &--sm {
-    @apply px-[1.2rem] text-body-xs leading-none h-[1.6rem];
-    // Optical centring: the glyphs sit high in the 1em line box, so nudge
-    // the label down to even out the space above and below it
+    @apply px-[1.2rem] text-body-xs h-[1.6rem];
+    // Optical centring: nudges the label down so the space above and below
+    // it reads as even
     @apply pt-[0.2rem];
     // Inherits rounded-sm from base
   }
