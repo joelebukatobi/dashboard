@@ -4,12 +4,13 @@
 // ============================================================================
 
 .comments-list {
-  @apply flex flex-col gap-[1.6rem];
+  // No gap: the separator below owns the space on both of its sides
+  @apply flex flex-col;
 }
 
 // Separator between sibling comments, top level and replies alike
 .comment + .comment {
-  @apply pt-[1.6rem] border-t border-grey-100/70;
+  @apply mt-[2.4rem] pt-[2.4rem] border-t border-grey-100/70;
 
   .dark & {
     @apply border-grey-700/60;
@@ -131,7 +132,7 @@
   }
 
   &__replies {
-    @apply flex flex-col gap-[1.2rem];
+    @apply flex flex-col;
     @apply mt-[0.8rem] ml-[1.6rem];
 
     // Always rendered, so drop it out of the flex flow when there are no
