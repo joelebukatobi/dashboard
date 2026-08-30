@@ -232,12 +232,14 @@ function renderComment(comment, currentUser, depth = 0) {
               <i data-lucide="pencil"></i>
             </button>
             <button
-              class="btn btn--danger btn--sm"
+              class="btn btn--sm comment__action-icon comment__action-icon--danger"
               data-comment-id="${comment.id}"
               data-author-name="${escapeHtml(comment.authorName || 'Anonymous')}"
               onclick="openDeleteModal(this)"
+              aria-label="Delete"
+              title="Delete"
             >
-              Delete
+              <i data-lucide="trash-2"></i>
             </button>
           </div>
           
