@@ -7,6 +7,15 @@
   @apply flex flex-col gap-[1.6rem];
 }
 
+// Separator between sibling comments, top level and replies alike
+.comment + .comment {
+  @apply pt-[1.6rem] border-t border-grey-100;
+
+  .dark & {
+    @apply border-grey-700;
+  }
+}
+
 .comment {
   @apply flex flex-col gap-[1.2rem];
 
