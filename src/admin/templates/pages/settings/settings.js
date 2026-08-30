@@ -157,8 +157,8 @@ export function settingsContent({ user, settings, toast }) {
   const siteIconPreview = siteIcon
     ? `<img src="${escapeHtml(siteIcon)}" alt="Site icon" class="site-icon-field__preview-img"
            onerror="this.hidden = true; this.nextElementSibling.hidden = false;" />
-       <span hidden><i data-lucide="square-library" class="site-icon-field__preview-icon"></i></span>`
-    : `<i data-lucide="square-library" class="site-icon-field__preview-icon"></i>`;
+       <span hidden><i data-lucide="square-library" stroke-width="1" class="site-icon-field__preview-icon"></i></span>`
+    : `<i data-lucide="square-library" stroke-width="1" class="site-icon-field__preview-icon"></i>`;
 
   const socialLinks = normalizeSocialLinks(getSetting('SOCIAL', 'socialLinks', []));
   const socialLinksHtml = socialLinks.map((link) => renderSocialLinkRow(link.label, link.url)).join('');
@@ -233,7 +233,7 @@ export function settingsContent({ user, settings, toast }) {
                       <div class="site-icon-field__preview" id="siteIconPreview">
                         ${siteIconPreview}
                         <span class="site-icon-field__overlay">
-                          <i data-lucide="upload"></i>
+                          <i data-lucide="upload" stroke-width="1"></i>
                         </span>
                       </div>
                     </label>
