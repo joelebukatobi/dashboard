@@ -64,7 +64,6 @@ export function newSubscriberContent({ user, error }) {
           <div class="card__footer">
             <div class="form__field-group">
               <button type="submit" form="newSubscriberForm" class="btn btn--primary">
-                <i data-lucide="plus"></i>
                 Add Subscriber
               </button>
               <a href="/admin/subscribers" class="btn btn--outline btn--cancel">Cancel</a>

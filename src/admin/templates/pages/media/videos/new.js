@@ -113,7 +113,6 @@ export function videosNewContent({ user, posts }) {
               <div class="card__footer">
                 <div class="form__field-group">
                   <button type="submit" class="btn btn--primary">
-                    <i data-lucide="upload"></i>
                     Upload Video
                   </button>
                   <a href="/admin/media/videos" class="btn btn--outline btn--cancel">Cancel</a>

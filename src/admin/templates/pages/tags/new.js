@@ -81,7 +81,6 @@ export function tagNewContent({ user, errors = {} }) {
         <div class="card__footer">
           <div class="form__field-group">
             <button type="button" class="btn btn--primary" onclick="submitForm()">
-              <i data-lucide="plus"></i>
               Create Tag
             </button>
             <a href="/admin/tags" class="btn btn--outline btn--cancel">Cancel</a>
