@@ -72,19 +72,8 @@
   }
 
   &__actions {
-    @apply flex items-center gap-[0.4rem];
-    // Keep the 2.4rem buttons from inflating the header row past the meta text
-    @apply -my-[0.4rem];
-    @apply opacity-0 transition-opacity duration-200;
-
-    .comment:hover & {
-      @apply opacity-100;
-    }
-  }
-
-  &__reply-action {
-    @apply flex mt-[0.4rem];
-    // Cancel the ghost button's padding so its label lines up with the body text
+    @apply flex items-center gap-[0.4rem] mt-[0.4rem];
+    // Cancel the ghost buttons' padding so Reply lines up with the body text
     @apply -ml-[1.2rem];
   }
 
