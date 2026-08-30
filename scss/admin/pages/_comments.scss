@@ -9,6 +9,11 @@
 
 .comment {
   @apply flex flex-col gap-[1.2rem];
+  @apply rounded-[0.8rem] border border-grey-100 p-[1.2rem];
+
+  .dark & {
+    @apply border-grey-700;
+  }
 
   &__main {
     @apply flex gap-[1.2rem];
