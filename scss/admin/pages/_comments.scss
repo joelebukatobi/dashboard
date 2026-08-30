@@ -75,6 +75,22 @@
     @apply flex items-center gap-[0.8rem] mt-[0.8rem];
   }
 
+  // Bare icon buttons: no border, no fill, and the icon stays visible on
+  // mobile, where .btn otherwise hides it
+  &__action-icon {
+    @apply px-[0.4rem] text-grey-500;
+    @apply hover:text-grey-900;
+
+    i,
+    svg {
+      @apply inline-block;
+    }
+
+    .dark & {
+      @apply text-grey-400 hover:text-white;
+    }
+  }
+
   &__body {
     @apply text-body text-grey-700 leading-relaxed;
 
