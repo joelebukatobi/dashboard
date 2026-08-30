@@ -9,10 +9,10 @@
 
 // Separator between sibling comments, top level and replies alike
 .comment + .comment {
-  @apply pt-[1.6rem] border-t border-grey-100;
+  @apply pt-[1.6rem] border-t border-grey-100/70;
 
   .dark & {
-    @apply border-grey-700;
+    @apply border-grey-700/60;
   }
 }
 
@@ -133,6 +133,12 @@
   &__replies {
     @apply flex flex-col gap-[1.2rem];
     @apply mt-[0.8rem] ml-[1.6rem];
+
+    // Always rendered, so drop it out of the flex flow when there are no
+    // replies rather than letting it add a gap and a margin
+    &:empty {
+      @apply hidden;
+    }
   }
 
   // Nested depth styles
