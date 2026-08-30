@@ -216,13 +216,13 @@ function renderComment(comment, currentUser, depth = 0) {
 
           <div class="comment__actions">
             <button
-              class="btn btn--ghost btn--xs"
+              class="btn btn--outline btn--xs"
               onclick="toggleReplyForm('${comment.id}')"
             >
               Reply
             </button>
             <button
-              class="btn btn--ghost btn--xs"
+              class="btn btn--outline btn--xs"
               onclick="toggleEditForm('${comment.id}')"
             >
               Edit
