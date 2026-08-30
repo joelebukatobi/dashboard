@@ -15,7 +15,9 @@
   }
 
   &__header {
-    @apply flex items-center justify-between p-[1.6rem];
+    // Horizontal margin rather than padding, so the rule below the header
+    // stops short of the card edges and the content lines up with the body
+    @apply flex items-center justify-between mx-[2.4rem] py-[1.6rem];
     @apply border-b border-grey-100;
 
     .dark & {
