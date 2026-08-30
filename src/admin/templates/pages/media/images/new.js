@@ -112,7 +112,6 @@ export function imagesNewContent({ user, posts }) {
               <div class="card__footer">
                 <div class="form__field-group">
                   <button type="submit" class="btn btn--primary">
-                    <i data-lucide="upload"></i>
                     Upload Image
                   </button>
                   <a href="/admin/media/images" class="btn btn--outline btn--cancel">Cancel</a>

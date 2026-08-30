@@ -120,7 +120,6 @@ export function albumEditContent({ user, album, albumImages = [], toast }) {
           <div class="card__footer">
             <div class="form__field-group">
               <button type="button" class="btn btn--primary" onclick="submitForm()">
-                <i data-lucide="check"></i>
                 Save
               </button>
               <a href="/admin/media/albums" class="btn btn--outline btn--cancel">Cancel</a>
