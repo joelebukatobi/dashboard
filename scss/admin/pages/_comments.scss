@@ -82,6 +82,12 @@
     }
   }
 
+  &__reply-action {
+    @apply flex mt-[0.4rem];
+    // Cancel the ghost button's padding so its label lines up with the body text
+    @apply -ml-[1.2rem];
+  }
+
   &__body {
     @apply text-body text-grey-700 leading-relaxed;
 
