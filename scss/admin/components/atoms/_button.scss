@@ -121,7 +121,7 @@
   // Sizes
   &--sm {
     // No fixed height: the vertical padding sets it
-    @apply px-[1.2rem] py-[0.2rem] text-body-xs h-auto;
+    @apply px-[1.2rem] py-[0.2rem] text-body-xs leading-none h-auto;
     // Inherits rounded-sm from base
   }
 
