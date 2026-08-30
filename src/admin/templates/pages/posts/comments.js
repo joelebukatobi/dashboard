@@ -208,34 +208,32 @@ function renderComment(comment, currentUser, depth = 0) {
               <span class="comment__time">${formatRelativeTime(comment.createdAt)}</span>
               <span class="comment__edited ${comment.isEdited ? 'comment__edited--visible' : ''}">(edited)</span>
             </div>
-            <div class="comment__actions">
-              <button 
-                class="btn btn--ghost btn--xs"
-                onclick="toggleEditForm('${comment.id}')"
-              >
-                Edit
-              </button>
-              <button 
-                class="btn btn--ghost btn--danger btn--xs"
-                data-comment-id="${comment.id}"
-                data-author-name="${escapeHtml(comment.authorName || 'Anonymous')}"
-                onclick="openDeleteModal(this)"
-              >
-                Delete
-              </button>
-            </div>
           </div>
           
           <div class="comment__body" id="comment-body-${comment.id}">
             ${escapeHtml(comment.content).replace(/\n/g, '<br>')}
           </div>
 
-          <div class="comment__reply-action">
+          <div class="comment__actions">
             <button
               class="btn btn--ghost btn--xs"
               onclick="toggleReplyForm('${comment.id}')"
             >
               Reply
+            </button>
+            <button
+              class="btn btn--ghost btn--xs"
+              onclick="toggleEditForm('${comment.id}')"
+            >
+              Edit
+            </button>
+            <button
+              class="btn btn--ghost btn--danger btn--xs"
+              data-comment-id="${comment.id}"
+              data-author-name="${escapeHtml(comment.authorName || 'Anonymous')}"
+              onclick="openDeleteModal(this)"
+            >
+              Delete
             </button>
           </div>
           
