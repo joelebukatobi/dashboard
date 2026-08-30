@@ -234,25 +234,12 @@ export function settingsContent({ user, settings, toast }) {
                         ${siteIconPreview}
                         <span class="site-icon-field__overlay">
                           <i data-lucide="upload"></i>
-                          <span>${siteIcon ? 'Change' : 'Upload'}</span>
                         </span>
                       </div>
                     </label>
                     <div class="site-icon-field__info">
                       <span class="site-icon-field__title">Site Icon</span>
                       <p class="form-feedback form-feedback--hint">Used in the sidebar and as the default favicon. Falls back to the library icon when empty.</p>
-                      ${siteIcon ? `
-                        <button
-                          type="button"
-                          class="btn btn--outline btn--danger btn--sm site-icon-field__remove"
-                          hx-delete="/admin/settings/icon"
-                          hx-target="#form-response"
-                          hx-swap="innerHTML"
-                          hx-include="#settings-csrf"
-                        >
-                          Remove
-                        </button>
-                      ` : ''}
                     </div>
                   </div>
                 </div>
