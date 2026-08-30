@@ -79,7 +79,7 @@
   // hover, with the icon flipping to white. The icon override is needed
   // because .btn hides its icons below the sm breakpoint.
   &__action-icon {
-    @apply px-[0.4rem];
+    @apply p-[1.6rem] rounded-full;
     @apply bg-blue-600/10 text-blue-600;
     @apply hover:bg-blue-600 hover:text-white;
 
