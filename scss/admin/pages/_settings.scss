@@ -40,9 +40,10 @@
   }
 
   &__preview {
-    @apply relative flex items-center justify-center;
-    // Matches the .input height so the row lines up with the other fields
-    @apply w-[3.2rem] h-[3.2rem] rounded-md bg-grey-100 border border-grey-200 overflow-hidden;
+    // Same dimensions as the accordion header icon boxes
+    @apply relative flex items-center justify-center shrink-0;
+    @apply h-16 w-16 rounded-lg overflow-hidden;
+    @apply bg-grey-100 border border-grey-200;
 
     .dark & {
       @apply bg-grey-800 border-grey-700;
@@ -54,7 +55,7 @@
   }
 
   &__preview-icon {
-    @apply w-[1.8rem] h-[1.8rem] text-grey-500;
+    @apply h-8 w-8 text-grey-500;
   }
 
   &__overlay {
@@ -63,7 +64,7 @@
     @apply pointer-events-none;
 
     i {
-      @apply w-[1.4rem] h-[1.4rem];
+      @apply h-8 w-8;
     }
   }
 
