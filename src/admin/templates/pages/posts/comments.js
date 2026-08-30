@@ -259,7 +259,7 @@ function renderComment(comment, currentUser, depth = 0) {
               >${escapeHtml(comment.content)}</textarea>
               <div class="form__actions form__actions--right">
                 <button type="submit" class="btn btn--primary btn--sm">
-                  Save Changes
+                  Save
                 </button>
                 <button type="button" class="btn btn--outline btn--sm" onclick="toggleEditForm('${comment.id}')">
                   Cancel
