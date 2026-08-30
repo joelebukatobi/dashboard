@@ -210,12 +210,6 @@ function renderComment(comment, currentUser, depth = 0) {
             </div>
             <div class="comment__actions">
               <button 
-                class="btn btn--ghost btn--xs" 
-                onclick="toggleReplyForm('${comment.id}')"
-              >
-                Reply
-              </button>
-              <button 
                 class="btn btn--ghost btn--xs"
                 onclick="toggleEditForm('${comment.id}')"
               >
@@ -234,6 +228,15 @@ function renderComment(comment, currentUser, depth = 0) {
           
           <div class="comment__body" id="comment-body-${comment.id}">
             ${escapeHtml(comment.content).replace(/\n/g, '<br>')}
+          </div>
+
+          <div class="comment__reply-action">
+            <button
+              class="btn btn--ghost btn--xs"
+              onclick="toggleReplyForm('${comment.id}')"
+            >
+              Reply
+            </button>
           </div>
           
           <!-- Edit Form (hidden by default) -->
