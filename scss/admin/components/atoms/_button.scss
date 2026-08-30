@@ -121,9 +121,7 @@
   // Sizes
   &--sm {
     @apply px-[1.2rem] text-body-xs h-[1.6rem];
-    // Optical centring: nudges the label down so the space above and below
-    // it reads as even
-    @apply pt-[0.2rem];
+    @apply py-[0.2rem];
     // Inherits rounded-sm from base
   }
 
