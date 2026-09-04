@@ -134,7 +134,6 @@ export function settingsContent({ user, settings, toast }) {
     saved: 'Settings saved successfully!',
     iconUploaded: 'Site icon updated.',
     iconSelected: 'Site icon updated from library.',
-    iconRemoved: 'Site icon removed.',
     totpEnrolled: 'Two-factor authentication enabled on your account.',
   });
 
