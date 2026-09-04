@@ -9,6 +9,7 @@ import { readdirSync, statSync, existsSync, mkdirSync, copyFileSync } from 'fs';
 import sharp from 'sharp';
 import crypto from 'crypto';
 import { toDateKey } from '../src/lib/date-key.js';
+import { assertLocalDevelopment } from './lib/local-dev-only.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -39,6 +40,8 @@ const stats = {
 };
 
 async function seed() {
+  assertLocalDevelopment('db:seed');
+
   console.log('🌱 Starting database seed...\n');
   const startTime = Date.now();
 

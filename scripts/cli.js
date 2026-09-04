@@ -17,6 +17,8 @@
  *   node scripts/cli.js maintenance update-colors
  */
 
+import { assertLocalDevelopment } from './lib/local-dev-only.js';
+
 const HELP = `
 Maintenance CLI
 
@@ -76,9 +78,18 @@ async function main() {
 
     case 'analytics': {
       const analytics = await import('./lib/tasks/analytics.js');
-      if (subcommand === 'day') return run(analytics.simulateDay, args);
-      if (subcommand === 'run') return run(analytics.runSimulation);
-      if (subcommand === 'scheduler') return run(analytics.runScheduler);
+      if (subcommand === 'day') {
+        assertLocalDevelopment('analytics day');
+        return run(analytics.simulateDay, args);
+      }
+      if (subcommand === 'run') {
+        assertLocalDevelopment('analytics run');
+        return run(analytics.runSimulation);
+      }
+      if (subcommand === 'scheduler') {
+        assertLocalDevelopment('analytics scheduler');
+        return run(analytics.runScheduler);
+      }
       break;
     }
 
@@ -93,7 +104,10 @@ async function main() {
     case 'maintenance': {
       const maintenance = await import('./lib/tasks/maintenance.js');
       if (subcommand === 'reset-password') return run(maintenance.resetAdminPassword, args);
-      if (subcommand === 'update-views') return run(maintenance.updatePostViews);
+      if (subcommand === 'update-views') {
+        assertLocalDevelopment('maintenance update-views');
+        return run(maintenance.updatePostViews);
+      }
       if (subcommand === 'update-colors') return run(maintenance.updateCategoryColors);
       break;
     }
