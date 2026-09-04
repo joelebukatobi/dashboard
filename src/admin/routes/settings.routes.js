@@ -32,11 +32,6 @@ export default async function settingsRoutes(fastify, opts) {
     handler: settingsController.selectSiteIcon.bind(settingsController),
   });
 
-  fastify.delete('/icon', {
-    preHandler: auth,
-    handler: settingsController.removeSiteIcon.bind(settingsController),
-  });
-
   fastify.get('/icon-picker', {
     preHandler: auth,
     handler: settingsController.showIconPicker.bind(settingsController),
