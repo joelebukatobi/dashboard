@@ -56,6 +56,13 @@ jobs:
       # --core skips image and video seeding, which shells out to sharp and
       # ffmpeg. Tests only need the admin user and basic content.
       - name: Seed core data
+        # The seed guard refuses outside local development so a stray
+        # DATABASE_URL cannot fabricate data on a hosted box. CI is neither:
+        # the database is a throwaway service container, so take the
+        # documented override, scoped to this step alone. NODE_ENV stays
+        # unset for the test run, which keeps helmet and rate limiting on.
+        env:
+          ALLOW_LOCAL_SIMULATION: 'true'
         run: node scripts/seed.js --core
 
       - name: Guardrails and tests
