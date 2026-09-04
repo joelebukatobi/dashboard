@@ -50,6 +50,9 @@ jobs:
           # server. Templates load htmx, preline, lucide and alpine from
           # /dist/js/, so skipping this ships a site with no JavaScript.
           npm run build:js
+          # Stamps the deployed commit so /health can report it and the
+          # post-deploy checks can prove the running app is this build.
+          echo "${GITHUB_SHA}" > dist/asset-version.txt
 
       - name: Validate required deploy secrets
         run: bash scripts/deploy/validate-secrets.sh CPANEL_FTP_HOST CPANEL_FTP_USER CPANEL_FTP_PASSWORD DEPLOY_PATH
@@ -172,29 +175,25 @@ jobs:
             pwd
             ls -la
 
-      - name: Health check - verify app responds
+      - name: Health check - verify app is stable
         if: steps.ssh_check.outputs.enabled == 'true'
+        env:
+          EXPECTED_ASSET_VERSION: ${{ github.sha }}
+          EXPECTED_ENV: production
         run: |
           set -e
-          echo "Waiting for app to start..."
-          sleep 10
-
           if [ -z "${{ secrets.URL }}" ]; then
             echo "::error::Missing secret: URL — set it to this site's base URL"
             exit 1
           fi
           HEALTH_URL="${{ secrets.URL }}/health"
           echo "Checking health at: $HEALTH_URL"
+          bash scripts/verify-remote-health.sh "$HEALTH_URL"
 
-          # Retry up to 3 times with 5 second intervals
-          for i in 1 2 3; do
-            if curl -sf "$HEALTH_URL" > /dev/null; then
-              echo "✅ Health check passed - app is responding"
-              exit 0
-            fi
-            echo "Attempt $i failed, retrying in 5s..."
-            sleep 5
-          done
+      - name: Verify deployed artifacts
+        if: steps.ssh_check.outputs.enabled == 'true'
+        run: bash scripts/verify-remote-artifacts.sh "${{ secrets.URL }}" "${{ github.sha }}" 0
 
-          echo "❌ Health check failed - app is not responding"
-          exit 1
+      - name: Smoke check - key routes and assets
+        if: steps.ssh_check.outputs.enabled == 'true'
+        run: bash scripts/verify-remote-smoke.sh "${{ secrets.URL }}" "${{ github.sha }}"
