@@ -1,4 +1,5 @@
 import { ensureDatabaseUrl } from '../../../env.js';
+import { assertLocalDevelopment } from '../local-dev-only.js';
 import { eq, sql } from 'drizzle-orm';
 
 export async function resetAdminPassword(args = []) {
@@ -25,6 +26,7 @@ export async function resetAdminPassword(args = []) {
 }
 
 export async function updatePostViews() {
+  assertLocalDevelopment('maintenance update-views');
   ensureDatabaseUrl({ scriptName: 'cli maintenance update-views' });
 
   const { db, posts } = await import('../../../src/db/index.js');
