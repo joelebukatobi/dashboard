@@ -256,25 +256,6 @@ class SettingsController {
     }
   }
 
-  async removeSiteIcon(request, reply) {
-    try {
-      const user = request.user;
-      if (user.role !== 'ADMIN') {
-        reply.code(403);
-        return renderFragment(reply, errorAlert({ message: 'Access denied.' }));
-      }
-
-      await persistSiteIcon(request, '');
-      return htmxRedirect(reply, '/admin/settings?toast=iconRemoved');
-    } catch (error) {
-      request.log.error(error);
-      reply.code(500);
-      return renderFragment(reply, errorAlert({
-        message: 'Failed to remove icon.',
-      }));
-    }
-  }
-
   async showIconPicker(request, reply) {
     try {
       const user = request.user;
