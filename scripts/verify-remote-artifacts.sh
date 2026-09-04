@@ -77,7 +77,6 @@ JS_ARTIFACTS=(
   lucide.js
   ckeditor.js
   ckeditor.css
-  main.js
 )
 
 for artifact in "${JS_ARTIFACTS[@]}"; do
