@@ -32,7 +32,7 @@ Reusable **Fastify + HTMX** base template for admin dashboards and public sites.
 
 ## Stack
 
-Fastify · HTMX · fastify-html · Tailwind v4 · SCSS (BEM) · MySQL/PostgreSQL · Drizzle ORM
+Fastify · HTMX · fastify-html · Tailwind v4 · SCSS (BEM) · MySQL · Drizzle ORM
 
 ## Verify changes
 
