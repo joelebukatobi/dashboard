@@ -13,7 +13,7 @@ npm run db:migrate       # after schema changes
 
 ## Verification
 
-1. Run `npm run check` (guardrails + 16 tests)
+1. Run `npm run check` (guardrails + the full test suite)
 2. Manually smoke affected pages if UI changed
 3. For new routes: confirm Zod schema wired and controller uses render helpers
 
