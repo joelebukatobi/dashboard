@@ -210,7 +210,7 @@ class DashboardController {
         };
       });
 
-      return renderFragment(reply, topPostsFragment(topPosts));
+      return renderFragment(reply, await topPostsFragment(topPosts));
     } catch (error) {
       request.log.error(error);
       reply.code(500);
@@ -716,38 +716,13 @@ function activityFragment(items) {
 }
 
 // Helper function for top posts fragment
-function topPostsFragment(posts) {
-  if (!posts || posts.length === 0) {
-    return `
-      <div class="panel-empty">
-        <i data-lucide="trending-up"></i>
-        <p>No posts</p>
-      </div>
-    `;
-  }
-
-  return posts
-    .map(
-      (post, index) => `
-    <div class="top-list__item">
-      <div class="top-list__left">
-        <span class="top-list__rank top-list__rank--${post.categoryColor || 'primary'}">${index + 1}</span>
-        <div class="top-list__info">
-          <p class="top-list__title">${post.title}</p>
-          <span class="top-list__url">${post.url}</span>
-        </div>
-      </div>
-      <div class="top-list__right">
-        <span class="top-list__value">${post.views}</span>
-        <span class="top-list__change top-list__change--${post.trend}">
-          <i data-lucide="${post.trend === 'up' ? 'trending-up' : 'trending-down'}"></i>
-          ${post.change}%
-        </span>
-      </div>
-    </div>
-  `,
-    )
-    .join('');
+// The page render and this fragment each had their own Top Posts markup and
+// they had drifted: this one used top-list__left/info/title/url/right/value,
+// none of which have any styles, so refreshing the widget re-rendered it
+// unstyled. Both now use the one renderer that the stylesheet matches.
+async function topPostsFragment(posts) {
+  const { getTopPosts } = await import('../templates/pages/dashboard.js');
+  return getTopPosts(posts);
 }
 
 // Export singleton

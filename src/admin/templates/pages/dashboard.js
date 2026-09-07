@@ -333,7 +333,7 @@ function getRecentPosts(posts) {
 }
 
 // Helper function for top posts
-function getTopPosts(posts) {
+export function getTopPosts(posts) {
   if (!posts || posts.length === 0) {
     return `
       <div class="empty">

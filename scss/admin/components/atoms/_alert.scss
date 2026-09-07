@@ -42,8 +42,17 @@
     @apply border border-amber-200 dark:border-amber-800;
   }
 
-  &--danger {
+  &--danger,
+  // The markup says alert--error (render.js errorAlert, the login and
+  // subscriber forms). That modifier lived in an organisms/_alert.scss that
+  // main.scss never imported, so error alerts rendered with no red at all.
+  &--error {
     @apply bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200;
     @apply border border-red-200 dark:border-red-800;
+  }
+
+  // Spacing modifier, also only defined in the unimported file
+  &--mb {
+    @apply mb-2;
   }
 }
