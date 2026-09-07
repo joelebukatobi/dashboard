@@ -46,7 +46,7 @@
     @apply min-h-[28rem] h-[28rem];
 
     & .chart-container__loading {
-      @apply text-center text-grey-500 py-8;
+      @apply text-center text-grey-500 py-5;
 
       .dark & {
         @apply text-grey-400;
@@ -54,7 +54,7 @@
 
       & i,
       & svg {
-        @apply w-12 h-12 mx-auto mb-4 opacity-50;
+        @apply w-6 h-6 mx-auto mb-2 opacity-50;
       }
     }
   }

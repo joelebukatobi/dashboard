@@ -12,7 +12,7 @@
 
   // [UNUSED - COMMENTED OUT] Form with vertical spacing between groups
   // &--spaced {
-  //   @apply space-y-6;
+  //   @apply space-y-4;
   //
   //   // Override default margin on groups since we're using space-y
   //   .form__group {
@@ -60,7 +60,7 @@
     }
 
     &--tight {
-      @apply mb-0 mt-6;
+      @apply mb-0 mt-4;
     }
 
     &--last {
@@ -363,7 +363,7 @@
 
   // Checkbox wrapper for label + input + text pattern
   &__checkbox-wrapper {
-    @apply flex items-center gap-3 cursor-pointer;
+    @apply flex items-center gap-2 cursor-pointer;
 
     & > span {
       @apply text-body-sm text-grey-600;
@@ -419,7 +419,7 @@
   }
 
   &__select-dropdown {
-    @apply absolute inset-x-0 top-full mt-[0.8rem] z-[200] w-full max-h-56 bg-white border border-grey-100 shadow-lg overflow-y-auto p-[0.4rem] rounded-md dark:bg-grey-900 dark:border-grey-700;
+    @apply absolute inset-x-0 top-full mt-[0.8rem] z-[200] w-full max-h-35 bg-white border border-grey-100 shadow-lg overflow-y-auto p-[0.4rem] rounded-md dark:bg-grey-900 dark:border-grey-700;
   }
 
   &__select-search {
@@ -459,7 +459,7 @@
 
   // [UNUSED - COMMENTED OUT] Horizontal Divider
   // &__hr {
-  //   @apply border-grey-50 my-6;
+  //   @apply border-grey-50 my-4;
   //
   //   .dark & {
   //     @apply border-grey-700;

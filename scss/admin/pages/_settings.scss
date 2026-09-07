@@ -43,7 +43,7 @@
   &__preview {
     // Same dimensions as the accordion header icon boxes
     @apply relative flex items-center justify-center shrink-0;
-    @apply h-16 w-16 rounded-lg overflow-hidden;
+    @apply h-10 w-10 rounded-lg overflow-hidden;
     @apply bg-grey-100 border border-grey-200;
 
     .dark & {
@@ -56,7 +56,7 @@
   }
 
   &__preview-icon {
-    @apply h-8 w-8 text-grey-500;
+    @apply h-5 w-5 text-grey-500;
   }
 
   &__overlay {
@@ -65,7 +65,7 @@
     @apply pointer-events-none;
 
     i {
-      @apply h-8 w-8;
+      @apply h-5 w-5;
     }
   }
 

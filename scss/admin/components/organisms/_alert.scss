@@ -4,10 +4,10 @@
 // ============================================================================
 
 .alert {
-  @apply flex items-center gap-3 px-4 py-3 rounded-md;
+  @apply flex items-center gap-2 px-2 py-2 rounded-md;
 
   &__icon {
-    @apply flex-shrink-0 w-5 h-5;
+    @apply flex-shrink-0 w-3 h-3;
   }
 
   &__message {
@@ -52,6 +52,6 @@
 
   // Margin utility for spacing
   &--mb {
-    @apply mb-4;
+    @apply mb-2;
   }
 }

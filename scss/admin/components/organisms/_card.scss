@@ -67,10 +67,10 @@
   }
 
   &__icon-box {
-    @apply h-16 w-16 rounded-lg flex items-center justify-center shrink-0;
+    @apply h-10 w-10 rounded-lg flex items-center justify-center shrink-0;
 
     svg {
-      @apply h-8 w-8;
+      @apply h-5 w-5;
     }
 
     &--blue {
@@ -246,7 +246,7 @@
     @apply size-[4.4rem];
 
     svg {
-      @apply h-8 w-8 stroke-1;
+      @apply h-5 w-5 stroke-1;
     }
 
     &--posts,

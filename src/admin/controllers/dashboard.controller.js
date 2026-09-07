@@ -314,8 +314,8 @@ function chartFragment({ range, data }) {
     return `
       <div id="chart-panel-${range}" role="tabpanel" aria-labelledby="chart-range-${range}">
         <div class="chart-container__chart">
-          <div class="text-center text-gray-500 py-8">
-            <i data-lucide="bar-chart-2" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+          <div class="text-center text-gray-500 py-5">
+            <i data-lucide="bar-chart-2" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>
             <p>No traffic data yet</p>
             <p class="text-sm">Daily traffic appears here as visitors read your posts. Page Views above shows lifetime totals.</p>
           </div>
@@ -691,8 +691,8 @@ function statsFragment(stats) {
 function activityFragment(items) {
   if (!items || items.length === 0) {
     return `
-      <div class="text-center py-8 text-gray-500">
-        <i data-lucide="activity" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+      <div class="text-center py-5 text-gray-500">
+        <i data-lucide="activity" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>
         <p>No recent activity</p>
       </div>
     `;
@@ -719,8 +719,8 @@ function activityFragment(items) {
 function topPostsFragment(posts) {
   if (!posts || posts.length === 0) {
     return `
-      <div class="text-center py-8 text-gray-500">
-        <i data-lucide="trending-up" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+      <div class="text-center py-5 text-gray-500">
+        <i data-lucide="trending-up" class="w-6 h-6 mx-auto mb-2 opacity-50"></i>
         <p>No posts</p>
       </div>
     `;

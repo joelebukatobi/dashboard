@@ -55,7 +55,7 @@
 
   // Placeholder avatar (for pending invitations, etc.)
   &--placeholder {
-    @apply w-10 h-10 rounded-full bg-grey-200 flex items-center justify-center;
+    @apply w-6 h-6 rounded-full bg-grey-200 flex items-center justify-center;
 
     .dark & {
       @apply bg-grey-700;

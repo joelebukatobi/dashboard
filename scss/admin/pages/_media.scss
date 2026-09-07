@@ -18,10 +18,10 @@
 
   // Empty state within media grid
   > .empty {
-    @apply col-span-full text-center py-12;
+    @apply col-span-full text-center py-6;
 
     > h3 {
-      @apply text-lg font-medium text-grey-900 mb-2;
+      @apply text-lg font-medium text-grey-900 mb-1;
 
       .dark & {
         @apply text-white;
