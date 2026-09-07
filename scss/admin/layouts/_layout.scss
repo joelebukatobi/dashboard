@@ -47,10 +47,10 @@
 
       // Empty state within table content (list pages)
       > .empty {
-        @apply text-center py-12;
+        @apply text-center py-6;
 
         > h3 {
-          @apply text-lg font-medium text-grey-900 mb-2;
+          @apply text-lg font-medium text-grey-900 mb-1;
 
           .dark & {
             @apply text-white;
@@ -153,6 +153,6 @@
   }
 
   &__stack {
-    @apply flex flex-col gap-[2.4rem]; // Matches space-y-6
+    @apply flex flex-col gap-[2.4rem]; // Matches space-y-4
   }
 }

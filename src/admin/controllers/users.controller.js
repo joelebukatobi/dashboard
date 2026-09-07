@@ -636,7 +636,7 @@ class UsersController {
       // Return success for HTMX
       return renderFragment(reply, `
         <div class="flex flex-col items-center">
-          <img src="${avatarUrl}?t=${Date.now()}" alt="${user.firstName}" class="h-24 w-24 rounded-full object-cover mb-4" />
+          <img src="${avatarUrl}?t=${Date.now()}" alt="${user.firstName}" class="h-15 w-15 rounded-full object-cover mb-2" />
           <p class="text-sm text-green-600">Avatar updated successfully!</p>
         </div>
       `);

@@ -5,7 +5,7 @@
 
 .toast {
   @apply fixed z-100 pointer-events-auto;
-  @apply flex items-center gap-3 px-4 py-3;
+  @apply flex items-center gap-2 px-2 py-2;
   @apply bg-white dark:bg-grey-800 rounded-md shadow-lg;
   @apply border border-grey-200 dark:border-grey-700;
   @apply text-body-sm font-medium;
@@ -19,7 +19,7 @@
 
   // Animation states
   &--hidden {
-    @apply pointer-events-none opacity-0 translate-y-4;
+    @apply pointer-events-none opacity-0 translate-y-2;
   }
 
   &--visible {
@@ -132,7 +132,7 @@
     @apply top-[2.4rem] left-1/2 right-auto bottom-auto -translate-x-1/2;
 
     &.toast--hidden {
-      @apply opacity-0 -translate-x-1/2 -translate-y-4;
+      @apply opacity-0 -translate-x-1/2 -translate-y-2;
     }
 
     &.toast--visible {
@@ -144,7 +144,7 @@
     @apply bottom-[2.4rem] left-1/2 right-auto -translate-x-1/2;
 
     &.toast--hidden {
-      @apply opacity-0 -translate-x-1/2 translate-y-4;
+      @apply opacity-0 -translate-x-1/2 translate-y-2;
     }
 
     &.toast--visible {
@@ -155,7 +155,7 @@
 
 // Toast container for stacking multiple toasts
 .toast-container {
-  @apply fixed z-100 flex flex-col gap-3;
+  @apply fixed z-100 flex flex-col gap-2;
   @apply bottom-[2.4rem] right-[2.4rem];
 
   &--top-right {
@@ -164,12 +164,12 @@
 }
 
 .layout-toast-container {
-  @apply fixed top-4 right-4 z-50;
+  @apply fixed top-2 right-2 z-50;
 }
 
 // Page Header Toast Container
 .page-header__toast-container {
-  @apply relative flex flex-1 items-center justify-start min-h-16 overflow-hidden pointer-events-none;
+  @apply relative flex flex-1 items-center justify-start min-h-10 overflow-hidden pointer-events-none;
 
   // The toast elements inside
   > div {
@@ -207,7 +207,7 @@
 
   // Wrapper for icon + message
   .toast__wrapper {
-    @apply flex items-center gap-3 px-4 py-3 whitespace-nowrap;
+    @apply flex items-center gap-2 px-2 py-2 whitespace-nowrap;
 
     // The page-header toast puts the icon straight in here rather than in a
     // .toast__icon, so it needs its own sizing or the raw SVG renders at its

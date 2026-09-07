@@ -15,6 +15,13 @@
  * ============================================================================ */
 
 @theme {
+  /* Tailwind's default spacing step is 0.25rem, which on this 62.5% root
+     renders as 2.5px - so px-4 gave 10px, not the 16px the scale implies.
+     0.4rem makes one step 4px, so the numeric scale is a real 4px grid and
+     the numbers mean what they say. Existing utilities were renumbered to
+     hold their rendered sizes. */
+  --spacing: 0.4rem;
+
   /* Layout */
   --sidebar-width: 24rem;
   --sidebar-width-collapsed: 6.4rem;

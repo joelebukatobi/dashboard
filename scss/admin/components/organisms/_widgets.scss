@@ -59,7 +59,7 @@
 
     // Empty state within widget (dashboard widgets)
     > .empty {
-      @apply text-center py-8;
+      @apply text-center py-5;
 
       > p {
         @apply text-grey-500;
@@ -83,7 +83,7 @@
   // Traffic Overview mobile layout
   @media (max-width: 640px) {
     .widget__header--traffic {
-      @apply flex-col items-start gap-2;
+      @apply flex-col items-start gap-1;
 
       .widget__title,
       .widget__subtitle {
@@ -91,7 +91,7 @@
       }
 
       .chart-range {
-        @apply mt-2 w-full justify-start;
+        @apply mt-1 w-full justify-start;
       }
     }
   }
@@ -188,10 +188,10 @@
 
   &__icon {
     @apply shrink-0 flex items-center justify-center rounded-full;
-    @apply size-16;
+    @apply size-10;
 
     svg {
-      @apply size-8;
+      @apply size-5;
     }
 
     &--post {
@@ -244,11 +244,11 @@
 
   // Container padding when inside widget--flush (matches header padding)
   .widget--flush & {
-    @apply px-[1.6rem] pb-8;
+    @apply px-[1.6rem] pb-5;
   }
 
   &__item {
-    @apply flex flex-col justify-between gap-[1.2rem] rounded-lg px-[1.2rem] py-4 lg:flex-row lg:items-start;
+    @apply flex flex-col justify-between gap-[1.2rem] rounded-lg px-[1.2rem] py-2 lg:flex-row lg:items-start;
     @apply bg-blue-600/5;
 
     .dark & {
@@ -274,7 +274,7 @@
     }
 
     & > div:last-child {
-      @apply ml-16 flex items-start lg:ml-auto lg:justify-end lg:gap-[1.2rem];
+      @apply ml-10 flex items-start lg:ml-auto lg:justify-end lg:gap-[1.2rem];
 
       & > span:first-child {
         @apply shrink-0 text-body-sm font-semibold tabular-nums lg:text-right;
@@ -299,7 +299,7 @@
 
   &__change {
     @apply shrink-0 flex items-center gap-[0.2rem] text-body-xs font-medium tabular-nums;
-    @apply min-w-12;
+    @apply min-w-6;
 
     svg {
       @apply w-[1.2rem] h-[1.2rem];
@@ -335,7 +335,7 @@
 
   // Container padding when inside widget--flush (matches header padding)
   .widget--flush & {
-    @apply px-[1.6rem] pb-8;
+    @apply px-[1.6rem] pb-5;
   }
 
   &__item {
@@ -351,7 +351,7 @@
   }
 
   &__image {
-    @apply shrink-0 h-12 w-16 overflow-hidden rounded-lg;
+    @apply shrink-0 h-6 w-10 overflow-hidden rounded-lg;
     @apply bg-grey-100;
 
     .dark & {
