@@ -82,6 +82,22 @@ export function formatZodError(error) {
 }
 
 /**
+ * Human-facing variant of formatZodError for rendered forms.
+ * A single problem reads better as a sentence — "Enter a valid email address"
+ * rather than "email: Enter a valid email address". With several, the field
+ * names are what tell the user which input to fix, so they stay.
+ * API responses keep the prefixed form: JSON consumers need the field.
+ * @param {import('zod').ZodError} error
+ * @returns {string}
+ */
+export function formatZodErrorForForm(error) {
+  if (error.errors.length === 1) {
+    return error.errors[0].message;
+  }
+  return formatZodError(error);
+}
+
+/**
  * Map Zod issues to field error messages (joins multiple issues per field).
  * @param {import('zod').ZodError} error
  * @returns {Record<string, string>}

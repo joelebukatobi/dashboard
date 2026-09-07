@@ -10,12 +10,15 @@ import { renderAdminPage } from '../render.js';
 import { validateBody } from '../middleware/validate.js';
 import { loginSchema } from '../../utils/validators.js';
 import { forgotPasswordSchema, resetPasswordSchema, verifyTotpSchema } from '../schemas/auth.schema.js';
-import { mapZodErrorsToFields } from '../schemas/common.schema.js';
+import { mapZodErrorsToFields, formatZodErrorForForm } from '../schemas/common.schema.js';
 import { errorAlert, successAlert } from '../render.js';
 
-function authFormValidationFail(request, reply, message) {
+function authFormValidationFail(request, reply, message, zodError) {
   reply.code(400);
-  return reply.html`!${errorAlert({ message })}`;
+  // Rendered forms read better without the field prefix on a lone error; the
+  // API keeps the prefixed form because JSON consumers need the field name.
+  const text = zodError ? formatZodErrorForForm(zodError) : message;
+  return reply.html`!${errorAlert({ message: text })}`;
 }
 
 function acceptInviteValidationFail(request, reply, _message, zodError) {
@@ -42,7 +45,7 @@ export default async function authRoutes(fastify) {
   });
 
   fastify.post('/verify-totp', {
-    preHandler: validateBody(verifyTotpSchema),
+    preHandler: validateBody(verifyTotpSchema, { onFail: authFormValidationFail }),
     handler: authController.verifyTotp.bind(authController),
   });
 
@@ -55,7 +58,7 @@ export default async function authRoutes(fastify) {
   });
 
   fastify.post('/totp-setup/verify', {
-    preHandler: validateBody(verifyTotpSchema),
+    preHandler: validateBody(verifyTotpSchema, { onFail: authFormValidationFail }),
     handler: authController.verifyTotpSetup.bind(authController),
   });
 
