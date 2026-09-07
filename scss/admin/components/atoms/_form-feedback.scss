@@ -14,6 +14,24 @@
     }
   }
 
+  // 2FA status messages ask for these; without them a "configured" and a
+  // "setup incomplete" message rendered in the same muted grey as a hint.
+  &--success {
+    @apply text-emerald-600;
+
+    .dark & {
+      @apply text-emerald-400;
+    }
+  }
+
+  &--warning {
+    @apply text-amber-600;
+
+    .dark & {
+      @apply text-amber-400;
+    }
+  }
+
   &--help,
   &--hint {
     @apply text-grey-500;

@@ -56,33 +56,6 @@ export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
           <i data-lucide="moon" class="theme-icon-dark"></i>
         </button>
 
-        <!-- Notifications - Commented out for now
-        <div class="hs-dropdown hs-dropdown--bottom-right" id="notifications-dropdown" data-user-id="${user?.id || ''}">
-          <button
-            id="hs-dropdown-notifications"
-            type="button"
-            class="hs-dropdown-toggle header__action header__action--badge"
-            data-count="0"
-          >
-            <i data-lucide="bell"></i>
-          </button>
-          <div
-            class="hs-dropdown-menu dropdown__menu dropdown__menu--lg"
-            role="menu"
-            aria-labelledby="hs-dropdown-notifications"
-          >
-            <div class="notifications__header">
-              <a href="#" class="notifications__action" onclick="markAllNotificationsRead(event)">Mark all as read</a>
-              <button class="notifications__reload" onclick="fetchNotifications(); return false;" title="Refresh notifications">
-                <i data-lucide="refresh-cw"></i>
-              </button>
-            </div>
-            <div class="notifications__list" id="notifications-list">
-              <div class="notifications__empty">Loading...</div>
-            </div>
-          </div>
-        </div>
-        -->
 
         <!-- User Menu -->
         <div class="hs-dropdown hs-dropdown--bottom-right">
