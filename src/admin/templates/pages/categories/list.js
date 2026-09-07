@@ -47,67 +47,11 @@ export function categoriesListContent({ categories, total, page, totalPages, fil
             : `
           <!-- Data List (Table) -->
           <table class="table">
-              <thead class="table__thead">
-                <tr>
-                  <th>Title</th>
-                  <th>Slug</th>
-                  <th>Description</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody class="table__tbody">
-                ${categories
-                  .map(
-                    (category) => `
-                  <tr class="table__tr">
-                    <td class="table__td">
-                      <span class="table__label">Title</span>
-                      <div class="table__title">
-                        <a href="/admin/categories/${category.id}/edit">${escapeHtml(category.title)}</a>
-                      </div>
-                    </td>
-
-                    <td class="table__td">
-                      <span class="table__label">Slug</span>
-                      <div>${category.slug}</div>
-                    </td>
-
-                    <td class="table__td">
-                      <span class="table__label">Description</span>
-                      <div class="table__title">${category.description || '-'}</div>
-                    </td>
-
-                    <td class="table__td">
-                      <span class="table__label">Date</span>
-                      ${formatDate(category.createdAt)}
-                    </td>
-
-                    <td class="table__td table__td--actions">
-                      <div class="row-actions">
-                        <a href="/admin/categories/${category.id}/edit" class="btn btn--ghost row-action row-action--edit">
-                          <i data-lucide="pencil"></i>
-                          <span>Edit</span>
-                        </a>
-                        <button
-                          type="button"
-                          class="btn btn--ghost row-action row-action--delete"
-                          data-category-id="${category.id}"
-                          data-category-title="${escapeHtml(category.title)}"
-                          data-post-count="${category.postCount || 0}"
-                          onclick="openDeleteModal(this)"
-                        >
-                          <i data-lucide="trash-2"></i>
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                `,
-                  )
-                  .join('')}
-              </tbody>
-            </table>
+            ${categoriesTableHead()}
+            <tbody class="table__tbody">
+              ${categories.map(renderCategoryRow).join('')}
+            </tbody>
+          </table>
         `}
         </div>
 
@@ -164,55 +108,7 @@ export function categoriesTableFragment({ categories, pagination, counts }) {
     `;
   }
 
-  const rows = categories.map((category) => {
-    const date = new Date(category.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-
-    return `
-      <tr class="table__tr">
-        <td class="table__td">
-          <span class="table__label">Title</span>
-          <div class="table__title">
-            <a href="/admin/categories/${category.id}/edit">${category.title}</a>
-          </div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Slug</span>
-          <div class="table__slug">${category.slug}</div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Description</span>
-          <div class="table__title">${category.description || '-'}</div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Date</span>
-          ${date}
-        </td>
-        <td class="table__td table__td--actions">
-          <div class="row-actions">
-            <a href="/admin/categories/${category.id}/edit" class="btn btn--ghost row-action row-action--edit">
-              <i data-lucide="pencil"></i>
-              <span>Edit</span>
-            </a>
-            <button
-              type="button"
-              class="btn btn--ghost row-action row-action--delete"
-              data-category-id="${category.id}"
-              data-category-title="${category.title}"
-              data-post-count="${category.postCount || 0}"
-              onclick="openDeleteModal(this)"
-            >
-              <i data-lucide="trash-2"></i>
-              <span>Delete</span>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
+  const rows = categories.map(renderCategoryRow).join('');
 
   const paginationFragment = pagination && pagination.totalPages > 1
     ? paginationHtml({
@@ -240,6 +136,69 @@ export function categoriesTableFragment({ categories, pagination, counts }) {
       </tbody>
     </table>
     ${paginationFragment}
+  `;
+}
+
+/**
+ * One header and one row renderer, shared by the full page render and the
+ * HTMX fragment, so filtering the list cannot change the table. Keeps the
+ * escaped title from the page render and the styled slug from the fragment.
+ */
+function categoriesTableHead() {
+  return `
+    <thead class="table__thead">
+      <tr>
+        <th>Title</th>
+        <th>Slug</th>
+        <th>Description</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  `;
+}
+
+function renderCategoryRow(category) {
+  return `
+    <tr class="table__tr">
+      <td class="table__td">
+        <span class="table__label">Title</span>
+        <div class="table__title">
+          <a href="/admin/categories/${category.id}/edit">${escapeHtml(category.title)}</a>
+        </div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Slug</span>
+        <div class="table__slug">${category.slug}</div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Description</span>
+        <div class="table__title">${category.description || '-'}</div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Date</span>
+        ${formatDate(category.createdAt)}
+      </td>
+      <td class="table__td table__td--actions">
+        <div class="row-actions">
+          <a href="/admin/categories/${category.id}/edit" class="btn btn--ghost row-action row-action--edit">
+            <i data-lucide="pencil"></i>
+            <span>Edit</span>
+          </a>
+          <button
+            type="button"
+            class="btn btn--ghost row-action row-action--delete"
+            data-category-id="${category.id}"
+            data-category-title="${escapeHtml(category.title)}"
+            data-post-count="${category.postCount || 0}"
+            onclick="openDeleteModal(this)"
+          >
+            <i data-lucide="trash-2"></i>
+            <span>Delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>
   `;
 }
 

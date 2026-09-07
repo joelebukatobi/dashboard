@@ -198,6 +198,20 @@
     }
   }
 
+  // Album cover thumbnail and its row wrapper.
+  // NOTE: these preserve the exact sizes the markup used inline (gap-3,
+  // w-10/h-10 on a 62.5% root = 7.5px gap, 25px square). Both came from
+  // Tailwind's default numeric scale rather than this codebase's rem
+  // convention, so they are probably not the intended sizes - worth a
+  // deliberate decision rather than a silent change.
+  &__thumb-row {
+    @apply flex items-center gap-[0.75rem];
+  }
+
+  &__thumb {
+    @apply w-[2.5rem] h-[2.5rem] rounded object-cover;
+  }
+
   // Content info container (avatar + name/email)
   &__content-info {
     @apply flex items-center gap-[1.2rem];

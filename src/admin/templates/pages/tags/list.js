@@ -45,70 +45,12 @@ export function tagsListContent({ tags, total, page, totalPages, filters, user, 
           tags.length === 0
             ? emptyState()
             : `
-          <!-- Data List (Table) -->
           <table class="table">
-              <thead class="table__thead">
-                <tr>
-                  <th>Name</th>
-                  <th>Slug</th>
-                  <th>Description</th>
-                  <th>Posts</th>
-                  <th>Date</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody class="table__tbody">
-                ${tags
-                  .map(
-                    (tag) => `
-                  <tr class="table__tr">
-                    <td class="table__td">
-                      <span class="table__label">Name</span>
-                      <div class="table__title">
-                        <a href="/admin/tags/${tag.id}/edit">${escapeHtml(tag.name)}</a>
-                      </div>
-                    </td>
-                    <td class="table__td">
-                      <span class="table__label">Slug</span>
-                      <div>${tag.slug}</div>
-                    </td>
-                    <td class="table__td">
-                      <span class="table__label">Description</span>
-                      <div>${tag.description || '-'}</div>
-                    </td>
-                    <td class="table__td">
-                      <span class="table__label">Posts</span>
-                      <span class="badge badge--neutral">${tag.postCount || 0}</span>
-                    </td>
-                    <td class="table__td">
-                      <span class="table__label">Date</span>
-                      ${formatDate(tag.createdAt)}
-                    </td>
-                    <td class="table__td table__td--actions">
-                      <div class="row-actions">
-                        <a href="/admin/tags/${tag.id}/edit" class="btn btn--ghost row-action row-action--edit">
-                          <i data-lucide="pencil"></i>
-                          <span>Edit</span>
-                        </a>
-                        <button
-                          type="button"
-                          class="btn btn--ghost row-action row-action--delete"
-                          data-tag-id="${tag.id}"
-                          data-tag-name="${escapeHtml(tag.name)}"
-                          data-post-count="${tag.postCount || 0}"
-                          onclick="openDeleteModal(this)"
-                        >
-                          <i data-lucide="trash-2"></i>
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                `,
-                  )
-                  .join('')}
-              </tbody>
-            </table>
+            ${tagsTableHead()}
+            <tbody class="table__tbody">
+              ${tags.map(renderTagRow).join('')}
+            </tbody>
+          </table>
         `}
         </div>
 
@@ -165,59 +107,7 @@ export function tagsTableFragment({ tags, pagination }) {
     `;
   }
 
-  const rows = tags.map((tag) => {
-    const date = new Date(tag.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-
-    return `
-      <tr class="table__tr">
-        <td class="table__td">
-          <span class="table__label">Name</span>
-          <div class="table__title">
-            <a href="/admin/tags/${tag.id}/edit">${tag.name}</a>
-          </div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Slug</span>
-          <div class="table__slug">${tag.slug}</div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Description</span>
-          <div class="table__title">${tag.description || '-'}</div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Posts</span>
-          <span class="badge badge--neutral">${tag.postCount || 0}</span>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Date</span>
-          ${date}
-        </td>
-        <td class="table__td table__td--actions">
-          <div class="row-actions">
-            <a href="/admin/tags/${tag.id}/edit" class="btn btn--ghost row-action row-action--edit">
-              <i data-lucide="pencil"></i>
-              <span>Edit</span>
-            </a>
-            <button
-              type="button"
-              class="btn btn--ghost row-action row-action--delete"
-              data-tag-id="${tag.id}"
-              data-tag-name="${tag.name}"
-              data-post-count="${tag.postCount || 0}"
-              onclick="openDeleteModal(this)"
-            >
-              <i data-lucide="trash-2"></i>
-              <span>Delete</span>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
+  const rows = tags.map(renderTagRow).join('');
 
   // Build pagination for the fragment
   const paginationFragment = pagination && pagination.totalPages > 1
@@ -247,6 +137,74 @@ export function tagsTableFragment({ tags, pagination }) {
       </tbody>
     </table>
     ${paginationFragment}
+  `;
+}
+
+/**
+ * Shared by the page render and the HTMX fragment so filtering cannot change
+ * the table. Keeps the escaped name from the page render and the styled slug
+ * and description from the fragment.
+ */
+function tagsTableHead() {
+  return `
+    <thead class="table__thead">
+      <tr>
+        <th>Name</th>
+        <th>Slug</th>
+        <th>Description</th>
+        <th>Posts</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  `;
+}
+
+function renderTagRow(tag) {
+  return `
+    <tr class="table__tr">
+      <td class="table__td">
+        <span class="table__label">Name</span>
+        <div class="table__title">
+          <a href="/admin/tags/${tag.id}/edit">${escapeHtml(tag.name)}</a>
+        </div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Slug</span>
+        <div class="table__slug">${tag.slug}</div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Description</span>
+        <div class="table__title">${tag.description || '-'}</div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Posts</span>
+        <span class="badge badge--neutral">${tag.postCount || 0}</span>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Date</span>
+        ${formatDate(tag.createdAt)}
+      </td>
+      <td class="table__td table__td--actions">
+        <div class="row-actions">
+          <a href="/admin/tags/${tag.id}/edit" class="btn btn--ghost row-action row-action--edit">
+            <i data-lucide="pencil"></i>
+            <span>Edit</span>
+          </a>
+          <button
+            type="button"
+            class="btn btn--ghost row-action row-action--delete"
+            data-tag-id="${tag.id}"
+            data-tag-name="${escapeHtml(tag.name)}"
+            data-post-count="${tag.postCount || 0}"
+            onclick="openDeleteModal(this)"
+          >
+            <i data-lucide="trash-2"></i>
+            <span>Delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>
   `;
 }
 
