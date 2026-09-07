@@ -52,6 +52,21 @@ export function buildDashboardShell({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Applied before first paint: reading the theme later, from a script at
+         the end of the body, meant every navigation painted the light theme
+         for a frame before JavaScript added .dark. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === null) {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            localStorage.setItem('theme', t);
+          }
+          if (t === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
     <title>${safeTitle} - ${safeSiteName}</title>
     <meta name="description" content="${safeDescription}" />
     ${ogMeta}
@@ -132,24 +147,10 @@ export function buildDashboardShell({
         });
       });
 
-      // Theme Toggle
+      // Theme Toggle. The theme itself is applied by the head script above,
+      // before first paint; this only wires the toggle.
       const themeToggle = document.getElementById('themeToggle');
       const html = document.documentElement;
-      const savedTheme = localStorage.getItem('theme');
-
-      // Theme initialization
-      if (savedTheme === null) {
-        // First visit - check system preference
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          html.classList.add('dark');
-          localStorage.setItem('theme', 'dark');
-        } else {
-          localStorage.setItem('theme', 'light');
-        }
-      } else if (savedTheme === 'dark') {
-        // Returning visitor with saved preference
-        html.classList.add('dark');
-      }
 
       if (themeToggle) {
         themeToggle.addEventListener('click', () => {

@@ -37,6 +37,21 @@ export function buildAuthShell({
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Applied before first paint: reading the theme later, from a script at
+         the end of the body, meant every navigation painted the light theme
+         for a frame before JavaScript added .dark. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (t === null) {
+            t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            localStorage.setItem('theme', t);
+          }
+          if (t === 'dark') document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
     <title>${safeTitle} - ${safeSiteName}</title>
     <meta name="description" content="${safeDescription}" />
     ${ogMeta}
@@ -83,22 +98,7 @@ export function buildAuthShell({
 
     <!-- Initialize Lucide icons and handle theme -->
     <script>
-      // Theme initialization for auth pages
-      const html = document.documentElement;
-      const savedTheme = localStorage.getItem('theme');
-
-      if (savedTheme === null) {
-        // First visit - check system preference
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          html.classList.add('dark');
-          localStorage.setItem('theme', 'dark');
-        } else {
-          localStorage.setItem('theme', 'light');
-        }
-      } else if (savedTheme === 'dark') {
-        // Returning visitor with saved preference
-        html.classList.add('dark');
-      }
+      // Theme is applied by the head script, before first paint.
 
       lucide.createIcons();
 
