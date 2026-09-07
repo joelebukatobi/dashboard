@@ -10,10 +10,11 @@
   // Responsive grid: 2 cols mobile, 3 tablet, 5 desktop
   @apply grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 content-start items-start;
 
-  // Desktop: scroll within content area above fixed footer
+  // The grid does not scroll: a page is two rows of five and the pagination
+  // sits below it. Cards keep their natural size, so a short viewport scrolls
+  // the content area rather than shrinking the cards.
   @media (min-width: 1024px) {
-    @apply flex-1 min-h-0 overflow-y-auto;
-    // padding-right: 1.6rem;
+    @apply shrink-0;
   }
 
   // Empty state within media grid
@@ -42,7 +43,7 @@
 @media (min-width: 1024px) {
   .layout--sidebar-collapsed {
     .media-grid {
-      @apply lg:grid-cols-6;
+      // Five per row regardless of sidebar state, so a page is always 2 rows
       @apply grid-flow-row;
       grid-auto-rows: max-content;
     }
