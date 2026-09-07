@@ -3,13 +3,18 @@ import { z } from 'zod';
 
 /**
  * Email validation schema
+ * - Must look like an email
  * - Max 255 characters
  * - Converted to lowercase
- * Note: Format validation is handled in auth service for specific error messages
+ *
+ * The format check used to live only in auth.service validateCredentials,
+ * which covers login but not the public subscribe endpoint or comment author
+ * addresses, so POST /api/v1/subscribe happily stored values like "nope".
  */
 export const emailSchema = z
   .string()
   .min(1, 'Email is required')
+  .email('Enter a valid email address')
   .max(255, 'Email must be less than 255 characters')
   .transform(email => email.toLowerCase().trim());
 

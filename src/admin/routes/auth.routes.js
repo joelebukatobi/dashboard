@@ -37,7 +37,7 @@ function forgotPasswordValidationFail(request, reply, _message, zodError) {
 
 export default async function authRoutes(fastify) {
   fastify.post('/login', {
-    preHandler: validateBody(loginSchema),
+    preHandler: validateBody(loginSchema, { onFail: authFormValidationFail }),
     handler: authController.login.bind(authController),
   });
 
