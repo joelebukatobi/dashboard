@@ -41,56 +41,9 @@ export function albumsListContent({ albums, total, page, totalPages, filters, to
             ? emptyState()
             : `
           <table class="table">
-            <thead class="table__thead">
-              <tr>
-                <th>Album</th>
-                <th>Slug</th>
-                <th>Description</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            ${albumsTableHead()}
             <tbody class="table__tbody">
-              ${albums.map((album) => `
-                <tr class="table__tr">
-                  <td class="table__td">
-                    <span class="table__label">Album</span>
-                    <div class="table__title">
-                      <a href="/admin/media/albums/${album.id}/edit">${escapeHtml(album.title)}</a>
-                    </div>
-                  </td>
-                  <td class="table__td">
-                    <span class="table__label">Slug</span>
-                    <div>${album.slug}</div>
-                  </td>
-                  <td class="table__td">
-                    <span class="table__label">Description</span>
-                    <div>${album.description || '-'}</div>
-                  </td>
-                  <td class="table__td">
-                    <span class="table__label">Created</span>
-                    ${formatDate(album.createdAt)}
-                  </td>
-                  <td class="table__td table__td--actions">
-                    <div class="row-actions">
-                      <a href="/admin/media/albums/${album.id}/edit" class="btn btn--ghost row-action row-action--edit">
-                        <i data-lucide="pencil"></i>
-                        <span>Edit</span>
-                      </a>
-                      <button
-                        type="button"
-                        class="btn btn--ghost row-action row-action--delete"
-                        data-album-id="${album.id}"
-                        data-album-title="${escapeHtml(album.title)}"
-                        onclick="openDeleteModal(this)"
-                      >
-                        <i data-lucide="trash-2"></i>
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
+              ${albums.map(renderAlbumRow).join('')}
             </tbody>
           </table>
         `}
@@ -130,52 +83,7 @@ export function albumsTableFragment({ albums, pagination }) {
     `;
   }
 
-  const rows = albums.map((album) => {
-    const coverSrc = toPublicMediaUrl(album.coverImage?.thumbnailPath || album.coverImage?.path) || '/favicon.svg';
-    return `
-      <tr class="table__tr">
-        <td class="table__td">
-          <span class="table__label">Album</span>
-          <div class="flex items-center gap-3">
-            <img src="${coverSrc}" alt="" class="w-10 h-10 rounded object-cover" />
-            <div class="table__title">
-              <a href="/admin/media/albums/${album.id}/edit">${album.title}</a>
-            </div>
-          </div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Slug</span>
-          <div class="table__slug">${album.slug}</div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Description</span>
-          <div class="table__title">${album.description || '-'}</div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Created</span>
-          ${new Date(album.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </td>
-        <td class="table__td table__td--actions">
-          <div class="row-actions">
-            <a href="/admin/media/albums/${album.id}/edit" class="btn btn--ghost row-action row-action--edit">
-              <i data-lucide="pencil"></i>
-              <span>Edit</span>
-            </a>
-            <button
-              type="button"
-              class="btn btn--ghost row-action row-action--delete"
-              data-album-id="${album.id}"
-              data-album-title="${album.title}"
-              onclick="openDeleteModal(this)"
-            >
-              <i data-lucide="trash-2"></i>
-              <span>Delete</span>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
+  const rows = albums.map(renderAlbumRow).join('');
 
   const paginationFragment = pagination && pagination.totalPages > 1
     ? paginationHtml({
@@ -216,6 +124,72 @@ export function albumsListModals({ user }) {
   });
 
   return deleteModal.render();
+}
+
+/**
+ * Shared by the page render and the HTMX fragment so filtering cannot change
+ * the table. Keeps the cover thumbnail and styled slug from the fragment and
+ * the escaping and formatDate from the page render.
+ */
+function albumsTableHead() {
+  return `
+    <thead class="table__thead">
+      <tr>
+        <th>Album</th>
+        <th>Slug</th>
+        <th>Description</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  `;
+}
+
+function renderAlbumRow(album) {
+  const coverSrc = toPublicMediaUrl(album.coverImage?.thumbnailPath || album.coverImage?.path) || '/favicon.svg';
+  return `
+    <tr class="table__tr">
+      <td class="table__td">
+        <span class="table__label">Album</span>
+        <div class="table__thumb-row">
+          <img src="${coverSrc}" alt="" class="table__thumb" />
+          <div class="table__title">
+            <a href="/admin/media/albums/${album.id}/edit">${escapeHtml(album.title)}</a>
+          </div>
+        </div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Slug</span>
+        <div class="table__slug">${album.slug}</div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Description</span>
+        <div class="table__title">${album.description || '-'}</div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Created</span>
+        ${formatDate(album.createdAt)}
+      </td>
+      <td class="table__td table__td--actions">
+        <div class="row-actions">
+          <a href="/admin/media/albums/${album.id}/edit" class="btn btn--ghost row-action row-action--edit">
+            <i data-lucide="pencil"></i>
+            <span>Edit</span>
+          </a>
+          <button
+            type="button"
+            class="btn btn--ghost row-action row-action--delete"
+            data-album-id="${album.id}"
+            data-album-title="${escapeHtml(album.title)}"
+            onclick="openDeleteModal(this)"
+          >
+            <i data-lucide="trash-2"></i>
+            <span>Delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `;
 }
 
 function emptyState() {
