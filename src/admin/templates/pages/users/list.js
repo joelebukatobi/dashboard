@@ -106,7 +106,7 @@ export function usersListContent({ users, pagination, counts, filters, user, toa
                     </td>
                     <td class="table__td">
                       <span class="table__label">Role</span>
-                      <span class="text-grey-900 dark:text-grey-100">${USER_ROLE_LABELS[u.role] || u.role}</span>
+                      <span>${USER_ROLE_LABELS[u.role] || u.role}</span>
                     </td>
                     <td class="table__td">
                       <span class="table__label">Status</span>
@@ -285,7 +285,7 @@ export function usersTableFragment({ users, total, page, totalPages, limit, filt
       </td>
       <td class="table__td">
         <span class="table__label">Role</span>
-        <span class="text-grey-900 dark:text-grey-100">${USER_ROLE_LABELS[u.role] || u.role}</span>
+        <span>${USER_ROLE_LABELS[u.role] || u.role}</span>
       </td>
       <td class="table__td">
         <span class="table__label">Status</span>

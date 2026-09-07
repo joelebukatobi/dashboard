@@ -156,10 +156,10 @@ export function albumsTableFragment({ albums, pagination }) {
           ${new Date(album.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
         </td>
         <td class="table__td table__td--actions">
-          <div class="flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]">
+          <div class="row-actions">
             <a href="/admin/media/albums/${album.id}/edit" class="btn btn--ghost row-action row-action--edit">
-              <i data-lucide="pencil" class="h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]"></i>
-              <span class="lg:hidden">Edit</span>
+              <i data-lucide="pencil"></i>
+              <span>Edit</span>
             </a>
             <button
               type="button"
@@ -168,8 +168,8 @@ export function albumsTableFragment({ albums, pagination }) {
               data-album-title="${album.title}"
               onclick="openDeleteModal(this)"
             >
-              <i data-lucide="trash-2" class="h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]"></i>
-              <span class="lg:hidden">Delete</span>
+              <i data-lucide="trash-2"></i>
+              <span>Delete</span>
             </button>
           </div>
         </td>
