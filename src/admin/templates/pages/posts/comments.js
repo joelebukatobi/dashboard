@@ -101,19 +101,19 @@ export function postCommentsContent({ user, post, comments, pagination, toast })
           nameElement.textContent = authorName || 'this comment';
         }
 
-        // Show modal
-        modal.classList.remove('hidden');
-        requestAnimationFrame(() => {
-          document.getElementById('commentModalBackdrop').classList.remove('opacity-0');
-        });
+        // Show modal. .modal is display:none until .is-open, and the backdrop
+        // fades via .modal.is-open &, so this is the whole of it. The previous
+        // version toggled a hidden class that could not beat .modal's own
+        // display:none, and reached for a #commentModalBackdrop that does not
+        // exist, which threw before the modal could open at all.
+        modal.classList.add('is-open');
       }
-      
+
       function closeDeleteModal() {
         const modal = document.getElementById('deleteCommentModal');
-        document.getElementById('commentModalBackdrop').classList.add('opacity-0');
-        setTimeout(() => {
-          modal.classList.add('hidden');
-        }, 200);
+        if (modal) {
+          modal.classList.remove('is-open');
+        }
       }
       
       // Close modal on backdrop click
@@ -121,7 +121,7 @@ export function postCommentsContent({ user, post, comments, pagination, toast })
         const modal = document.getElementById('deleteCommentModal');
         if (modal) {
           modal.addEventListener('click', function(e) {
-            if (e.target === this || e.target.id === 'commentModalBackdrop') {
+            if (e.target === this || e.target.classList.contains('modal__backdrop')) {
               closeDeleteModal();
             }
           });

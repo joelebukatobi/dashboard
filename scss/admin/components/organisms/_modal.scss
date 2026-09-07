@@ -114,6 +114,12 @@
   @apply flex-1 overflow-auto p-4;
 }
 
+// Content block for modals that lay out their own body, where the header
+// above already supplies the top spacing (TOTP setup).
+.modal__body-block {
+  @apply px-4 pb-5;
+}
+
 .modal__close {
   @apply absolute top-2 right-2;
   @apply w-5 h-5 flex items-center justify-center;

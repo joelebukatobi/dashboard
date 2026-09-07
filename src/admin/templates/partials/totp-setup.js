@@ -87,7 +87,7 @@ export function totpSetupModal({ userId }) {
       <h3 id="totpSetupModalLabel" class="modal__title">Set Up Two-Factor Authentication</h3>
       <p class="modal__description">Configure an authenticator app on your admin account.</p>
     </div>
-    <div class="px-4 pb-5">
+    <div class="modal__body-block">
       <div id="totpSetupBody">
         ${totpLoadingHtml()}
       </div>
