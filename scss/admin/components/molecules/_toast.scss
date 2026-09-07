@@ -35,7 +35,7 @@
 
     i,
     svg {
-      @apply size-4;
+      @apply shrink-0 size-4;
     }
   }
 
@@ -208,5 +208,13 @@
   // Wrapper for icon + message
   .toast__wrapper {
     @apply flex items-center gap-3 px-4 py-3 whitespace-nowrap;
+
+    // The page-header toast puts the icon straight in here rather than in a
+    // .toast__icon, so it needs its own sizing or the raw SVG renders at its
+    // intrinsic 24px.
+    i,
+    svg {
+      @apply shrink-0 size-4;
+    }
   }
 }
