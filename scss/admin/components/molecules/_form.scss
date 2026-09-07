@@ -191,6 +191,17 @@
     @apply opacity-100;
   }
 
+  // Action row for inline forms (comment edit and reply). The markup has
+  // always carried these classes; they had no rules, so the buttons sat on
+  // inline whitespace and --right did not right align anything.
+  &__actions {
+    @apply flex items-center gap-2;
+
+    &--right {
+      @apply justify-end;
+    }
+  }
+
   &__divider {
     @apply w-full border-t border-grey-50 my-[2.4rem];
     .dark & {
