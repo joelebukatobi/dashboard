@@ -126,13 +126,13 @@
 // Inline code styles
 .post-editor {
   code {
-    @apply bg-gray-100 text-red-600 px-[0.4rem] py-[0.2rem] rounded text-[0.9em] font-mono;
+    @apply bg-grey-100 text-red-600 px-[0.4rem] py-[0.2rem] rounded text-[0.9em] font-mono;
   }
 }
 
 // Preview/Content area inline code
 .post__content {
   code {
-    @apply bg-gray-100 text-red-600 px-[0.4rem] py-[0.2rem] rounded text-[0.9em] font-mono;
+    @apply bg-grey-100 text-red-600 px-[0.4rem] py-[0.2rem] rounded text-[0.9em] font-mono;
   }
 }

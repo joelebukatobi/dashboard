@@ -71,3 +71,22 @@
     }
   }
 }
+
+// ============================================================================
+// Avatar Upload Result - the fragment returned after an avatar upload
+// ============================================================================
+.avatar-result {
+  @apply flex flex-col items-center;
+
+  &__image {
+    @apply h-15 w-15 rounded-full object-cover mb-2;
+  }
+
+  &__message {
+    @apply text-body-sm text-green-600;
+
+    .dark & {
+      @apply text-green-400;
+    }
+  }
+}
