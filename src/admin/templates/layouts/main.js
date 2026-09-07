@@ -458,14 +458,18 @@ export function buildDashboardShell({
                   
                   toastContainer.appendChild(toast);
                   
-                  // Animate in
+                  // Animate in. This used to remove translate-x-full, which was
+                  // never added, so the toast stayed at toast--hidden opacity 0
+                  // and was never actually seen.
                   requestAnimationFrame(function() {
-                    toast.classList.remove('translate-x-full');
+                    toast.classList.remove('toast--hidden');
+                    toast.classList.add('toast--visible');
                   });
-                  
+
                   // Remove after 3 seconds
                   setTimeout(function() {
-                    toast.classList.add('translate-x-full', 'opacity-0');
+                    toast.classList.remove('toast--visible');
+                    toast.classList.add('toast--hidden');
                     setTimeout(function() { toast.remove(); }, 300);
                   }, 3000);
                 }
