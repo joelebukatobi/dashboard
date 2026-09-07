@@ -70,68 +70,9 @@ export function postsListContent({ posts, total, page, totalPages, categories, f
             : `
           <!-- Data List (Table) -->
           <table class="table">
-             <thead class="table__thead">
-               <tr>
-                 <th>Title</th>
-                 <th>Category</th>
-                 <th>Status</th>
-                 <th>Comments</th>
-                 <th>Date</th>
-                 <th>Actions</th>
-               </tr>
-             </thead>
+            ${postsTableHead()}
             <tbody class="table__tbody">
-              ${posts
-                .map(
-                  (post) => `
-                <tr class="table__tr">
-                  <td class="table__td">
-                    <span class="table__label">Title</span>
-                    <div class="table__title">
-                      <a href="/admin/posts/${post.id}/edit">${escapeHtml(post.title)}</a>
-                    </div>
-                  </td>
-                   <td class="table__td">
-                     <span class="table__label">Category</span>
-                     ${post.category ? `<span>${post.category.title}</span>` : '<span>Uncategorized</span>'}
-                   </td>
-                    <td class="table__td">
-                      <span class="table__label">Status</span>
-                      ${getStatusBadge(post.status)}
-                    </td>
-                   <td class="table__td">
-                     <span class="table__label">Comments</span>
-                     <a href="/admin/posts/${post.id}/comments" class="table__comments-link">
-                       <i data-lucide="message-circle"></i>
-                       <span>${post.commentsCount || 0}</span>
-                     </a>
-                   </td>
-                   <td class="table__td">
-                     <span class="table__label">Date</span>
-                     ${formatDate(post.publishedAt || post.createdAt)}
-                   </td>
-                  <td class="table__td table__td--actions">
-                     <div class="row-actions">
-                       <a href="/admin/posts/${post.id}/edit" class="btn btn--ghost row-action row-action--edit">
-                         <i data-lucide="pencil"></i>
-                         <span>Edit</span>
-                       </a>
-                       <button
-                         type="button"
-                         class="btn btn--ghost row-action row-action--delete"
-                         data-post-id="${post.id}"
-                         data-post-title="${escapeHtml(post.title)}"
-                         onclick="openDeleteModal(this)"
-                       >
-                         <i data-lucide="trash-2"></i>
-                         <span>Delete</span>
-                       </button>
-                     </div>
-                   </td>
-                </tr>
-              `,
-                )
-                .join('')}
+              ${posts.map(renderPostRow).join('')}
             </tbody>
           </table>
         `}
@@ -185,97 +126,90 @@ export function postsTableFragment({ posts, page, totalPages, filters }) {
     `;
   }
 
-  const rows = posts.map((post) => {
-    const statusConfig = {
-      PUBLISHED: { class: 'status--success', label: 'Published' },
-      DRAFT: { class: 'status--warning', label: 'Draft' },
-      SCHEDULED: { class: 'status--info', label: 'Scheduled' },
-      ARCHIVED: { class: 'status--neutral', label: 'Archived' },
-    };
-    const config = statusConfig[post.status] || statusConfig['DRAFT'];
-    const date = new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-
-    return `
-      <tr class="table__tr">
-        <td class="table__td">
-          <span class="table__label">Title</span>
-          <div class="table__title">
-            <a href="/admin/posts/${post.id}/edit">${escapeHtmlHelper(post.title)}</a>
-          </div>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Category</span>
-          ${post.category ? `<span class="text-grey-700">${post.category.title}</span>` : '<span class="text-grey-500">Uncategorized</span>'}
-        </td>
-        <td class="table__td">
-          <span class="table__label">Status</span>
-          <span class="status ${config.class}">
-            <span class="status__dot"></span>
-            ${config.label}
-          </span>
-        </td>
-        <td class="table__td">
-          <span class="table__label">Date</span>
-          ${date}
-        </td>
-        <td class="table__td table__td--actions">
-          <div class="row-actions">
-            <a href="/admin/posts/${post.id}/edit" class="btn btn--ghost row-action row-action--edit">
-              <i data-lucide="pencil"></i>
-              <span>Edit</span>
-            </a>
-            <button 
-              type="button"
-              class="btn btn--ghost row-action row-action--delete"
-              data-post-id="${post.id}"
-              data-post-title="${escapeHtmlHelper(post.title)}"
-              onclick="openDeleteModal(this)"
-            >
-              <i data-lucide="trash-2"></i>
-              <span>Delete</span>
-            </button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
-
-  // Build pagination for the fragment
   const paginationFragment = totalPages > 1
     ? paginationHtml({ basePath: '/admin/posts', page, totalPages, filters, filterKeys: POST_FILTER_KEYS })
     : '';
 
   return `
     <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Title</th>
-          <th>Category</th>
-          <th>Status</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      ${postsTableHead()}
       <tbody class="table__tbody">
-        ${rows}
+        ${posts.map(renderPostRow).join('')}
       </tbody>
     </table>
     ${paginationFragment}
   `;
 }
 
-function escapeHtmlHelper(text) {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+/**
+ * One header and one row renderer, shared by the full page render and the
+ * HTMX fragment. They drifted while duplicated: the fragment had lost the
+ * Comments column entirely and rendered status, dates and escaping
+ * differently, so filtering the list changed the table.
+ */
+function postsTableHead() {
+  return `
+    <thead class="table__thead">
+      <tr>
+        <th>Title</th>
+        <th>Category</th>
+        <th>Status</th>
+        <th>Comments</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  `;
+}
+
+function renderPostRow(post) {
+  return `
+    <tr class="table__tr">
+      <td class="table__td">
+        <span class="table__label">Title</span>
+        <div class="table__title">
+          <a href="/admin/posts/${post.id}/edit">${escapeHtml(post.title)}</a>
+        </div>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Category</span>
+        ${post.category ? `<span>${post.category.title}</span>` : '<span>Uncategorized</span>'}
+      </td>
+      <td class="table__td">
+        <span class="table__label">Status</span>
+        ${getStatusBadge(post.status)}
+      </td>
+      <td class="table__td">
+        <span class="table__label">Comments</span>
+        <a href="/admin/posts/${post.id}/comments" class="table__comments-link">
+          <i data-lucide="message-circle"></i>
+          <span>${post.commentsCount || 0}</span>
+        </a>
+      </td>
+      <td class="table__td">
+        <span class="table__label">Date</span>
+        ${formatDate(post.publishedAt || post.createdAt)}
+      </td>
+      <td class="table__td table__td--actions">
+        <div class="row-actions">
+          <a href="/admin/posts/${post.id}/edit" class="btn btn--ghost row-action row-action--edit">
+            <i data-lucide="pencil"></i>
+            <span>Edit</span>
+          </a>
+          <button
+            type="button"
+            class="btn btn--ghost row-action row-action--delete"
+            data-post-id="${post.id}"
+            data-post-title="${escapeHtml(post.title)}"
+            onclick="openDeleteModal(this)"
+          >
+            <i data-lucide="trash-2"></i>
+            <span>Delete</span>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `;
 }
 
 // Helper Functions
