@@ -385,3 +385,24 @@
     @apply shrink-0 ml-auto;
   }
 }
+
+// ============================================================================
+// Panel Empty State - compact empty state for dashboard panels (chart,
+// activity, top posts). Lighter than .empty-state, which is page sized.
+// ============================================================================
+.panel-empty {
+  @apply text-center py-5 text-grey-500;
+
+  .dark & {
+    @apply text-grey-400;
+  }
+
+  svg,
+  i {
+    @apply w-6 h-6 mx-auto mb-2 opacity-50;
+  }
+
+  &__hint {
+    @apply text-body-sm;
+  }
+}
