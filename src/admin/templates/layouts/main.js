@@ -223,17 +223,6 @@ export function buildDashboardShell({
       sidebarClose?.addEventListener('click', closeMobileSidebar);
       sidebarOverlay?.addEventListener('click', closeMobileSidebar);
 
-      // Mobile Search Toggle
-      const mobileSearchToggle = document.getElementById('mobileSearchToggle');
-      const mobileSearch = document.getElementById('mobileSearch');
-
-      mobileSearchToggle?.addEventListener('click', () => {
-        mobileSearch?.classList.toggle('mobile-search--open');
-        if (mobileSearch?.classList.contains('mobile-search--open')) {
-          mobileSearch?.querySelector('input')?.focus();
-        }
-      });
-
       document.addEventListener('click', (e) => {
         if (
           mobileSearch?.classList.contains('mobile-search--open') &&

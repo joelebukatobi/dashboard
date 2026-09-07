@@ -79,7 +79,7 @@ export function setupWizardContent({ step, token, expiresIn, error, errors = {},
         <p class="auth-card__subtitle">Create Your Admin Account To Get Started</p>
       </div>
 
-      ${error ? `<div class="alert alert--danger">${escapeHtml(error)}</div>` : ''}
+      ${error ? `<div class="alert alert--error">${escapeHtml(error)}</div>` : ''}
 
       <div class="setup-wizard__token-info">
         <i data-lucide="clock"></i>

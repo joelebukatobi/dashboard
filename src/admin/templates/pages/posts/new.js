@@ -510,7 +510,6 @@ export function postNewContent({ categories, tags, user }) {
       const imageInput = document.getElementById('imageInput');
       const imagePreview = document.getElementById('imagePreview');
       const previewImg = document.getElementById('previewImg');
-      const removeImage = document.getElementById('removeImage');
       const featuredImageId = document.getElementById('featuredImageId');
 
       dropzone?.addEventListener('click', () => imageInput.click());
@@ -559,12 +558,6 @@ export function postNewContent({ categories, tags, user }) {
         }
       });
 
-      removeImage?.addEventListener('click', () => {
-        imageInput.value = '';
-        featuredImageId.value = '';
-        previewImg.src = previewImg.dataset.defaultSrc || '';
-        imagePreview.classList.remove('has-image');
-      });
     </script>
   `;
 
