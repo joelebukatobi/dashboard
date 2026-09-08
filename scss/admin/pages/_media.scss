@@ -15,7 +15,8 @@
   // header, toolbar and pagination stay put. On a tall screen a full page of
   // ten fits and nothing scrolls at all.
   @media (min-width: 1024px) {
-    @apply flex-1 min-h-0 overflow-y-auto;
+    // pr matches the scrollable table areas, so the cards clear the scrollbar.
+    @apply flex-1 min-h-0 overflow-y-auto pr-[1.6rem];
   }
 
   // Empty state within media grid
