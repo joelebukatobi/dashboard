@@ -56,7 +56,6 @@ export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
           <i data-lucide="moon" class="theme-icon-dark"></i>
         </button>
 
-
         <!-- User Menu -->
         <div class="hs-dropdown hs-dropdown--bottom-right">
           <button id="hs-dropdown-user" type="button" class="hs-dropdown-toggle header__user-btn">
