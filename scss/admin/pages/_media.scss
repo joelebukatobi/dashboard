@@ -10,11 +10,12 @@
   // Responsive grid: 2 cols mobile, 3 tablet, 5 desktop
   @apply grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 content-start items-start;
 
-  // The grid does not scroll: a page is two rows of five and the pagination
-  // sits below it. Cards keep their natural size, so a short viewport scrolls
-  // the content area rather than shrinking the cards.
+  // The grid owns the scroll, not the page: cards keep their natural size, so
+  // on a viewport too short for two rows the grid scrolls internally while the
+  // header, toolbar and pagination stay put. On a tall screen a full page of
+  // ten fits and nothing scrolls at all.
   @media (min-width: 1024px) {
-    @apply shrink-0;
+    @apply flex-1 min-h-0 overflow-y-auto;
   }
 
   // Empty state within media grid
