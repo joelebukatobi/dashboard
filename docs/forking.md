@@ -157,3 +157,45 @@ Required repository secrets: `CPANEL_FTP_HOST`, `CPANEL_FTP_USER`,
 `CPANEL_SSH_KEY` for the restart step. `URL` must be the fork's own
 base URL — the deploy fails loudly if it is unset rather than checking
 somebody else's site.
+
+## Portfolio: a fork that predates this model
+
+Portfolio is dashboard's oldest fork, and came first — the admin CMS in this
+repo was originally extracted from portfolio's own codebase, not the other
+way around. The ownership split above was formalized later, so portfolio
+never adopted `routes/project/` or `nav.project.js`. Its one project feature
+(a Projects admin section) is wired directly into core-owned files instead:
+the route is hardcoded into `plugin.js`'s registration list rather than
+autoloaded, and the sidebar nav entry is a literal `<a href="/admin/projects">`
+in `sidebar.js` rather than an entry in a fork-owned `nav.project.js`.
+
+This means a `git merge` pull from dashboard will conflict on `plugin.js` and
+`sidebar.js` specifically — portfolio edited core files to add project
+content, which is exactly the rule violation described above. Until
+portfolio migrates those two additions into `routes/project/posts.routes.js`
+(or similar) and `nav.project.js`, expect to resolve those two files by hand
+on every pull, keeping portfolio's project line and dashboard's everything
+else.
+
+Two differences that looked like gaps on inspection and are not:
+
+- **Favicon.** Dashboard resolves the configured site icon server-side with
+  a disk-existence check and fallback (`sendFavicon` in `src/app.js`).
+  Portfolio instead points `<link rel="icon">` straight at the configured
+  icon's own URL, falling back to a static file only when unset. Both solve
+  "each fork shows its own icon"; portfolio's is simpler because `<link>`
+  tags have no `onerror` fallback to begin with, so dashboard's extra
+  missing-file handling buys it nothing there.
+- **Dashboard's Top Posts widget fix.** Dashboard once had two divergent
+  renderers for this widget (full page vs. HTMX fragment refresh) that had
+  drifted onto different CSS classes. Portfolio never had this bug — it was
+  already calling one shared `getTopPosts()` from both paths. The only
+  actual difference is CSS: dashboard uses a `panel-empty` SCSS component,
+  portfolio uses inline Tailwind utility classes for the same empty state.
+
+One confirmed real gap, the other direction: dashboard's list pages
+(posts/albums/categories/tags) have no responsive handling on row actions —
+portfolio added `lg:hidden` text labels and smaller icon sizing below the
+desktop breakpoint; dashboard still renders icon-only regardless of viewport.
+This is a core-file improvement portfolio made that hasn't been pulled
+upstream into dashboard.
