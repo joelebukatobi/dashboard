@@ -191,10 +191,10 @@ function renderPostRow(post) {
         ${formatDate(post.publishedAt || post.createdAt)}
       </td>
       <td class="table__td table__td--actions">
-        <div class="row-actions">
+        <div class="flex items-center justify-end gap-[1.6rem] lg:gap-[0.64rem]">
           <a href="/admin/posts/${post.id}/edit" class="btn btn--ghost row-action row-action--edit">
-            <i data-lucide="pencil"></i>
-            <span>Edit</span>
+            <i data-lucide="pencil" class="h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]"></i>
+            <span class="lg:hidden">Edit</span>
           </a>
           <button
             type="button"
@@ -203,8 +203,8 @@ function renderPostRow(post) {
             data-post-title="${escapeHtml(post.title)}"
             onclick="openDeleteModal(this)"
           >
-            <i data-lucide="trash-2"></i>
-            <span>Delete</span>
+            <i data-lucide="trash-2" class="h-[1.4rem] w-[1.4rem] lg:h-[1.2rem] lg:w-[1.2rem]"></i>
+            <span class="lg:hidden">Delete</span>
           </button>
         </div>
       </td>
