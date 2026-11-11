@@ -193,9 +193,10 @@ Two differences that looked like gaps on inspection and are not:
   actual difference is CSS: dashboard uses a `panel-empty` SCSS component,
   portfolio uses inline Tailwind utility classes for the same empty state.
 
-One confirmed real gap, the other direction: dashboard's list pages
-(posts/albums/categories/tags) have no responsive handling on row actions —
+One real gap, the other direction, now closed: dashboard's list pages
+(posts/albums/categories/tags) had no responsive handling on row actions —
 portfolio added `lg:hidden` text labels and smaller icon sizing below the
-desktop breakpoint; dashboard still renders icon-only regardless of viewport.
-This is a core-file improvement portfolio made that hasn't been pulled
-upstream into dashboard.
+desktop breakpoint, dashboard rendered icon-only regardless of viewport.
+Ported into dashboard's shared `render*Row()` for each page, which fixed it
+in both the full page render and the HTMX fragment at once — portfolio's own
+version only applied it to the fragment.
