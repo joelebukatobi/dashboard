@@ -162,7 +162,7 @@ function tagsTableHead() {
 
 function renderTagRow(tag) {
   return `
-    <tr class="table__tr">
+    <tr class="table__tr cursor-pointer" data-href="/admin/tags/${tag.id}/edit">
       <td class="table__td">
         <span class="table__label">Name</span>
         <div class="table__title">

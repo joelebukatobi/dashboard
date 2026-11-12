@@ -160,7 +160,7 @@ function categoriesTableHead() {
 
 function renderCategoryRow(category) {
   return `
-    <tr class="table__tr">
+    <tr class="table__tr cursor-pointer" data-href="/admin/categories/${category.id}/edit">
       <td class="table__td">
         <span class="table__label">Title</span>
         <div class="table__title">

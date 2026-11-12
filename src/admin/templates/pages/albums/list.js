@@ -148,7 +148,7 @@ function albumsTableHead() {
 function renderAlbumRow(album) {
   const coverSrc = toPublicMediaUrl(album.coverImage?.thumbnailPath || album.coverImage?.path) || '/favicon.svg';
   return `
-    <tr class="table__tr">
+    <tr class="table__tr cursor-pointer" data-href="/admin/media/albums/${album.id}/edit">
       <td class="table__td">
         <span class="table__label">Album</span>
         <div class="table__thumb-row">

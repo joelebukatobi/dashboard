@@ -172,7 +172,7 @@ export function renderSubscriberRow(subscriber) {
   }[subscriber.status] || 'badge--neutral';
 
   return `
-    <tr class="table__tr" id="subscriber-${subscriber.id}">
+    <tr class="table__tr cursor-pointer" id="subscriber-${subscriber.id}" data-href="/admin/subscribers/${subscriber.id}/edit">
       <td class="table__td">
         <span class="table__label">Email</span>
         <div class="table__title">

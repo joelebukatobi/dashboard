@@ -233,6 +233,34 @@ export function buildDashboardShell({
         }
       });
 
+      // Whole-row navigation for admin list tables (Posts, Categories, Tags,
+      // Subscribers, Albums). Registered once at the document level so it
+      // survives HTMX swapping the table (search, paging) or the whole page
+      // (boosted sidebar nav) -- a per-table listener would be lost on swap.
+      function openRowTarget(e, row) {
+        const href = row.dataset.href;
+        if (!href) return;
+        if (e.ctrlKey || e.metaKey || e.button === 1) {
+          window.open(href, '_blank');
+        } else {
+          window.location.href = href;
+        }
+      }
+
+      document.addEventListener('click', function (e) {
+        if (e.button !== 0) return;
+        const row = e.target.closest('tr[data-href]');
+        if (!row || e.target.closest('a, button, input, select, textarea, label')) return;
+        openRowTarget(e, row);
+      });
+
+      document.addEventListener('auxclick', function (e) {
+        if (e.button !== 1) return;
+        const row = e.target.closest('tr[data-href]');
+        if (!row || e.target.closest('a, button, input, select, textarea, label')) return;
+        openRowTarget(e, row);
+      });
+
       // Submenu Toggle
       function initSidebarSubmenus() {
         const submenuTriggers = document.querySelectorAll('.sidebar__item--has-submenu');
