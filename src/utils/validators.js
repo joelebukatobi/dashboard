@@ -68,7 +68,7 @@ export function validate(schema, data) {
   }
   
   // Format Zod errors into readable messages
-  const errors = result.error.errors.map(err => {
+  const errors = result.error.issues.map(err => {
     const path = err.path.join('.');
     return path ? `${path}: ${err.message}` : err.message;
   });

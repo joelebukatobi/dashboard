@@ -73,7 +73,7 @@ export const apiCommentsQuerySchema = z.object({
 });
 
 export function formatZodError(error) {
-  return error.errors
+  return error.issues
     .map((err) => {
       const path = err.path.join('.');
       return path ? `${path}: ${err.message}` : err.message;
@@ -91,8 +91,8 @@ export function formatZodError(error) {
  * @returns {string}
  */
 export function formatZodErrorForForm(error) {
-  if (error.errors.length === 1) {
-    return error.errors[0].message;
+  if (error.issues.length === 1) {
+    return error.issues[0].message;
   }
   return formatZodError(error);
 }
@@ -106,7 +106,7 @@ export function mapZodErrorsToFields(error) {
   /** @type {Record<string, string>} */
   const errors = {};
 
-  for (const issue of error.errors) {
+  for (const issue of error.issues) {
     const key = issue.path[0];
     if (typeof key === 'string') {
       errors[key] = errors[key] ? `${errors[key]}. ${issue.message}` : issue.message;
