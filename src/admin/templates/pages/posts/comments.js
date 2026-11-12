@@ -4,6 +4,29 @@
 import { getInitials, formatRelativeTime, escapeHtml, toastQueryScript } from '../../utils/helpers.js';
 
 /**
+ * Shared by the full page render and the HTMX fragment (pagination), so
+ * they can never drift the way the list pages' table/fragment pairs once
+ * did.
+ */
+function commentsListBody({ comments, pagination, post, user }) {
+  if (comments.length === 0) {
+    return emptyCommentsState();
+  }
+  return `
+    <div class="comments-list">
+      ${comments.map(comment => renderComment(comment, user)).join('')}
+    </div>
+
+    ${paginationHtml(pagination, post.id)}
+  `;
+}
+
+/** HTMX fragment for the comments-list-container, used by pagination. */
+export function commentsListFragment({ comments, pagination, post, user }) {
+  return commentsListBody({ comments, pagination, post, user });
+}
+
+/**
  * Post comments page inner content (layout applied via fastify-html addLayout).
  */
 export function postCommentsContent({ user, post, comments, pagination, toast }) {
@@ -40,17 +63,8 @@ export function postCommentsContent({ user, post, comments, pagination, toast })
                   </div>
                 </div>
               </div>
-              <div class="card__body">
-                ${comments.length === 0 
-                  ? emptyCommentsState()
-                  : `
-                    <div class="comments-list">
-                      ${comments.map(comment => renderComment(comment, user)).join('')}
-                    </div>
-                    
-                    ${paginationHtml(pagination, post.id)}
-                  `
-                }
+              <div class="card__body" id="comments-list-container">
+                ${commentsListBody({ comments, pagination, post, user })}
                </div>
              </div>
            </div>
@@ -332,11 +346,16 @@ function emptyCommentsState() {
 function paginationHtml(pagination, postId) {
   if (pagination.totalPages <= 1) return '';
 
+  const hxAttrs = (p) => {
+    const url = `/admin/posts/${postId}/comments?page=${p}`;
+    return `hx-get="${url}" hx-target="#comments-list-container" hx-push-url="true"`;
+  };
+
   const pages = [];
   for (let i = 1; i <= pagination.totalPages; i++) {
     const activeClass = i === pagination.page ? 'pagination__item--active' : '';
     pages.push(`
-      <a href="/admin/posts/${postId}/comments?page=${i}" class="pagination__item ${activeClass}">
+      <a href="/admin/posts/${postId}/comments?page=${i}" ${hxAttrs(i)} class="pagination__item ${activeClass}">
         ${i}
       </a>
     `);
@@ -345,13 +364,13 @@ function paginationHtml(pagination, postId) {
   return `
     <div class="pagination">
       ${pagination.page > 1 ? `
-        <a href="/admin/posts/${postId}/comments?page=${pagination.page - 1}" class="pagination__item">
+        <a href="/admin/posts/${postId}/comments?page=${pagination.page - 1}" ${hxAttrs(pagination.page - 1)} class="pagination__item">
           <i data-lucide="chevron-left" stroke-width="1"></i>
         </a>
       ` : ''}
       ${pages.join('')}
       ${pagination.page < pagination.totalPages ? `
-        <a href="/admin/posts/${postId}/comments?page=${pagination.page + 1}" class="pagination__item">
+        <a href="/admin/posts/${postId}/comments?page=${pagination.page + 1}" ${hxAttrs(pagination.page + 1)} class="pagination__item">
           <i data-lucide="chevron-right" stroke-width="1"></i>
         </a>
       ` : ''}

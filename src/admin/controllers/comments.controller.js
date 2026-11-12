@@ -33,7 +33,11 @@ class CommentsController {
       // Get comments for post
       const { comments, pagination } = await commentsService.getCommentsByPostId(postId, page);
 
-      const { postCommentsContent, postCommentsMeta } = await import('../templates/pages/posts/comments.js');
+      const { postCommentsContent, postCommentsMeta, commentsListFragment } = await import('../templates/pages/posts/comments.js');
+
+      if (request.headers['hx-request'] === 'true') {
+        return renderFragment(reply, commentsListFragment({ comments, pagination, post, user }));
+      }
 
       return renderAdminPage(
         request,
