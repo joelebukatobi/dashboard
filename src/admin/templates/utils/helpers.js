@@ -209,11 +209,17 @@ export function paginationHtml({ basePath, page, totalPages, filters = {}, filte
   const baseQuery = params.toString();
   const queryPrefix = baseQuery ? `&${baseQuery}` : '';
 
+  // Every list page's table container follows basePath's last segment, e.g.
+  // /admin/media/albums -> #albums-table-container. Swapping that in place
+  // via htmx avoids a full page (and sidebar/header) reload on every click.
+  const targetId = basePath.split('/').filter(Boolean).pop() + '-table-container';
+  const hxAttrs = (url) => `hx-get="${url}" hx-target="#${targetId}" hx-push-url="true"`;
+
   let links = '';
 
   const prevDisabled = page <= 1 ? 'pagination__item--disabled' : '';
   const prevHref = page > 1 ? `${basePath}?page=${page - 1}${queryPrefix}` : '#';
-  links += `<a href="${prevHref}" class="pagination__item ${prevDisabled}"><i data-lucide="chevron-left"></i></a>`;
+  links += `<a href="${prevHref}" ${page > 1 ? hxAttrs(prevHref) : ''} class="pagination__item ${prevDisabled}"><i data-lucide="chevron-left"></i></a>`;
 
   let pageNumbers = [];
   const maxVisible = 5;
@@ -233,13 +239,14 @@ export function paginationHtml({ basePath, page, totalPages, filters = {}, filte
       links += '<span class="pagination__ellipsis">...</span>';
     } else {
       const active = p === page ? 'pagination__item--active' : '';
-      links += `<a href="${basePath}?page=${p}${queryPrefix}" class="pagination__item ${active}">${p}</a>`;
+      const href = `${basePath}?page=${p}${queryPrefix}`;
+      links += `<a href="${href}" ${hxAttrs(href)} class="pagination__item ${active}">${p}</a>`;
     }
   });
 
   const nextDisabled = page >= totalPages ? 'pagination__item--disabled' : '';
   const nextHref = page < totalPages ? `${basePath}?page=${page + 1}${queryPrefix}` : '#';
-  links += `<a href="${nextHref}" class="pagination__item ${nextDisabled}"><i data-lucide="chevron-right"></i></a>`;
+  links += `<a href="${nextHref}" ${page < totalPages ? hxAttrs(nextHref) : ''} class="pagination__item ${nextDisabled}"><i data-lucide="chevron-right"></i></a>`;
 
   return `
     <footer class="page-footer">
