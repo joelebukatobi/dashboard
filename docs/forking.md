@@ -117,34 +117,38 @@ admin business logic. Lyndem's Games feature did both: the service lives in
 `src/admin/routes/project/games/` carries controller and template work
 inline.
 
-The proposed fix is a fork-owned `src/project/` tree, mirroring core's own
-admin-side layering one level down:
+The proposed fix is a fork-owned `src/site/` tree, mirroring core's own
+admin-side layering one level down. **"site"** here means the concrete site
+built on dashboard: `src/app` stays the public surface; `src/site` is the
+fork-owned admin layering home (controllers, services, schemas, templates).
 
 ```
-src/project/
+src/site/
 ├── controllers/   # mirrors src/admin/controllers/
-├── services/      # mirrors src/services/ — project business logic, no HTTP or HTML
+├── services/      # mirrors src/services/ — site business logic, no HTTP or HTML
 ├── schemas/       # mirrors src/admin/schemas/ — Zod validation
 └── templates/     # mirrors src/admin/templates/pages/ — admin page/fragment templates
 ```
 
 `src/admin/routes/project/` and `nav.project.js` don't move — they're already
-fork-owned and already autoload correctly. A route file under
-`routes/project/games/` would import from `../../../../project/controllers/`,
-`../../../../project/schemas/`, etc., the same way a core module's routes file
-imports from `src/admin/controllers/`. This is additive only: it would be
-added to `.gitattributes.fork` in a future release (not this one), so an
-existing fork can adopt it at its own pace rather than being forced to move
-code on pull.
+fork-owned and already autoload correctly. They keep the older **"project"**
+name for now; a later cleanup could rename those slots to **"site"** if we
+want one word everywhere. A route file under `routes/project/games/` would
+import from `../../../../site/controllers/`, `../../../../site/schemas/`,
+etc., the same way a core module's routes file imports from
+`src/admin/controllers/`. This is additive only: it would be added to
+`.gitattributes.fork` in a future release (not this one), so an existing fork
+can adopt it at its own pace rather than being forced to move code on pull.
 
 **Migrating an existing feature** (using Lyndem's Games as the example): move
-its service from `src/app/services/` to `src/project/services/`; extract the
-controller logic currently inline in
+its service from `src/app/services/` to `src/site/services/games.service.js`;
+extract the controller logic currently inline in
 `src/admin/routes/project/games/games.routes.js` into
-`src/project/controllers/games.controller.js`; extract any inline Zod
-validation into `src/project/schemas/games.schema.js`; extract any inline HTML
-generation into `src/project/templates/pages/games.js`. The routes file then
-only wires validated input to the controller, matching every core module.
+`src/site/controllers/games.controller.js`; extract any inline Zod validation
+into `src/site/schemas/games.schema.js`; extract any inline HTML generation
+into `src/site/templates/pages/games/…`. The routes file stays under
+`src/admin/routes/project/` and only wires validated input to those
+modules, matching every core module.
 
 ## Pulling dashboard changes down
 
