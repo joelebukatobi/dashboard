@@ -15,6 +15,15 @@
       @apply flex-1 w-full flex flex-col min-h-0;
     }
 
+    // #main-content is an htmx swap target wrapping the actual page div
+    // (boosted sidebar nav needs an addressable id). display: contents
+    // removes its own box so the rule above still reaches the real page
+    // wrapper (.posts etc.) as if it were main's direct child, instead of
+    // the page content losing its flex sizing one level down.
+    > #main-content {
+      display: contents;
+    }
+
     // Mobile: Natural scrolling without overflow restrictions
     @apply ml-0 w-full overflow-x-hidden;
 
