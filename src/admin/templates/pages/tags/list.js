@@ -175,7 +175,7 @@ function renderTagRow(tag) {
       </td>
       <td class="table__td">
         <span class="table__label">Description</span>
-        <div class="table__title">${tag.description || '-'}</div>
+        <div class="table__description">${tag.description || '-'}</div>
       </td>
       <td class="table__td">
         <span class="table__label">Posts</span>

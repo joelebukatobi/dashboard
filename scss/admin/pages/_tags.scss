@@ -3,27 +3,19 @@
 // ============================================================================
 
 .tags {
-  .table__tbody {
-    .table__td {
-      &:nth-child(2) {
-        & > div {
-          @apply text-body-sm text-grey-600;
+  .table__slug {
+    @apply text-body-sm text-grey-600;
 
-          .dark & {
-            @apply text-grey-400;
-          }
-        }
-      }
+    .dark & {
+      @apply text-grey-400;
+    }
+  }
 
-      &:nth-child(3) {
-        & > div {
-          @apply text-body-sm text-grey-700;
+  .table__description {
+    @apply text-body-sm text-grey-700;
 
-          .dark & {
-            @apply text-grey-300;
-          }
-        }
-      }
+    .dark & {
+      @apply text-grey-300;
     }
   }
 }
