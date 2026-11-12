@@ -41,15 +41,24 @@ package.json name, .env files
 ## Creating a fork
 
 ```bash
-git clone git@github.com:joelebukatobi/dashboard-v2.git <project>
+git clone --branch <latest-tag> git@github.com:joelebukatobi/dashboard.git <project>
 cd <project>
-git remote rename origin upstream
-git remote add origin git@github.com:joelebukatobi/<project>.git
-mv .gitattributes.fork .gitattributes
-git config merge.ours.driver true
-git add .gitattributes && git commit -m "chore: fork-owned merge paths"
+git switch -c main
+sh scripts/fork-setup.sh <project> git@github.com:joelebukatobi/<project>.git
+git commit -m "chore: set up fork"
 git push -u origin main
 ```
+
+`scripts/fork-setup.sh` renames dashboard's `origin` to `upstream`, adds the
+fork's own `origin`, turns `.gitattributes.fork` into `.gitattributes`, sets
+the package name, and sets the `ours` merge driver. It is safe to run more
+than once.
+
+**After cloning an existing fork, run `sh scripts/fork-setup.sh` once with no
+arguments.** The `ours` merge driver is local git config, so it doesn't travel
+with the repository. Without it, `merge=ours` in `.gitattributes` does
+nothing, and fork-owned files conflict on every pull. The script also adds
+`upstream` if the clone doesn't have one.
 
 ## Adding a feature to a fork
 
