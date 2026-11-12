@@ -21,7 +21,6 @@ export default defineConfig({
   schema: './src/db/schema/project.js',
   out: './src/db/migrations/project',
   dialect: 'mysql',
-  driver: 'mysql2',
   dbCredentials: {
     host: parsedDatabaseUrl.hostname,
     port: parsedDatabaseUrl.port ? parseInt(parsedDatabaseUrl.port, 10) : 3306,
