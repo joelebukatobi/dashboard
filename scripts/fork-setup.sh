@@ -9,7 +9,8 @@
 #   - points `upstream` at dashboard (renaming dashboard's `origin` on a fresh clone)
 #   - copies .gitattributes.fork to .gitattributes (fork-owned paths merge as ours).
 #     It copies rather than moves: .gitattributes.fork stays a shared file, so
-#     dashboard can update it without conflicting. Rerun after each pull to resync.
+#     dashboard can update it without conflicting. Rerun only after a pull that
+#     changed .gitattributes.fork; everything else persists across merges.
 #   - sets the `ours` merge driver; this is local git config, so every clone needs it
 #   - optionally sets the package name and the fork's own `origin`
 set -eu

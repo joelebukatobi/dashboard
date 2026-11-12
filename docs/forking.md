@@ -109,11 +109,16 @@ Dashboard tags releases. Pull to a tag, not to a moving branch.
 git fetch upstream --tags
 git checkout -b sync/v1.2.0
 git merge v1.2.0
-sh scripts/fork-setup.sh   # resyncs .gitattributes if the release changed it
+git diff --no-index --quiet .gitattributes .gitattributes.fork || sh scripts/fork-setup.sh
 npm install
 npm run db:migrate
 npm run check
 ```
+
+The script runs once per clone. Its other settings (`upstream`, the `ours`
+merge driver) survive merges, so after a pull it is only needed when the
+release changed `.gitattributes.fork`; the `git diff` line above runs it only
+then.
 
 Leave `.gitattributes.fork` unchanged in a fork. It is dashboard's file; the
 fork's working copy is `.gitattributes`. Deleting or editing

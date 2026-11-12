@@ -1,6 +1,7 @@
 # A fork's .gitattributes is a copy of this file. scripts/fork-setup.sh makes
 # the copy and sets the `ours` merge driver it relies on. Forks keep this file
-# unchanged so dashboard can update it; rerun the script after a pull to resync.
+# unchanged so dashboard can update it; rerun the script after a pull that
+# changes this file.
 #
 # These paths are fork-owned. Marking them merge=ours means a
 # `git merge upstream/<tag>` keeps the fork's version even when dashboard
