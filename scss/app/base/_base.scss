@@ -2,6 +2,17 @@
 // App Base Styles
 // ============================================================================
 
+html {
+  // Matches admin's root (scss/admin/base/_base.scss) so the shared --spacing
+  // (css/theme.css) lands on the same 4px grid here, and so the rem values in
+  // scss/app/pages/** (written assuming a 10px root) render at their intended size.
+  @apply text-[62.5%]; // 1rem = 10px (Default for < 1440px)
+
+  @media (min-width: 1440px) {
+    @apply text-[87.5%]; // 1rem = 14px
+  }
+}
+
 .app-shell {
   @apply min-h-screen bg-grey-50 text-grey-900;
 
