@@ -26,7 +26,7 @@ scss/admin/**  css/index.css
 scripts/  src/server.js  src/app.js
 ```
 
-**Project — the fork owns; dashboard ships these empty:**
+**Project / site — the fork owns; dashboard ships these empty:**
 
 ```
 src/app/**                       the whole client-facing side
@@ -35,6 +35,7 @@ src/db/schema/project.js
 src/db/migrations/project/
 src/admin/routes/project/
 src/admin/nav.project.js
+src/site/**                      admin controllers/services/schemas/templates
 .env files
 ```
 
@@ -101,7 +102,7 @@ an entry to `src/admin/routes/project/prefixes.js`.
 **The client-facing site:** `src/app/**` is entirely yours. Replace dashboard's
 dummy `home` and `blog` pages outright.
 
-### Proposal: a fork-owned home for controllers, services, schemas and templates
+### `src/site/` — fork-owned controllers, services, schemas and templates
 
 `src/admin/routes/project/` and `src/admin/nav.project.js` give a fork a place
 for routes and a sidebar entry, but nothing downstream of that: dashboard owns
@@ -117,28 +118,29 @@ admin business logic. Lyndem's Games feature did both: the service lives in
 `src/admin/routes/project/games/` carries controller and template work
 inline.
 
-The proposed fix is a fork-owned `src/site/` tree, mirroring core's own
-admin-side layering one level down. **"site"** here means the concrete site
-built on dashboard: `src/app` stays the public surface; `src/site` is the
-fork-owned admin layering home (controllers, services, schemas, templates).
+Dashboard ships an empty fork-owned `src/site/` tree for that layering.
+**"site"** means the concrete site built on dashboard: `src/app` stays the
+public surface; `src/site` is the fork-owned admin home (controllers,
+services, schemas, templates).
 
 ```
 src/site/
 ├── controllers/   # mirrors src/admin/controllers/
 ├── services/      # mirrors src/services/ — site business logic, no HTTP or HTML
 ├── schemas/       # mirrors src/admin/schemas/ — Zod validation
-└── templates/     # mirrors src/admin/templates/pages/ — admin page/fragment templates
+└── templates/     # mirrors src/admin/templates/ — admin page/fragment templates
+    └── pages/
 ```
 
 `src/admin/routes/project/` and `nav.project.js` don't move — they're already
 fork-owned and already autoload correctly. They keep the older **"project"**
 name for now; a later cleanup could rename those slots to **"site"** if we
-want one word everywhere. A route file under `routes/project/games/` would
-import from `../../../../site/controllers/`, `../../../../site/schemas/`,
-etc., the same way a core module's routes file imports from
-`src/admin/controllers/`. This is additive only: it would be added to
-`.gitattributes.fork` in a future release (not this one), so an existing fork
-can adopt it at its own pace rather than being forced to move code on pull.
+want one word everywhere. A route file under `routes/project/games/` imports
+from `../../../../site/controllers/`, `../../../../site/schemas/`, etc., the
+same way a core module's routes file imports from `src/admin/controllers/`.
+`src/site/**` is `merge=ours` in `.gitattributes.fork`. After a pull that
+adds or changes that entry, rerun `sh scripts/fork-setup.sh` so the fork's
+`.gitattributes` picks it up.
 
 **Migrating an existing feature** (using Lyndem's Games as the example): move
 its service from `src/app/services/` to `src/site/services/games.service.js`;

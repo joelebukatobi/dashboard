@@ -13,6 +13,7 @@ src/db/schema/project.js     merge=ours
 src/admin/nav.project.js     merge=ours
 src/admin/routes/project/**  merge=ours
 src/db/migrations/project/** merge=ours
+src/site/**                  merge=ours
 css/app.css                  merge=ours
 
 # package.json is deliberately NOT here. merge=ours would keep the fork's

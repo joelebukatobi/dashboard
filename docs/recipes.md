@@ -28,6 +28,10 @@ ownership rules. In short:
 |---|---|
 | Migrate with `npm run db:generate` | `npm run db:generate:project` — writes to `src/db/migrations/project/` |
 | Schema in `src/db/schema/` | `src/db/schema/project.js` |
+| Service in `src/services/` | `src/site/services/` |
+| Zod schema in `src/admin/schemas/` | `src/site/schemas/` |
+| Controller in `src/admin/controllers/` | `src/site/controllers/` |
+| Templates in `src/admin/templates/` | `src/site/templates/` |
 | Register in `src/admin/plugin.js` (step 7) | Drop the routes file into `src/admin/routes/project/` — it autoloads |
 | Sidebar link in `src/admin/templates/partials/sidebar.js` | Add to `projectNavItems` in `src/admin/nav.project.js` |
 
