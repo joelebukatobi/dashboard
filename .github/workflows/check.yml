@@ -46,7 +46,11 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # .npmrc sets ignore-scripts=true (see @lavamoat/allow-scripts in
+        # package.json), so npm ci never runs any install script on its own --
+        # run the allowlisted ones explicitly, or esbuild/@parcel/watcher fall
+        # back to behavior that assumes their install script ran.
+        run: npm ci && npm run deps:approve
 
       # Applies the full migration chain to an empty database on every run —
       # the same path a new fork takes on day one.

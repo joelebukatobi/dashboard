@@ -45,6 +45,10 @@ jobs:
       - name: Build frontend assets
         run: |
           npm ci --no-audit --no-fund
+          # .npmrc sets ignore-scripts=true, so esbuild/@parcel/watcher's own
+          # install scripts never ran above -- run the allowlisted ones now,
+          # or the build below can fail or silently fall back.
+          npm run deps:approve
           npm run build:css
           # dist/ is gitignored, so anything not built here never reaches the
           # server. Templates load htmx, preline, lucide and alpine from
