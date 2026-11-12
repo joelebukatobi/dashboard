@@ -1,15 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import Fastify from 'fastify';
-import { createSigner } from 'fast-jwt';
 
 const { ensureDatabaseUrl } = await import('../../env.js');
 ensureDatabaseUrl({ scriptName: 'boosted-nav.test' });
 
 const { default: app } = await import('../../src/app.js');
-const { getAppSecret } = await import('../../src/lib/app-secrets.js');
-const { authService } = await import('../../src/services/auth.service.js');
 const { db, users } = await import('../../src/db/index.js');
 const { eq } = await import('drizzle-orm');
+const { createTestSession } = await import('../helpers/admin-session.js');
 
 describe('boosted sidebar nav', () => {
   /** @type {import('fastify').FastifyInstance} */
@@ -22,8 +20,7 @@ describe('boosted sidebar nav', () => {
     await server.ready();
 
     const [admin] = await db.select().from(users).where(eq(users.email, 'admin@example.com')).limit(1);
-    token = createSigner({ key: getAppSecret() })({ userId: admin.id, email: admin.email, role: admin.role });
-    await authService.createSession(admin.id, false, token);
+    token = await createTestSession(admin);
   });
 
   afterAll(async () => {
