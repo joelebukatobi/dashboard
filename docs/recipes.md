@@ -17,9 +17,24 @@ How to fork this base and add features without rewriting core patterns.
 
 Reference: **categories** (`src/admin/routes/categories.routes.js` and friends).
 
-### 1. Database
+**This section describes dashboard's own pattern for adding a module to
+core** (`src/admin/`, `src/db/schema/core.js`) — use it as-is only when
+you're working in dashboard itself. In a fork, every step below that touches
+a core-owned file or command has a fork-owned equivalent instead; see
+[`forking.md`'s "Adding a feature to a fork"](forking.md) for the full
+ownership rules. In short:
+
+| This section says | A fork does instead |
+|---|---|
+| Migrate with `npm run db:generate` | `npm run db:generate:project` — writes to `src/db/migrations/project/` |
+| Schema in `src/db/schema/` | `src/db/schema/project.js` |
+| Register in `src/admin/plugin.js` (step 7) | Drop the routes file into `src/admin/routes/project/` — it autoloads |
+| Sidebar link in `src/admin/templates/partials/sidebar.js` | Add to `projectNavItems` in `src/admin/nav.project.js` |
+
+### 1. Database (dashboard only)
 
 Drizzle schema + migration in `src/db/`, then `npm run db:generate` and `npm run db:migrate`.
+A fork runs `npm run db:generate:project` instead — see the table above.
 
 ### 2. Service
 
@@ -70,7 +85,7 @@ fastify.get('/', { preHandler: [auth, validateQuery(talkListQuerySchema)], handl
 fastify.post('/', { preHandler: [auth, validateBody(createTalkSchema)], handler: … });
 ```
 
-### 7. Register
+### 7. Register (dashboard only)
 
 In `src/admin/plugin.js`:
 
@@ -80,13 +95,15 @@ await fastify.register(import('./routes/talks.routes.js'), { prefix: '/talks' })
 
 Add a sidebar link in `src/admin/templates/partials/sidebar.js`.
 
+A fork does not touch either file — see the table above.
+
 ### Checklist
 
 - [ ] Schemas: create, update, list query, params
 - [ ] All POST/PUT/PATCH use `validate*`
 - [ ] Controller uses render helpers only
 - [ ] Meta + Content + TableFragment
-- [ ] Registered in `admin/plugin.js`
+- [ ] Registered in `admin/plugin.js` (dashboard) or autoloaded from `routes/project/` (fork)
 - [ ] `npm run check` passes
 
 ---
