@@ -49,7 +49,7 @@ class SubscribersController {
         subscribersTableFragment,
       } = await import('../templates/pages/subscribers/index.js');
 
-      if (request.headers['hx-request'] === 'true') {
+      if (request.headers['hx-request'] === 'true' && request.headers['hx-boost-nav'] !== 'true') {
         return renderFragment(reply, subscribersTableFragment({
           subscribers: result.subscribers,
           pagination: {

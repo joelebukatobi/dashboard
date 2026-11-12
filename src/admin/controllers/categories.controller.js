@@ -47,7 +47,7 @@ class CategoriesController {
         categoriesTableFragment,
       } = await import('../templates/pages/categories/index.js');
 
-      if (request.headers['hx-request'] === 'true') {
+      if (request.headers['hx-request'] === 'true' && request.headers['hx-boost-nav'] !== 'true') {
         return renderFragment(reply, categoriesTableFragment({ categories, pagination, counts }));
       }
 

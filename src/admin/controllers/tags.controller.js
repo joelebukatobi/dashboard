@@ -46,7 +46,7 @@ class TagsController {
         tagsTableFragment,
       } = await import('../templates/pages/tags/index.js');
 
-      if (request.headers['hx-request'] === 'true') {
+      if (request.headers['hx-request'] === 'true' && request.headers['hx-boost-nav'] !== 'true') {
         return renderFragment(reply, tagsTableFragment({ tags, pagination }));
       }
 

@@ -107,7 +107,7 @@ export function buildDashboardShell({
           ${header({ user, breadcrumbs, siteUrl })}
 
           <!-- Main Content -->
-          ${content}
+          <div id="main-content">${content}</div>
         </main>
       </div>
     </div>

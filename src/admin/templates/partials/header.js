@@ -16,14 +16,13 @@ import { getInitials, escapeHtml } from '../utils/helpers.js';
  * @param {string} options.user.avatarUrl - User's avatar URL
  * @returns {string} Header HTML
  */
-export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
-  const displayName = user
-    ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0]
-    : 'User';
-  const avatarUrl = user?.avatarUrl;
-  const websiteHref = escapeHtml(siteUrl || '/');
-
-  // Generate breadcrumb HTML with chevrons
+/**
+ * Breadcrumb nav, shared by the full header render and the boosted-nav OOB
+ * swap (admin/render.js) so a sidebar click's response can update it without
+ * re-rendering the rest of the header.
+ * @param {{ breadcrumbs?: Array<{label: string, url?: string}>, oob?: boolean }} options
+ */
+export function breadcrumbNav({ breadcrumbs = [], oob = false } = {}) {
   const breadcrumbHtml =
     breadcrumbs.length > 0
       ? breadcrumbs
@@ -37,6 +36,20 @@ export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
       : '<a href="/admin" class="breadcrumb__item breadcrumb__item--current">Dashboard</a>';
 
   return `
+    <nav class="breadcrumb" id="breadcrumb-nav"${oob ? ' hx-swap-oob="true"' : ''}>
+      ${breadcrumbHtml}
+    </nav>
+  `;
+}
+
+export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
+  const displayName = user
+    ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0]
+    : 'User';
+  const avatarUrl = user?.avatarUrl;
+  const websiteHref = escapeHtml(siteUrl || '/');
+
+  return `
     <header class="header">
       <div class="header__left">
         <button class="header__menu-toggle" id="mobileMenuToggle">
@@ -44,9 +57,7 @@ export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
         </button>
 
         <!-- Breadcrumb (hidden on mobile) -->
-        <nav class="breadcrumb">
-          ${breadcrumbHtml}
-        </nav>
+        ${breadcrumbNav({ breadcrumbs })}
       </div>
 
       <div class="header__right">

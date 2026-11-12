@@ -39,7 +39,7 @@ class AlbumsController {
         toast,
       };
 
-      if (request.headers['hx-request'] === 'true') {
+      if (request.headers['hx-request'] === 'true' && request.headers['hx-boost-nav'] !== 'true') {
         return renderFragment(reply, albumsTableFragment({ albums, pagination }));
       }
 

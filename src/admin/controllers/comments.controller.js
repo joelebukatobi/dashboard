@@ -35,7 +35,7 @@ class CommentsController {
 
       const { postCommentsContent, postCommentsMeta, commentsListFragment } = await import('../templates/pages/posts/comments.js');
 
-      if (request.headers['hx-request'] === 'true') {
+      if (request.headers['hx-request'] === 'true' && request.headers['hx-boost-nav'] !== 'true') {
         return renderFragment(reply, commentsListFragment({ comments, pagination, post, user }));
       }
 

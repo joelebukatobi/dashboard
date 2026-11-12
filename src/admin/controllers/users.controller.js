@@ -81,8 +81,10 @@ class UsersController {
       const roleCounts = await usersService.countByRole();
       const statusCounts = await usersService.countByStatus();
 
-      // Check if HTMX request
-      const isHtmx = request.headers['hx-request'] === 'true';
+      // Check if HTMX request. Boosted sidebar nav also sends hx-request,
+      // but marks itself with HX-Boost-Nav so it falls through to the full
+      // page instead of this narrower fragment (see sidebar.js).
+      const isHtmx = request.headers['hx-request'] === 'true' && request.headers['hx-boost-nav'] !== 'true';
 
       const {
         usersListContent,

@@ -51,7 +51,7 @@ export function renderProjectNav({ items = [], title = 'Project', isActive }) {
         </div>`;
 }
 
-export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIcon = '' } = {}) {
+export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIcon = '', oob = false } = {}) {
   const isActive = (route) => {
     // Exact match for dashboard (just /admin or /admin/)
     if (route === '/admin') {
@@ -72,8 +72,16 @@ export function sidebar({ activeRoute = '/', user, siteName = 'BlogCMS', siteIco
        <span class="sidebar__logo-icon-fallback" hidden><i data-lucide="square-library"></i></span>`
     : `<i data-lucide="square-library"></i>`;
 
+  // Boosts every link inside: a click fetches the target URL and swaps only
+  // #main-content, instead of a full page navigation re-rendering sidebar
+  // and header too. HX-Boost-Nav marks the request so the list/comments
+  // controllers' own search/pagination fragment branches (which check plain
+  // hx-request) don't mistake this for one of those and return a too-narrow
+  // table-only fragment instead of the page's full inner content.
+  const boostAttrs = 'hx-boost="true" hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" hx-headers=\'{"HX-Boost-Nav": "true"}\'';
+
   return `
-    <aside class="sidebar">
+    <aside class="sidebar" id="admin-sidebar" ${boostAttrs}${oob ? ' hx-swap-oob="true"' : ''}>
       <!-- Sidebar Header / Logo -->
       <div class="sidebar__header">
           <a href="/admin" class="sidebar__logo">

@@ -3,6 +3,8 @@
  */
 
 import { escapeHtml } from './templates/utils/helpers.js';
+import { sidebar } from './templates/partials/sidebar.js';
+import { breadcrumbNav } from './templates/partials/header.js';
 
 /**
  * @typedef {Object} TemplateMeta
@@ -31,6 +33,29 @@ export function setTemplateMeta(request, meta) {
  */
 export function renderAdminPage(request, reply, meta, html) {
   setTemplateMeta(request, meta);
+
+  // Boosted sidebar nav (see sidebar.js) sends hx-request, which makes
+  // fastify-html's addLayout skip the surrounding doctype/sidebar/header
+  // entirely (admin/plugin.js's skipOnHeader) and return just this inner
+  // html. That's the whole page's content minus sidebar and header -- but
+  // the sidebar's active-item highlight and the header's breadcrumb are
+  // page-specific too, and the request that fetched this content never
+  // re-renders them on its own. Append both as out-of-band swaps so one
+  // response keeps all three in sync, instead of the sidebar/breadcrumb
+  // quietly going stale after every boosted click.
+  if (request.headers['hx-request']) {
+    const siteMap = request.siteSettingsMap ?? {};
+    const navOob =
+      sidebar({
+        activeRoute: meta.activeRoute ?? '/admin',
+        user: request.user,
+        siteName: String(siteMap.siteName || 'BlogCMS'),
+        siteIcon: String(siteMap.siteIcon || ''),
+        oob: true,
+      }) + breadcrumbNav({ breadcrumbs: meta.breadcrumbs ?? [], oob: true });
+    return reply.html`!${html}!${navOob}`;
+  }
+
   return reply.html`!${html}`;
 }
 

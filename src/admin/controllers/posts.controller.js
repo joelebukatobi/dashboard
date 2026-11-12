@@ -80,8 +80,11 @@ class PostsController {
         toast,
       };
 
-      // Check if HTMX request - return only table fragment
-      const isHtmx = request.headers['hx-request'] === 'true';
+      // Check if HTMX request - return only table fragment. Boosted sidebar
+      // nav also sends hx-request, but marks itself with HX-Boost-Nav so it
+      // falls through to the full page below instead of this narrower
+      // fragment (see sidebar.js).
+      const isHtmx = request.headers['hx-request'] === 'true' && request.headers['hx-boost-nav'] !== 'true';
 
       const {
         postsListContent,
