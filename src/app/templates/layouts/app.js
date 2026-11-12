@@ -16,7 +16,8 @@ function headBlock({ title, favicon = '/favicon.svg', ogMeta = '' }) {
     <title>${escapeAttr(title)}</title>
     ${ogMeta}
     <link rel="icon" href="${escapeAttr(favicon)}" />
-    <link rel="stylesheet" href="/dist/css/app.css" />`;
+    <link rel="stylesheet" href="/dist/css/app.css" />
+    <script src="/dist/js/htmx.js"></script>`;
 }
 
 /**
@@ -61,10 +62,12 @@ export function buildBlogShell({
       </div>
     </header>
 
-    <main class="blog-main">
-      ${content}
-    </main>
-    ${footer}
+    <div id="blog-list-container">
+      <main class="blog-main">
+        ${content}
+      </main>
+      ${footer}
+    </div>
   </body>
 </html>`;
 }

@@ -2,6 +2,7 @@ import { getPublicPageLimit } from '../../lib/site-pagination.js';
 import {
   blogIndexContent,
   blogIndexMeta,
+  blogIndexFragment,
 } from '../templates/pages/blog/index.js';
 import {
   blogPostContent,
@@ -9,13 +10,14 @@ import {
   blogPostNotFoundContent,
   blogPostNotFoundMeta,
 } from '../templates/pages/blog/post.js';
-import { renderAppPage } from '../render.js';
+import { renderAppPage, renderAppFragment } from '../render.js';
 
 class BlogController {
   async index(request, reply) {
     const page = request.query.page;
     const siteMap = request.siteSettingsMap ?? {};
     const limit = getPublicPageLimit(siteMap, request.query.limit);
+    const isHtmx = request.headers['hx-request'] === 'true';
 
     const apiResponse = await request.server.inject({
       method: 'GET',
@@ -24,6 +26,9 @@ class BlogController {
 
     if (apiResponse.statusCode !== 200) {
       request.log.error({ statusCode: apiResponse.statusCode }, 'Failed to load blog posts from API');
+      if (isHtmx) {
+        return renderAppFragment(reply, blogIndexFragment({ posts: [], page, totalPages: 1 }));
+      }
       return renderAppPage(
         request,
         reply,
@@ -36,6 +41,10 @@ class BlogController {
     const posts = payload?.data || [];
     const currentPage = payload?.meta?.current_page || page;
     const totalPages = payload?.meta?.last_page || 1;
+
+    if (isHtmx) {
+      return renderAppFragment(reply, blogIndexFragment({ posts, page: currentPage, totalPages }));
+    }
 
     return renderAppPage(
       request,

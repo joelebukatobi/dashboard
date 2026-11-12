@@ -31,13 +31,28 @@ export function blogIndexMeta({ page = 1, totalPages = 1 }) {
 export function blogIndexFooter({ page = 1, totalPages = 1 }) {
   const prevPage = Math.max(1, page - 1);
   const nextPage = Math.min(totalPages, page + 1);
+  const hxAttrs = (p) => `hx-get="/blog?page=${p}" hx-target="#blog-list-container" hx-push-url="true"`;
 
   return `
     <footer class="blog-pagination">
-      <a class="blog-pagination__link ${page <= 1 ? 'blog-pagination__link--disabled' : ''}" href="/blog?page=${prevPage}">Previous</a>
+      <a class="blog-pagination__link ${page <= 1 ? 'blog-pagination__link--disabled' : ''}" ${page > 1 ? hxAttrs(prevPage) : ''} href="/blog?page=${prevPage}">Previous</a>
       <span class="blog-pagination__current">Page ${page}</span>
-      <a class="blog-pagination__link ${page >= totalPages ? 'blog-pagination__link--disabled' : ''}" href="/blog?page=${nextPage}">Next</a>
+      <a class="blog-pagination__link ${page >= totalPages ? 'blog-pagination__link--disabled' : ''}" ${page < totalPages ? hxAttrs(nextPage) : ''} href="/blog?page=${nextPage}">Next</a>
     </footer>
+  `;
+}
+
+/**
+ * HTMX fragment for #blog-list-container, used by pagination. Mirrors the
+ * <main>+footer markup buildBlogShell wraps around index content, so
+ * swapping this in place matches what a full page load would have shown.
+ */
+export function blogIndexFragment({ posts = [], page = 1, totalPages = 1 }) {
+  return `
+    <main class="blog-main">
+      ${blogIndexContent({ posts, page, totalPages })}
+    </main>
+    ${blogIndexFooter({ page, totalPages })}
   `;
 }
 
