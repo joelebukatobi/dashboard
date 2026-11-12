@@ -1,5 +1,6 @@
-# Rename to .gitattributes in a fork, then run once:
-#   git config merge.ours.driver true
+# A fork's .gitattributes is a copy of this file. scripts/fork-setup.sh makes
+# the copy and sets the `ours` merge driver it relies on. Forks keep this file
+# unchanged so dashboard can update it; rerun the script after a pull to resync.
 #
 # These paths are fork-owned. Marking them merge=ours means a
 # `git merge upstream/<tag>` keeps the fork's version even when dashboard
@@ -11,4 +12,10 @@ src/db/schema/project.js     merge=ours
 src/admin/nav.project.js     merge=ours
 src/admin/routes/project/**  merge=ours
 src/db/migrations/project/** merge=ours
-package.json                 merge=ours
+css/app.css                  merge=ours
+
+# package.json is deliberately NOT here. merge=ours would keep the fork's
+# whole file and silently drop dashboard's dependency changes, while
+# package-lock.json still takes them. That desyncs the two, and npm ci
+# (which deploys run) fails. The fork changes only `name`, which merges
+# cleanly; see docs/forking.md.

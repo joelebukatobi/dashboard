@@ -7,7 +7,9 @@
 #
 # What it does:
 #   - points `upstream` at dashboard (renaming dashboard's `origin` on a fresh clone)
-#   - turns .gitattributes.fork into .gitattributes (fork-owned paths merge as ours)
+#   - copies .gitattributes.fork to .gitattributes (fork-owned paths merge as ours).
+#     It copies rather than moves: .gitattributes.fork stays a shared file, so
+#     dashboard can update it without conflicting. Rerun after each pull to resync.
 #   - sets the `ours` merge driver; this is local git config, so every clone needs it
 #   - optionally sets the package name and the fork's own `origin`
 set -eu
@@ -42,9 +44,10 @@ elif [ -z "$upstream_now" ]; then
   echo "Added upstream: $UPSTREAM_URL"
 fi
 
-if [ -f .gitattributes.fork ] && [ ! -f .gitattributes ]; then
-  git mv .gitattributes.fork .gitattributes
-  echo "Moved .gitattributes.fork to .gitattributes."
+if [ -f .gitattributes.fork ] && ! cmp -s .gitattributes.fork .gitattributes; then
+  cp .gitattributes.fork .gitattributes
+  git add .gitattributes
+  echo "Copied .gitattributes.fork to .gitattributes."
 fi
 
 git config merge.ours.driver true

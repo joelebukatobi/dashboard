@@ -35,8 +35,24 @@ src/db/schema/project.js
 src/db/migrations/project/
 src/admin/routes/project/
 src/admin/nav.project.js
-package.json name, .env files
+.env files
 ```
+
+**`package.json` is shared, not fork-owned.** A fork changes only its `name`
+(the setup script sets it). Dashboard's dependency changes then merge in
+normally, alongside the matching `package-lock.json`. Two rules keep that
+clean:
+
+- Dashboard never bumps `version` in `package.json`; release tags carry the
+  version. The line sits next to `name`, so changing it would conflict with
+  every fork.
+- If a fork adds its own dependency, a later pull can conflict in the
+  dependency list. Keep both sides' lines, then run `npm install` to rebuild
+  `package-lock.json`, and commit both.
+
+It used to be `merge=ours`. That kept the fork's whole file, so dashboard's
+dependency bumps were silently dropped, while the lock file still took them.
+The two fell out of sync and `npm ci` failed on deploy.
 
 ## Creating a fork
 
@@ -50,7 +66,7 @@ git push -u origin main
 ```
 
 `scripts/fork-setup.sh` renames dashboard's `origin` to `upstream`, adds the
-fork's own `origin`, turns `.gitattributes.fork` into `.gitattributes`, sets
+fork's own `origin`, copies `.gitattributes.fork` to `.gitattributes`, sets
 the package name, and sets the `ours` merge driver. It is safe to run more
 than once.
 
@@ -93,9 +109,24 @@ Dashboard tags releases. Pull to a tag, not to a moving branch.
 git fetch upstream --tags
 git checkout -b sync/v1.2.0
 git merge v1.2.0
+sh scripts/fork-setup.sh   # resyncs .gitattributes if the release changed it
 npm install
 npm run db:migrate
 npm run check
+```
+
+Leave `.gitattributes.fork` unchanged in a fork. It is dashboard's file; the
+fork's working copy is `.gitattributes`. Deleting or editing
+`.gitattributes.fork` makes every later change to it conflict.
+
+If a release changes `.gitattributes.fork`, git still uses the fork's old
+`.gitattributes` during that merge. When the change matters for the merge
+itself (for example a path stops being `merge=ours`), adopt it first:
+
+```bash
+git show <tag>:.gitattributes.fork > .gitattributes
+git commit -am "chore: adopt <tag> fork attributes"
+git merge <tag>
 ```
 
 A conflict in a core file means the rule was broken — the fork edited
@@ -140,14 +171,31 @@ session secret. Set one in your hosting environment before deploying.
 
 ## Sending a fix back up
 
-Rare, and unsupported by tooling on purpose:
+The normal direction is down: fix core problems in dashboard, tag a release,
+and let forks pull it. Sometimes a core fix gets made inside a fork anyway.
+Rather than leave the fork diverged, send that commit up to dashboard, release
+it, and the fork's next pull reconciles cleanly.
 
 ```bash
 cd ../dashboard
+git switch dev
+git fetch ../<fork> <fork-branch>      # or the fork's GitHub URL
 git cherry-pick <sha-from-fork>
+# test, merge dev to main, then tag a release as usual
 ```
 
-Only works cleanly for commits that touch core files exclusively.
+Then, in the fork, pull that release as usual (`git merge <tag>`). Git sees
+that the fork already has the same change and merges without a conflict.
+
+**The commit must contain only dashboard-owned files.** Cherry-pick copies one
+commit, not the branch, so the fork's own pages stay behind. But anything
+fork-owned *inside that commit* (a page in `src/app/`, `package.json`, the
+fork's docs) is copied into dashboard too. When fixing something core inside a
+fork, commit it on its own.
+
+This was tested end to end with `scripts/fork-setup.sh`: written in a fork
+alongside a fork-only page, cherry-picked into dashboard (the script arrived,
+the page didn't), released, then pulled back into the fork with a clean merge.
 
 ## Deploying a fork
 
