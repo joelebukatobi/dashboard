@@ -34,10 +34,12 @@ export class DeleteModal {
       const { messageWithItems, messageWithoutItems } = this.config.conditionalConfig;
       messageHtml = `
         <p class="modal__description hidden" id="deleteWithItems">
-          ${messageWithItems.replace('{count}', '<span id="deleteItemCount"></span>')}
+          ${messageWithItems
+            .replace('{count}', '<span id="deleteItemCount"></span>')
+            .replace('{name}', '<span id="deleteWithItemsName"></span>')}
         </p>
         <p class="modal__description hidden" id="deleteNoItems">
-          ${messageWithoutItems}
+          ${messageWithoutItems.replace('{name}', '<span id="deleteNoItemsName"></span>')}
         </p>
       `;
     } else {
@@ -86,8 +88,8 @@ export class DeleteModal {
         const hasItems = parseInt(itemCount) > 0;
         const withItemsMsg = document.getElementById('deleteWithItems');
         const noItemsMsg = document.getElementById('deleteNoItems');
-        withItemsMsg.innerHTML = withItemsMsg.innerHTML.replace(/\\{name\\}/g, entityDisplayName);
-        noItemsMsg.innerHTML = noItemsMsg.innerHTML.replace(/\\{name\\}/g, entityDisplayName);
+        document.getElementById('deleteWithItemsName').textContent = entityDisplayName;
+        document.getElementById('deleteNoItemsName').textContent = entityDisplayName;
         withItemsMsg.classList.toggle('hidden', !hasItems);
         noItemsMsg.classList.toggle('hidden', hasItems);
         if (hasItems) {
