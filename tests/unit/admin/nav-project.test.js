@@ -46,17 +46,30 @@ describe('renderProjectNav', () => {
   });
 });
 
+// These run in forks too, so they check the shape of whatever a fork adds
+// rather than insisting on dashboard's empty defaults.
 describe('nav.project.js', () => {
-  it('is empty in dashboard', () => {
-    expect(projectNavItems).toEqual([]);
+  it('holds only well-formed items (none in dashboard)', () => {
+    expect(Array.isArray(projectNavItems)).toBe(true);
+    for (const item of projectNavItems) {
+      expect(item.href).toMatch(/^\/admin\//);
+      expect(typeof item.label).toBe('string');
+      expect(item.label.trim()).not.toBe('');
+      expect(typeof item.icon).toBe('string');
+    }
   });
 });
 
 describe('sidebar', () => {
-  it('renders no project group when there are no project items', () => {
+  it('renders the project group only when a fork supplies items', () => {
     const html = sidebar({ activeRoute: '/admin', user: { role: 'ADMIN' } });
     expect(html).toContain('/admin/posts');
-    expect(html).not.toContain('sidebar__group--project');
+    if (projectNavItems.length === 0) {
+      expect(html).not.toContain('sidebar__group--project');
+    } else {
+      expect(html).toContain('sidebar__group--project');
+      for (const item of projectNavItems) expect(html).toContain(item.href);
+    }
   });
 });
 

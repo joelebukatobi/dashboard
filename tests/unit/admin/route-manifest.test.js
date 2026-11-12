@@ -8,6 +8,7 @@ import {
   PAGE_PREFIX_OVERRIDES,
   API_PREFIX_OVERRIDES,
 } from '../../../src/admin/routes/manifest.js';
+import { projectPagePrefixes } from '../../../src/admin/routes/project/prefixes.js';
 
 describe('routeName', () => {
   it('strips the .routes.js suffix', () => {
@@ -95,9 +96,22 @@ describe('buildApiManifest', () => {
   });
 });
 
+// Runs in forks too: checks the shape of whatever routes a fork adds
+// rather than insisting the project directory is empty.
 describe('buildProjectManifest', () => {
-  it('is empty in dashboard, where the project directory holds no routes', () => {
-    expect(buildProjectManifest()).toEqual([]);
+  const entries = buildProjectManifest(projectPagePrefixes);
+
+  it('resolves each project route to /admin/<name> unless prefixes.js overrides it', () => {
+    for (const entry of entries) {
+      expect(entry.file).toMatch(/\.routes\.js$/);
+      expect(entry.url).toMatch(/^file:/);
+      expect(entry.prefix).toBe(projectPagePrefixes[entry.name] ?? `/admin/${entry.name}`);
+    }
+  });
+
+  it('never reuses a core route prefix, which would crash on registration', () => {
+    const corePrefixes = new Set(buildPageManifest(projectPagePrefixes).map((e) => e.prefix));
+    for (const entry of entries) expect(corePrefixes.has(entry.prefix)).toBe(false);
   });
 });
 
