@@ -10,17 +10,19 @@ const { ensureDatabaseUrl } = await import('../../env.js');
 ensureDatabaseUrl({ scriptName: 'posts-with-relations.test' });
 
 const { postsService } = await import('../../src/services/posts.service.js');
-const { db, posts, users } = await import('../../src/db/index.js');
+const { db, posts } = await import('../../src/db/index.js');
 const { eq } = await import('drizzle-orm');
+const { getOrCreateTestAdmin } = await import('../helpers/admin-session.js');
 
 describe('getPostWithRelations', () => {
   let draftSlug;
   let adminId;
+  let cleanupAdmin;
 
   beforeAll(async () => {
-    const [admin] = await db.select().from(users).limit(1);
-    adminId = admin?.id;
-    if (!adminId) return;
+    const { user: admin, cleanup } = await getOrCreateTestAdmin();
+    adminId = admin.id;
+    cleanupAdmin = cleanup;
     draftSlug = `draft-relations-test-${Date.now()}`;
     await postsService.createPost(
       {
@@ -39,6 +41,7 @@ describe('getPostWithRelations', () => {
 
   afterAll(async () => {
     if (draftSlug) await db.delete(posts).where(eq(posts.slug, draftSlug));
+    await cleanupAdmin();
   });
 
   it('hides a non-published post when a status filter is given', async () => {
@@ -111,6 +114,36 @@ describe('getAllPosts', () => {
 // hand, and meta.total counted unfiltered rows. An unknown category slug was
 // worse: the filter was silently dropped and every post came back.
 describe('getAllPosts filtering', () => {
+  // A fresh fork database has no published posts yet, which would make the
+  // "filtered vs unfiltered" check below compare 0 to 0. Guarantee at least
+  // one so the comparison actually exercises the filter.
+  let publishedSlug;
+  let cleanupAdmin;
+
+  beforeAll(async () => {
+    const { user: admin, cleanup } = await getOrCreateTestAdmin();
+    cleanupAdmin = cleanup;
+    publishedSlug = `published-filtering-test-${Date.now()}`;
+    await postsService.createPost(
+      {
+        title: 'Published filtering test',
+        slug: publishedSlug,
+        content: 'body',
+        excerpt: '',
+        categoryId: '',
+        featuredImageId: '',
+        status: 'PUBLISHED',
+        tagIds: [],
+      },
+      admin.id,
+    );
+  });
+
+  afterAll(async () => {
+    await db.delete(posts).where(eq(posts.slug, publishedSlug));
+    await cleanupAdmin();
+  });
+
   it('returns nothing for a category slug that does not exist', async () => {
     const { posts: rows, total } = await postsService.getAllPosts({
       status: 'PUBLISHED',

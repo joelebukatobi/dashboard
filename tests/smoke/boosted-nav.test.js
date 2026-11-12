@@ -5,26 +5,39 @@ const { ensureDatabaseUrl } = await import('../../env.js');
 ensureDatabaseUrl({ scriptName: 'boosted-nav.test' });
 
 const { default: app } = await import('../../src/app.js');
-const { db, users } = await import('../../src/db/index.js');
+const { db, categories } = await import('../../src/db/index.js');
 const { eq } = await import('drizzle-orm');
-const { createTestSession } = await import('../helpers/admin-session.js');
+const { getOrCreateTestAdmin, createTestSession } = await import('../helpers/admin-session.js');
 
 describe('boosted sidebar nav', () => {
   /** @type {import('fastify').FastifyInstance} */
   let server;
   let token;
+  let cleanupAdmin;
+  let categorySlug;
 
   beforeAll(async () => {
     server = Fastify({ logger: false });
     await server.register(app);
     await server.ready();
 
-    const [admin] = await db.select().from(users).where(eq(users.email, 'admin@example.com')).limit(1);
+    const { user: admin, cleanup } = await getOrCreateTestAdmin();
+    cleanupAdmin = cleanup;
     token = await createTestSession(admin);
+
+    // A fresh fork database has no categories yet, which renders an empty
+    // state instead of the <table> the "narrow fragment" test below expects.
+    const [existing] = await db.select().from(categories).limit(1);
+    if (!existing) {
+      categorySlug = `boosted-nav-test-${Date.now()}`;
+      await db.insert(categories).values({ title: 'Boosted nav test', slug: categorySlug });
+    }
   });
 
   afterAll(async () => {
     await server.close();
+    if (categorySlug) await db.delete(categories).where(eq(categories.slug, categorySlug));
+    await cleanupAdmin();
   });
 
   it('a plain full page load carries the boost attributes but no OOB markers', async () => {
