@@ -42,12 +42,11 @@ export function breadcrumbNav({ breadcrumbs = [], oob = false } = {}) {
   `;
 }
 
-export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
+export function header({ user, breadcrumbs = [] }) {
   const displayName = user
     ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email.split('@')[0]
     : 'User';
   const avatarUrl = user?.avatarUrl;
-  const websiteHref = escapeHtml(siteUrl || '/');
 
   return `
     <header class="header">
@@ -96,7 +95,7 @@ export function header({ user, breadcrumbs = [], siteUrl = '/' }) {
               Settings
             </a>
             ` : ''}
-            <a class="dropdown__item" href="${websiteHref}" target="_blank" rel="noopener noreferrer">
+            <a class="dropdown__item" href="/" target="_blank" rel="noopener noreferrer">
               <i data-lucide="globe"></i>
               View Website
             </a>

@@ -38,7 +38,6 @@ export function buildDashboardShell({
   modals = '',
   siteName = 'BlogCMS',
   siteIcon = '',
-  siteUrl = '/',
   favicon = '/favicon.svg',
   ogMeta = '',
 }) {
@@ -104,7 +103,7 @@ export function buildDashboardShell({
         <!-- Main Content Area -->
         <main class="main">
           <!-- Header -->
-          ${header({ user, breadcrumbs, siteUrl })}
+          ${header({ user, breadcrumbs })}
 
           <!-- Main Content -->
           <div id="main-content">${content}</div>

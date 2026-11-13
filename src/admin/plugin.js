@@ -16,7 +16,6 @@ export default async function adminPlugin(fastify) {
     const siteMap = reply.request.siteSettingsMap ?? {};
     const siteName = String(siteMap.siteName || 'BlogCMS');
     const siteIcon = String(siteMap.siteIcon || '');
-    const siteUrl = String(siteMap.siteUrl || '/').trim() || '/';
     // Always point at the route, never at the stored path. /favicon.svg
     // resolves the configured icon and falls back to the bundled one when
     // that file is missing (src/app.js sendFavicon) — embedding the raw
@@ -38,7 +37,6 @@ export default async function adminPlugin(fastify) {
       modals: pageMeta.modals ?? '',
       siteName,
       siteIcon,
-      siteUrl,
       favicon,
       ogMeta: renderOgMetaTags(resolved),
     });
