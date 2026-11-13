@@ -6,7 +6,8 @@ Tailwind CSS v4 + SCSS (BEM) + Preline UI. Admin and public each have their own 
 
 ```bash
 npm run build:css    # required after any SCSS change
-npm run watch:css    # runs with npm run dev
+npm run watch:css    # runs with npm run dev; rebuilds on any SCSS, CSS, src HTML or src JS change,
+                     # so a new Tailwind class in a template gets its CSS without a restart
 ```
 
 ```
