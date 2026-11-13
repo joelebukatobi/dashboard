@@ -51,9 +51,10 @@ class MailService {
 
   /**
    * @param {Record<string, unknown>} settingsMap
-   * @param {{ to: string, subject: string, html: string, text?: string }} message
+   * @param {{ to: string, subject: string, html: string, text?: string, replyTo?: string }} message
+   *   replyTo overrides the configured Reply-To (e.g. a contact form's sender).
    */
-  async send(settingsMap, { to, subject, html, text }) {
+  async send(settingsMap, { to, subject, html, text, replyTo }) {
     const settings = getMailSettings(settingsMap);
     if (!settings.configured) {
       throw new Error('SMTP is not configured. Save your email settings first.');
@@ -63,7 +64,7 @@ class MailService {
     await transport.sendMail({
       from: formatMailFrom(settings),
       to,
-      replyTo: settings.replyTo || undefined,
+      replyTo: replyTo || settings.replyTo || undefined,
       subject,
       html,
       text: text || html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
