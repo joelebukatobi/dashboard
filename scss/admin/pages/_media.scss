@@ -525,8 +525,15 @@
   display: none;
   margin-bottom: 2rem;
 
+  // Cap height so album + Upload stay on screen; the list scrolls, not the page.
+  // Desktop .main is overflow-hidden and batch has no inner scroll region
+  // (unlike .media-grid), so a long selection otherwise hides the actions.
+  // pr matches .media-grid / [class$="__table-content"] so rows clear the scrollbar.
   &--visible {
     display: block;
+    max-height: min(40vh, 28rem);
+    overflow-y: auto;
+    @apply pr-[1.6rem];
   }
 }
 

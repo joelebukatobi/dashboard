@@ -16,6 +16,7 @@ import { ensureDatabaseUrl } from '../env.js';
 import { getAppSecret } from './lib/app-secrets.js';
 import { buildApiManifest } from './admin/routes/manifest.js';
 import { buildHealthReport } from './lib/health-check.js';
+import { isRateLimitExemptPath } from './lib/rate-limit-allowlist.js';
 import { projectApiPrefixes } from './admin/routes/project/prefixes.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -83,11 +84,15 @@ export default async function app(fastify, opts) {
     },
   });
 
-  // Rate limiting - disabled in development, enabled in production
+  // Rate limiting - disabled in development, enabled in production.
+  // Skip static asset URLs: a media grid page alone fires ~10 image requests,
+  // so counting /public|/uploads|/dist against the same 100/min budget as HTML
+  // made pagination 429 and broke every <img> (edit preview included).
   if (!isDevelopment) {
     await fastify.register(fastifyRateLimit, {
       max: 100,
       timeWindow: '1 minute',
+      allowList: (request) => isRateLimitExemptPath(request.url),
     });
   }
 

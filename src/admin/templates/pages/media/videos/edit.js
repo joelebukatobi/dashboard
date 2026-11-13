@@ -188,6 +188,7 @@ export function videosEditContent({ user, video, posts, albums = [], toast }) {
         });
       });
     </script>
+    ${toastScript}
   `;
 }
 
@@ -248,7 +249,6 @@ export function videosEditModals({ user, video }) {
         }
       });
     </script>
-    ${toastScript}
   `;
 }
 

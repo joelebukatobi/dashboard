@@ -143,6 +143,7 @@ export function imagesEditContent({ user, image, posts, albums = [], toast }) {
         </div>
       </div>
     </div>
+    ${toastScript}
   `;
 }
 
@@ -203,7 +204,6 @@ export function imagesEditModals({ user, image }) {
         }
       });
     </script>
-    ${toastScript}
   `;
 }
 
