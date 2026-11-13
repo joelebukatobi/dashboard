@@ -92,7 +92,7 @@ export function buildComingSoonShell({ content, favicon = '/favicon.svg', ogMeta
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/dist/css/admin.css" />
-    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="/dist/js/lucide.js"></script>
   </head>
   <body>
     ${content}
