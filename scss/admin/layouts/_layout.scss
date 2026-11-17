@@ -11,7 +11,7 @@
 
     // Ensure direct children (page wrappers like .posts, .users) fill the space
     // Excludes modals/overlays so they don't participate in flex sizing
-    > div:not(.header):not(.mobile-search):not(.hs-overlay):not([id$="Modal"]) {
+    > div:not(.header):not(.hs-overlay):not([id$="Modal"]) {
       @apply flex-1 w-full flex flex-col min-h-0;
     }
 

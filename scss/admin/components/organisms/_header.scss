@@ -127,42 +127,6 @@
   }
 }
 
-// Mobile search toggle (shows search icon on mobile)
-.header__search-toggle {
-  @apply sm:hidden p-[0.8rem] text-grey-500 dark:text-grey-400 rounded-lg;
-  @apply hover:bg-grey-100/50 dark:hover:bg-grey-800 transition-colors;
-
-  svg {
-    @apply w-[2.0rem] h-[2.0rem];
-  }
-}
-
-// Mobile search overlay
-.mobile-search {
-  @apply relative z-10 px-[1.6rem] py-[1.2rem];
-  @apply lg:hidden;
-  @apply bg-white;
-  @apply w-full max-w-full box-border;
-  .dark & {
-    @apply bg-grey-900;
-  }
-  @apply border-b;
-  @apply border-grey-100;
-  .dark & {
-    @apply border-grey-700;
-  }
-  @apply hidden;
-  @apply transition-all duration-200;
-
-  &--open {
-    @apply block;
-  }
-
-  .form__wrapper {
-    @apply w-full;
-  }
-}
-
 // Theme toggle icons
 .theme-icon-light {
   @apply block dark:hidden;
