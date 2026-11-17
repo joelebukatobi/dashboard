@@ -222,16 +222,6 @@ export function buildDashboardShell({
       sidebarClose?.addEventListener('click', closeMobileSidebar);
       sidebarOverlay?.addEventListener('click', closeMobileSidebar);
 
-      document.addEventListener('click', (e) => {
-        if (
-          mobileSearch?.classList.contains('mobile-search--open') &&
-          !mobileSearch?.contains(e.target) &&
-          !mobileSearchToggle?.contains(e.target)
-        ) {
-          mobileSearch?.classList.remove('mobile-search--open');
-        }
-      });
-
       // Whole-row navigation for admin list tables (Posts, Categories, Tags,
       // Subscribers, Albums). Registered once at the document level so it
       // survives HTMX swapping the table (search, paging) or the whole page
