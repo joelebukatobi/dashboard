@@ -6,6 +6,12 @@ HEALTH_URL="${1:?HEALTH_URL required}"
 INITIAL_WAIT="${2:-20}"
 INTERVAL_WAIT="${3:-15}"
 MIN_UPTIME_GROWTH="${4:-10}"
+# How long to keep waiting for the app to answer at all after a restart.
+# Passenger boots cold on shared hosting: the first request compiles and loads
+# the whole app, which has taken past 100s here, so a short fixed retry count
+# reports a perfectly good release as a failed deploy.
+BOOT_TIMEOUT="${5:-300}"
+BOOT_RETRY_INTERVAL="${6:-10}"
 
 EXPECTED_ASSET_VERSION="${EXPECTED_ASSET_VERSION:-}"
 EXPECTED_ENV="${EXPECTED_ENV:-}"
@@ -42,17 +48,24 @@ fetch_health() {
 }
 
 BODY=""
-for attempt in 1 2 3 4 5 6; do
+attempt=0
+boot_deadline=$((SECONDS + BOOT_TIMEOUT))
+while :; do
+  attempt=$((attempt + 1))
   if BODY=$(fetch_health 2>/dev/null); then
+    echo "Health answered on attempt ${attempt} after ${SECONDS}s."
     break
   fi
   BODY=""
-  echo "Health attempt ${attempt} failed, retrying in 10s..."
-  sleep 10
+  if (( SECONDS + BOOT_RETRY_INTERVAL >= boot_deadline )); then
+    break
+  fi
+  echo "Health attempt ${attempt} failed (${SECONDS}s elapsed, giving it up to ${BOOT_TIMEOUT}s), retrying in ${BOOT_RETRY_INTERVAL}s..."
+  sleep "$BOOT_RETRY_INTERVAL"
 done
 
 if [[ -z "$BODY" ]]; then
-  echo "::error::Health check failed: no valid JSON response from ${HEALTH_URL}"
+  echo "::error::Health check failed: no valid JSON response from ${HEALTH_URL} after ${SECONDS}s (${attempt} attempts)"
   echo "Check cPanel Node.js stderr logs. Common causes: missing node_modules (run NPM Install), migration failure, app paused, a slow boot exceeding the gateway timeout, or the Node.js app not registered/Application URL not matching this domain in cPanel's Setup Node.js App (requests never reach Passenger at all in that case)."
   exit 1
 fi
