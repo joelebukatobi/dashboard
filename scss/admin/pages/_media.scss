@@ -7,13 +7,19 @@
 // ========================================
 .media-grid {
   @apply grid gap-x-[1.6rem] gap-y-[1.6rem];
-  // Responsive grid: 2 cols mobile, 3 tablet, 5 desktop
-  @apply grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 content-start items-start;
+  @apply grid-cols-2 sm:grid-cols-3 content-start items-start;
 
-  // The grid owns the scroll, not the page: cards keep their natural size, so
-  // on a viewport too short for two rows the grid scrolls internally while the
-  // header, toolbar and pagination stay put. On a tall screen a full page of
-  // ten fits and nothing scrolls at all.
+  // From lg up the column COUNT grows with the screen rather than the cards
+  // growing to fill five fixed columns - at 2560 that made every card 409px.
+  // auto-fill holds a card near its natural ~185px and fits as many per row as
+  // there is room for, so a wider monitor shows more pictures, not bigger ones.
+  // 180px is tuned to keep 5 columns at 1280/1440, where the old grid sat.
+  @apply lg:grid-cols-[repeat(auto-fill,minmax(180px,1fr))];
+
+  // The grid fills the space between the toolbar and the fixed pagination
+  // footer. mediaPageFitScript sizes a page to the whole rows that fit here, so
+  // normally nothing overflows; the scroll is the fallback when that script
+  // cannot run (no JS) or in the instant before it corrects the page size.
   @media (min-width: 1024px) {
     // pr matches the scrollable table areas, so the cards clear the scrollbar.
     @apply flex-1 min-h-0 overflow-y-auto pr-[1.6rem];

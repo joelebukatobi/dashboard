@@ -11,7 +11,13 @@
 
     // Ensure direct children (page wrappers like .posts, .users) fill the space
     // Excludes modals/overlays so they don't participate in flex sizing
-    > div:not(.header):not(.hs-overlay):not([id$="Modal"]) {
+    // #main-content is display:contents, so its own box disappears and the
+    // page wrapper inside it becomes main's real flex item. A child selector
+    // alone only ever matched #main-content, which contents then discarded -
+    // leaving .media/.posts at auto height, so nothing filled the viewport and
+    // long lists ran under the fixed pagination footer. Match both depths.
+    > div:not(.header):not(.hs-overlay):not([id$="Modal"]),
+    > #main-content > div:not(.header):not(.hs-overlay):not([id$="Modal"]) {
       @apply flex-1 w-full flex flex-col min-h-0;
     }
 
@@ -47,9 +53,18 @@
       @apply shrink-0;
     }
 
+    // Bulk selection wraps each list in a form, which sits between .content
+    // and the table. Without this the form is a plain block, the flex chain
+    // breaks, and the table grows past the viewport under the fixed pagination
+    // footer instead of scrolling inside its own area.
+    > form[data-bulk-form] {
+      @apply flex-1 min-h-0 flex flex-col;
+    }
+
     // Generic scrollable table content area (desktop only)
     // Matches .posts__table-content, .categories__table-content, .tags__table-content, etc.
-    > [class$="__table-content"] {
+    // Descendant, not child: the bulk form nests it one level deeper.
+    [class$="__table-content"] {
       @media (min-width: 1024px) {
         @apply flex-1 min-h-0 overflow-y-auto pr-[1.6rem];
       }

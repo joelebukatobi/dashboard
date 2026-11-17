@@ -3,6 +3,7 @@
 
 import { imagesService } from '../../services/images.service.js';
 import { albumsService } from '../../services/albums.service.js';
+import { resolveMediaPageSize } from '../lib/media-page-size.js';
 import {
   renderAdminPage,
   renderFragment,
@@ -34,7 +35,11 @@ class ImagesController {
       } = request.query;
 
       const viewMode = view === 'table' ? 'table' : 'grid';
-      const limit = Math.min(100, Math.max(1, parseInt(limitRaw, 10) || (viewMode === 'table' ? 25 : 10)));
+      const limit = resolveMediaPageSize({
+        limitParam: limitRaw,
+        cookies: request.cookies,
+        view: viewMode,
+      });
 
       const { data: images, pagination } = await imagesService.getAll({
         search,

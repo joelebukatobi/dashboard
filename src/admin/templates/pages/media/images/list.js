@@ -8,7 +8,7 @@ import {
   bulkSelectHead,
   bulkTableScript,
 } from '../../../partials/bulk-table.js';
-import { mediaLimitScript, mediaViewToggle } from '../../../partials/media-view.js';
+import { mediaPageFitScript, mediaViewToggle } from '../../../partials/media-view.js';
 import { escapeHtml, paginationHtml, toastQueryScript, toPublicMediaUrl } from '../../../utils/helpers.js';
 
 /**
@@ -104,7 +104,8 @@ export function imagesListContent({
     </div>
 
     ${toastScript}
-    ${isTable ? bulkTableScript() : mediaLimitScript()}
+    ${isTable ? bulkTableScript() : ''}
+    ${mediaPageFitScript({ view })}
   `;
 }
 
