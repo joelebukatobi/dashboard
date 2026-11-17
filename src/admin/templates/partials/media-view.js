@@ -143,6 +143,9 @@ export function mediaPageFitScript({ view = 'grid' } = {}) {
             params.set('page', String(Math.floor(firstItem / want) + 1));
           }
           params.set('limit', String(want));
+          // The reload keeps ?toast and ?next; tell the toast script to leave
+          // them for the reloaded page.
+          window.__adminReloading = true;
           window.location.replace(window.location.pathname + '?' + params.toString());
         }
 

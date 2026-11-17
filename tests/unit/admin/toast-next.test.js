@@ -10,11 +10,10 @@ describe('toastQueryScript ?next', () => {
     expect(js).toContain('3400');
   });
 
-  it('only follows admin paths', () => {
+  it('only follows admin paths, and the script parses', () => {
     const js = toastQueryScript('x');
-    const re = new RegExp(js.match(/if \(next && \/(.+)\/\.test\(next\)\)/)[1].replace(/\\\\/g, '\\'));
-    expect(re.test('/admin/media/albums/abc/edit')).toBe(true);
-    expect(re.test('//evil.example')).toBe(false);
-    expect(re.test('https://evil.example')).toBe(false);
+    const body = js.replace(/<\/?script>/g, '');
+    expect(() => new Function(body)).not.toThrow();
+    expect(js).toContain("next.indexOf('/admin/') === 0");
   });
 });

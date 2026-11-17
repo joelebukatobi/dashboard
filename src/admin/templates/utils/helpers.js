@@ -273,7 +273,11 @@ export function toastQueryScript(toast, messages = {}) {
 
   return `
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function() { setTimeout(function() {
+        // Deferred so other DOMContentLoaded handlers run first; if one of
+        // them is reloading the page (media lists fitting their page size),
+        // the reloaded page shows the toast instead.
+        if (window.__adminReloading) return;
         const toastMessages = {
 ${messageMap}
         };
@@ -288,10 +292,10 @@ ${messageMap}
         const next = url.searchParams.get('next');
         url.searchParams.delete('next');
         window.history.replaceState({}, '', url);
-        if (next && /^\/admin\/[^/]/.test(next)) {
+        if (next && next.indexOf('/admin/') === 0) {
           setTimeout(function () { window.location.assign(next); }, 3400);
         }
-      });
+      }, 0); });
     </script>
   `;
 }
