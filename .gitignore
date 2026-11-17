@@ -102,3 +102,8 @@ __pycache__/
 # Local-only working files
 .vitest/
 docs/plans/
+
+# Cross-tool agent scaffolding — local to each machine, never tracked
+AGENTS.md
+CLAUDE.md
+HANDOFF.md
