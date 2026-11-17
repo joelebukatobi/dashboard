@@ -143,11 +143,14 @@ export function setHtmxTrigger(reply, triggers) {
 }
 
 /**
- * HTMX redirect with an empty body.
+ * HTMX redirect with an empty body. A plain form post (no HX-Request, e.g.
+ * the bulk-action modal) gets a normal 303 instead; an empty 200 would leave
+ * the browser on a blank page at the POST URL.
  * @param {import('fastify').FastifyReply} reply
  * @param {string} url
  */
 export function htmxRedirect(reply, url) {
+  if (reply.request?.headers?.['hx-request'] !== 'true') return reply.redirect(url, 303);
   reply.header('HX-Redirect', url);
   return renderEmpty(reply);
 }
