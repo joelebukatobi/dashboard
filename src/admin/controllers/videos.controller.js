@@ -118,7 +118,8 @@ class VideosController {
       const n = await videosService.bulkAssignAlbum(ids, albumId);
       return htmxRedirect(
         reply,
-        `/admin/media/videos?view=table&toast=${encodeURIComponent(`Added ${n} video${n === 1 ? '' : 's'} to album`)}`,
+        `/admin/media/videos?view=table&toast=${encodeURIComponent(`Added ${n} video${n === 1 ? '' : 's'} to album`)}`
+          + `&next=${encodeURIComponent(`/admin/media/albums/${albumId}/edit`)}`,
       );
     } catch (error) {
       request.log.error(error);

@@ -258,7 +258,8 @@ export function paginationHtml({ basePath, page, totalPages, filters = {}, filte
 }
 
 /**
- * Inline script that shows a toast from a ?toast= query param.
+ * Inline script that shows a toast from a ?toast= query param, then follows
+ * ?next= (an /admin/ path) once the toast has gone.
  * @param {string|undefined|null} toast
  * @param {Record<string, string>} messages
  * @returns {string}
@@ -282,7 +283,14 @@ ${messageMap}
         }));
         const url = new URL(window.location);
         url.searchParams.delete('toast');
+        // ?next=/admin/... : once the toast has run its course (shown after
+        // 100ms, 3s on screen, 300ms to fade), move on to that admin page.
+        const next = url.searchParams.get('next');
+        url.searchParams.delete('next');
         window.history.replaceState({}, '', url);
+        if (next && /^\/admin\/[^/]/.test(next)) {
+          setTimeout(function () { window.location.assign(next); }, 3400);
+        }
       });
     </script>
   `;

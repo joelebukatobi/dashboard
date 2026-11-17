@@ -117,7 +117,8 @@ class ImagesController {
       const n = await imagesService.bulkAssignAlbum(ids, albumId);
       return htmxRedirect(
         reply,
-        `/admin/media/images?view=table&toast=${encodeURIComponent(`Added ${n} image${n === 1 ? '' : 's'} to album`)}`,
+        `/admin/media/images?view=table&toast=${encodeURIComponent(`Added ${n} image${n === 1 ? '' : 's'} to album`)}`
+          + `&next=${encodeURIComponent(`/admin/media/albums/${albumId}/edit`)}`,
       );
     } catch (error) {
       request.log.error(error);
