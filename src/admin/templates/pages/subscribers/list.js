@@ -3,9 +3,13 @@
 
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
+import {
+  bulkActionsBar,
+  bulkSelectCell,
+  bulkSelectHead,
+  bulkTableScript,
+} from '../../partials/bulk-table.js';
 import { escapeHtml, formatRelativeTime, SUBSCRIBER_STATUS_LABELS, paginationHtml, toastQueryScript } from '../../utils/helpers.js';
-
-
 
 /**
  * Subscribers list page inner content (layout applied via fastify-html addLayout).
@@ -36,7 +40,6 @@ export function subscribersListContent({ subscribers, pagination, filters, user,
   const content = `
     <div class="subscribers">
       <div class="content">
-        <!-- Page Header -->
         <div class="page-header">
           <div class="page-header__left">
             <h1 class="page-header__title">Subscribers</h1>
@@ -45,30 +48,38 @@ export function subscribersListContent({ subscribers, pagination, filters, user,
           <div class="page-header__toast-container"></div>
         </div>
 
-        <!-- Data Filter -->
         ${listToolbar({
           searchUrl: '/admin/subscribers',
           searchTarget: '#subscribers-table-container',
           searchPlaceholder: 'Search subscribers...',
           searchValue: filters.search || '',
-          filters: [],
+          filters: toolbarFilters,
           hasAddButton: true,
           addButtonUrl: '/admin/subscribers/new',
-          addButtonLabel: 'Add Subscriber',
+          addButtonText: 'Add Subscriber',
         })}
 
-        <div id="subscribers-table-container" class="subscribers__table-content">
-          ${subscribers.length === 0
-            ? emptyState()
-            : renderSubscribersTable(subscribers, pagination, filters)
-          }
-        </div>
+        <form data-bulk-form method="post">
+          ${bulkActionsBar({
+            csrfToken: user?.csrfToken || '',
+            deleteAction: '/admin/subscribers/bulk-delete',
+            entityLabel: 'subscribers',
+          })}
+
+          <div id="subscribers-table-container" class="subscribers__table-content">
+            ${subscribers.length === 0
+              ? emptyState()
+              : renderSubscribersTable(subscribers, pagination, filters)
+            }
+          </div>
+        </form>
 
         ${subscribers.length > 0 && totalPages > 1 ? paginationHtml({ basePath: '/admin/subscribers', page, totalPages, filters, filterKeys: ['status', 'search'] }) : ''}
       </div>
     </div>
 
     ${toastScript}
+    ${bulkTableScript()}
   `;
 
   return content;
@@ -122,15 +133,7 @@ export function subscribersTableFragment({ subscribers, pagination, filters }) {
 
   return `
     <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Email</th>
-          <th>Status</th>
-          <th>Confirmed</th>
-          <th>Subscribed</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      ${subscribersTableHead()}
       <tbody class="table__tbody">
         ${rows}
       </tbody>
@@ -144,19 +147,26 @@ export function subscribersTableFragment({ subscribers, pagination, filters }) {
 function renderSubscribersTable(subscribers, pagination, filters) {
   return `
     <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Email</th>
-          <th>Status</th>
-          <th>Confirmed</th>
-          <th>Subscribed</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      ${subscribersTableHead()}
       <tbody class="table__tbody">
         ${subscribers.map(subscriber => renderSubscriberRow(subscriber)).join('')}
       </tbody>
     </table>
+  `;
+}
+
+function subscribersTableHead() {
+  return `
+    <thead class="table__thead">
+      <tr>
+        ${bulkSelectHead()}
+        <th>Email</th>
+        <th>Status</th>
+        <th>Confirmed</th>
+        <th>Subscribed</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
   `;
 }
 
@@ -173,6 +183,7 @@ export function renderSubscriberRow(subscriber) {
 
   return `
     <tr class="table__tr cursor-pointer" id="subscriber-${subscriber.id}" data-href="/admin/subscribers/${subscriber.id}/edit">
+      ${bulkSelectCell(subscriber.id)}
       <td class="table__td">
         <span class="table__label">Email</span>
         <div class="table__title">

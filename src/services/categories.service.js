@@ -204,6 +204,26 @@ class CategoriesService {
   }
 
   /**
+   * Delete many categories.
+   * @param {string[]} ids
+   * @param {string} userId
+   */
+  async bulkDelete(ids, userId) {
+    let deleted = 0;
+    let postsMoved = 0;
+    for (const id of ids) {
+      try {
+        const result = await this.delete(id, userId);
+        deleted += 1;
+        postsMoved += Number(result?.postsMoved) || 0;
+      } catch {
+        // skip
+      }
+    }
+    return { deleted, postsMoved };
+  }
+
+  /**
    * Delete a category
    * @param {string} id - Category ID
    * @param {string} userId - User making the deletion

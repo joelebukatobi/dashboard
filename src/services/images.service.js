@@ -2,12 +2,13 @@
 // Images service for managing media library
 
 import { db, mediaItems, posts, albums } from '../db/index.js';
-import { eq, like, desc, asc, sql, and, isNull } from 'drizzle-orm';
+import { eq, like, desc, asc, sql, and, isNull, inArray } from 'drizzle-orm';
 import { promises as fs } from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import crypto from 'crypto';
 import { resolveMediaFsPath, toPublicMediaUrl } from '../lib/media-paths.js';
+import { buildStoreZip } from '../lib/zip-store.js';
 
 /**
  * Images Service
@@ -463,6 +464,63 @@ class ImagesService {
         updatedAt: new Date(),
       })
       .where(eq(posts.id, postId));
+  }
+
+  /**
+   * Assign many images to one album.
+   * @param {string[]} ids
+   * @param {string} albumId
+   */
+  async bulkAssignAlbum(ids, albumId) {
+    if (!albumId) throw new Error('Album is required');
+    await db
+      .update(mediaItems)
+      .set({ albumId, updatedAt: new Date() })
+      .where(and(eq(mediaItems.type, 'IMAGE'), inArray(mediaItems.id, ids)));
+    return ids.length;
+  }
+
+  /**
+   * Delete many images (reuses single-delete cleanup).
+   * @param {string[]} ids
+   */
+  async bulkDelete(ids) {
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await this.delete(id);
+        deleted += 1;
+      } catch {
+        // skip missing / already gone
+      }
+    }
+    return deleted;
+  }
+
+  /**
+   * Zip original files for the given image ids.
+   * @param {string[]} ids
+   * @returns {Promise<Buffer>}
+   */
+  async bulkZip(ids) {
+    const rows = await db
+      .select()
+      .from(mediaItems)
+      .where(and(eq(mediaItems.type, 'IMAGE'), inArray(mediaItems.id, ids)));
+
+    const files = [];
+    for (const row of rows) {
+      const fsPath = this.resolveMediaFsPath(row.path);
+      if (!fsPath) continue;
+      try {
+        const data = await fs.readFile(fsPath);
+        files.push({ name: row.originalName || row.filename, data });
+      } catch {
+        // skip missing files
+      }
+    }
+    if (files.length === 0) throw new Error('No files available to download');
+    return buildStoreZip(files);
   }
 
   /**

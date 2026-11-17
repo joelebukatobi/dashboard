@@ -25,13 +25,25 @@ class ImagesController {
   async list(request, reply) {
     try {
       const user = request.user;
-      const { search, page = 1, toast } = request.query;
+      const {
+        search,
+        page = 1,
+        toast,
+        view = 'grid',
+        limit: limitRaw,
+      } = request.query;
+
+      const viewMode = view === 'table' ? 'table' : 'grid';
+      const limit = Math.min(100, Math.max(1, parseInt(limitRaw, 10) || (viewMode === 'table' ? 25 : 10)));
 
       const { data: images, pagination } = await imagesService.getAll({
         search,
         page: parseInt(page, 10) || 1,
-        limit: 10,
+        limit,
       });
+
+      const albums = await albumsService.getAllForDropdown();
+      const albumTitleById = Object.fromEntries(albums.map((a) => [a.id, a.title]));
 
       await imagesService.getStats();
 
@@ -43,13 +55,16 @@ class ImagesController {
 
       const data = {
         user,
+        view: viewMode,
+        albums,
         images: images.map((img) => ({
           ...img,
           sizeFormatted: formatFileSize(img.size),
           dateFormatted: formatSiteDate(img.createdAt, request.siteSettingsMap ?? {}),
+          albumTitle: img.albumId ? albumTitleById[img.albumId] || '' : '',
         })),
         pagination,
-        filters: { search },
+        filters: { search, view: viewMode, limit },
         toast,
       };
 
@@ -69,6 +84,55 @@ class ImagesController {
       return renderFragment(reply, errorAlert({
         message: 'Failed to load images: ' + error.message,
       }));
+    }
+  }
+
+  async bulkDelete(request, reply) {
+    try {
+      const { ids } = request.body;
+      const deleted = await imagesService.bulkDelete(ids);
+      return htmxRedirect(
+        reply,
+        `/admin/media/images?view=table&toast=${encodeURIComponent(`Deleted ${deleted} image${deleted === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk delete failed.' }));
+    }
+  }
+
+  async bulkAlbum(request, reply) {
+    try {
+      const { ids, albumId } = request.body;
+      if (!albumId) {
+        reply.code(400);
+        return renderFragment(reply, errorAlert({ message: 'Choose an album.' }));
+      }
+      const n = await imagesService.bulkAssignAlbum(ids, albumId);
+      return htmxRedirect(
+        reply,
+        `/admin/media/images?view=table&toast=${encodeURIComponent(`Added ${n} image${n === 1 ? '' : 's'} to album`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Could not assign album.' }));
+    }
+  }
+
+  async bulkDownload(request, reply) {
+    try {
+      const { ids } = request.body;
+      const zip = await imagesService.bulkZip(ids);
+      reply
+        .header('Content-Type', 'application/zip')
+        .header('Content-Disposition', 'attachment; filename="images.zip"')
+        .send(zip);
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Download failed.' }));
     }
   }
 

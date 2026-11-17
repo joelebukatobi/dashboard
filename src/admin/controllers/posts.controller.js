@@ -48,8 +48,9 @@ class PostsController {
         limit: 10,
       });
 
-      // Get categories for filter dropdown
+      // Get categories for filter dropdown + tags for bulk add
       const allCategories = await db.select().from(categories);
+      const allTags = await db.select().from(tags);
 
       // Get counts by status
       const totalPosts = await postsService.getPostsCount();
@@ -63,6 +64,7 @@ class PostsController {
         page: parseInt(page),
         totalPages,
         categories: allCategories,
+        tags: allTags,
         statusCounts: {
           total: totalPosts,
           published: publishedCount,
@@ -314,6 +316,74 @@ class PostsController {
       return renderFragment(reply, errorAlert({
         message: error.message || 'Failed to delete post. Please try again.'
       }));
+    }
+  }
+
+  /** POST /admin/posts/bulk-delete */
+  async bulkDelete(request, reply) {
+    try {
+      const { ids } = request.body;
+      const deleted = await postsService.bulkDelete(ids, request.user?.id);
+      return htmxRedirect(
+        reply,
+        `/admin/posts?toast=${encodeURIComponent(`Deleted ${deleted} post${deleted === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk delete failed.' }));
+    }
+  }
+
+  /** POST /admin/posts/bulk-publish */
+  async bulkPublish(request, reply) {
+    try {
+      const { ids } = request.body;
+      const n = await postsService.bulkSetStatus(ids, 'PUBLISHED');
+      return htmxRedirect(
+        reply,
+        `/admin/posts?toast=${encodeURIComponent(`Published ${n} post${n === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk publish failed.' }));
+    }
+  }
+
+  /** POST /admin/posts/bulk-unpublish */
+  async bulkUnpublish(request, reply) {
+    try {
+      const { ids } = request.body;
+      const n = await postsService.bulkSetStatus(ids, 'DRAFT');
+      return htmxRedirect(
+        reply,
+        `/admin/posts?toast=${encodeURIComponent(`Unpublished ${n} post${n === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk unpublish failed.' }));
+    }
+  }
+
+  /** POST /admin/posts/bulk-tags */
+  async bulkAddTags(request, reply) {
+    try {
+      const { ids, tagIds } = request.body;
+      if (!tagIds?.length) {
+        reply.code(400);
+        return renderFragment(reply, errorAlert({ message: 'Choose at least one tag.' }));
+      }
+      const result = await postsService.bulkAddTags(ids, tagIds);
+      return htmxRedirect(
+        reply,
+        `/admin/posts?toast=${encodeURIComponent(`Added tags to ${result.posts} post${result.posts === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Could not add tags.' }));
     }
   }
 

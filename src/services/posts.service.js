@@ -539,6 +539,75 @@ class PostsService {
     return true;
   }
 
+  /** Bulk delete posts. Returns count deleted. */
+  async bulkDelete(ids, userId) {
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await this.deletePost(id, userId);
+        deleted += 1;
+      } catch {
+        // skip missing / failed
+      }
+    }
+    return deleted;
+  }
+
+  /** Bulk set status (PUBLISHED / DRAFT). */
+  async bulkSetStatus(ids, status) {
+    let updated = 0;
+    for (const id of ids) {
+      try {
+        await this.updatePost(id, { status });
+        updated += 1;
+      } catch {
+        // skip
+      }
+    }
+    return updated;
+  }
+
+  /**
+   * Merge tags onto posts (does not remove existing tags).
+   * @returns {{ posts: number, tagsAdded: number }}
+   */
+  async bulkAddTags(ids, tagIds) {
+    let postsTouched = 0;
+    let tagsAdded = 0;
+    for (const postId of ids) {
+      try {
+        const n = await this.addPostTags(postId, tagIds);
+        if (n > 0) {
+          postsTouched += 1;
+          tagsAdded += n;
+        } else {
+          postsTouched += 1;
+        }
+      } catch {
+        // skip
+      }
+    }
+    return { posts: postsTouched, tagsAdded };
+  }
+
+  /** Add tags to a post without removing existing ones. Returns number newly linked. */
+  async addPostTags(postId, tagIds = []) {
+    if (!tagIds.length) return 0;
+    const currentTags = await db
+      .select({ tagId: postTags.tagId })
+      .from(postTags)
+      .where(eq(postTags.postId, postId));
+    const currentIds = new Set(currentTags.map((t) => t.tagId));
+    const toAdd = tagIds.filter((id) => !currentIds.has(id));
+    if (!toAdd.length) return 0;
+
+    await db.insert(postTags).values(toAdd.map((tagId) => ({ postId, tagId })));
+    for (const tagId of toAdd) {
+      await this.incrementTagPostCount(tagId);
+    }
+    return toAdd.length;
+  }
+
   /**
    * Update post tags
    * @param {string} postId - Post ID

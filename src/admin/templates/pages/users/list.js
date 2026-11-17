@@ -3,6 +3,12 @@
 
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
+import {
+  bulkActionsBar,
+  bulkSelectCell,
+  bulkSelectHead,
+  bulkTableScript,
+} from '../../partials/bulk-table.js';
 import { escapeHtml, formatDate, formatRelativeTime, USER_ROLE_LABELS, USER_STATUS_LABELS, paginationHtml as buildPaginationHtml, toastQueryScript } from '../../utils/helpers.js';
 
 const USER_FILTER_KEYS = ['search', 'role', 'status'];
@@ -75,16 +81,37 @@ export function usersListContent({ users, pagination, counts, filters, user, toa
           addButtonText: 'Add User',
         })}
 
+        <form data-bulk-form method="post">
+          ${bulkActionsBar({
+            csrfToken: user?.csrfToken || '',
+            deleteAction: '/admin/users/bulk-delete',
+            entityLabel: 'users',
+            statusActions: [
+              {
+                label: 'Suspend',
+                action: '/admin/users/bulk-suspend',
+                title: 'Suspend users?',
+                message: 'Suspend the selected users? Your own account and the last admin are skipped.',
+              },
+              {
+                label: 'Activate',
+                action: '/admin/users/bulk-activate',
+                title: 'Activate users?',
+                message: 'Activate the selected users?',
+              },
+            ],
+          })}
+
         <div id="users-table-container" class="users__table-content">
         ${
           users.length === 0
             ? emptyState()
             : `
-          <!-- Users Table -->
           <div class="table">
             <table class="table__table">
               <thead class="table__thead">
                 <tr>
+                  ${bulkSelectHead()}
                   <th>User</th>
                   <th>Role</th>
                   <th>Status</th>
@@ -98,6 +125,7 @@ export function usersListContent({ users, pagination, counts, filters, user, toa
                   .map(
                     (u) => `
                   <tr class="table__tr ${u.status === 'SUSPENDED' ? 'table__tr--muted' : ''}">
+                    ${bulkSelectCell(u.id)}
                     <td class="table__td">
                       <span class="table__label">User</span>
                       <div class="table__title">
@@ -174,10 +202,12 @@ export function usersListContent({ users, pagination, counts, filters, user, toa
         `
         }
         </div>
+        </form>
       </div>
     </div>
 
     ${toastScript}
+    ${bulkTableScript()}
   `;
 
   return content;
@@ -277,6 +307,7 @@ export function usersTableFragment({ users, total, page, totalPages, limit, filt
 
   const rows = users.map((u) => `
     <tr class="table__tr ${u.status === 'SUSPENDED' ? 'table__tr--muted' : ''}">
+      ${bulkSelectCell(u.id)}
       <td class="table__td">
         <span class="table__label">User</span>
         <div class="table__title">
@@ -353,6 +384,7 @@ export function usersTableFragment({ users, total, page, totalPages, limit, filt
       <table class="table__table">
         <thead class="table__thead">
           <tr>
+            ${bulkSelectHead()}
             <th>User</th>
             <th>Role</th>
             <th>Status</th>

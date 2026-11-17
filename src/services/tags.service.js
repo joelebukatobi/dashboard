@@ -204,6 +204,19 @@ class TagsService {
    * @param {string} userId - User ID deleting the tag
    * @returns {Promise<Object>} - { deleted: true, postsAffected: count }
    */
+  async bulkDelete(ids, userId) {
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await this.delete(id, userId);
+        deleted += 1;
+      } catch {
+        // skip
+      }
+    }
+    return deleted;
+  }
+
   async delete(id, userId) {
     const tag = await this.getById(id);
     if (!tag) {

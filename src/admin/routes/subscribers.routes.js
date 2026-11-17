@@ -5,7 +5,11 @@ import { subscribersController } from '../controllers/subscribers.controller.js'
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { createSubscriberSchema, updateSubscriberSchema } from '../schemas/subscriber.schema.js';
-import { resourceIdSchema, subscribersListQuerySchema } from '../schemas/common.schema.js';
+import {
+  bulkIdsSchema,
+  resourceIdSchema,
+  subscribersListQuerySchema,
+} from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
@@ -24,6 +28,11 @@ export default async function subscribersRoutes(fastify, opts) {
   fastify.post('/', {
     preHandler: validateBody(createSubscriberSchema),
     handler: subscribersController.create.bind(subscribersController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: validateBody(bulkIdsSchema),
+    handler: subscribersController.bulkDelete.bind(subscribersController),
   });
 
   fastify.get('/:id/edit', {

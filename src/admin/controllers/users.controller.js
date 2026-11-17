@@ -382,6 +382,51 @@ class UsersController {
    * DELETE /admin/users/:id
    * Delete a user
    */
+  async bulkDelete(request, reply) {
+    try {
+      const { ids } = request.body;
+      const deleted = await usersService.bulkDelete(ids, request.user?.id);
+      return htmxRedirect(
+        reply,
+        `/admin/users?toast=${encodeURIComponent(`Deleted ${deleted} user${deleted === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk delete failed.' }));
+    }
+  }
+
+  async bulkSuspend(request, reply) {
+    try {
+      const { ids } = request.body;
+      const n = await usersService.bulkSuspend(ids, request.user?.id);
+      return htmxRedirect(
+        reply,
+        `/admin/users?toast=${encodeURIComponent(`Suspended ${n} user${n === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk suspend failed.' }));
+    }
+  }
+
+  async bulkActivate(request, reply) {
+    try {
+      const { ids } = request.body;
+      const n = await usersService.bulkActivate(ids, request.user?.id);
+      return htmxRedirect(
+        reply,
+        `/admin/users?toast=${encodeURIComponent(`Activated ${n} user${n === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk activate failed.' }));
+    }
+  }
+
   async delete(request, reply) {
     try {
       const currentUserId = request.user?.id;

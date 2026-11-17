@@ -3,9 +3,13 @@
 
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
+import {
+  bulkActionsBar,
+  bulkSelectCell,
+  bulkSelectHead,
+  bulkTableScript,
+} from '../../partials/bulk-table.js';
 import { escapeHtml, formatDate, paginationHtml, toastQueryScript } from '../../utils/helpers.js';
-
-
 
 /**
  * Tags list page inner content (layout applied via fastify-html addLayout).
@@ -19,7 +23,6 @@ export function tagsListContent({ tags, total, page, totalPages, filters, user, 
   const content = `
     <div class="tags">
       <div class="content">
-        <!-- Page Header -->
         <div class="page-header">
           <div class="page-header__left">
             <h1 class="page-header__title">Tags</h1>
@@ -28,7 +31,6 @@ export function tagsListContent({ tags, total, page, totalPages, filters, user, 
           <div class="page-header__toast-container"></div>
         </div>
 
-        <!-- Data Filter -->
         ${listToolbar({
           searchUrl: '/admin/tags',
           searchTarget: '#tags-table-container',
@@ -40,25 +42,34 @@ export function tagsListContent({ tags, total, page, totalPages, filters, user, 
           addButtonText: tags.length === 0 ? 'Create First Tag' : 'New Tag',
         })}
 
-        <div id="tags-table-container" class="tags__table-content">
-        ${
-          tags.length === 0
-            ? emptyState()
-            : `
-          <table class="table">
-            ${tagsTableHead()}
-            <tbody class="table__tbody">
-              ${tags.map(renderTagRow).join('')}
-            </tbody>
-          </table>
-        `}
-        </div>
+        <form data-bulk-form method="post">
+          ${bulkActionsBar({
+            csrfToken: user?.csrfToken || '',
+            deleteAction: '/admin/tags/bulk-delete',
+            entityLabel: 'tags',
+          })}
+
+          <div id="tags-table-container" class="tags__table-content">
+          ${
+            tags.length === 0
+              ? emptyState()
+              : `
+            <table class="table">
+              ${tagsTableHead()}
+              <tbody class="table__tbody">
+                ${tags.map(renderTagRow).join('')}
+              </tbody>
+            </table>
+          `}
+          </div>
+        </form>
 
         ${totalPages > 1 ? paginationHtml({ basePath: '/admin/tags', page, totalPages, filters, filterKeys: ['search'] }) : ''}
       </div>
     </div>
 
     ${toastScript}
+    ${bulkTableScript()}
   `;
 
   return content;
@@ -122,16 +133,7 @@ export function tagsTableFragment({ tags, pagination }) {
 
   return `
     <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Name</th>
-          <th>Slug</th>
-          <th>Description</th>
-          <th>Posts</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      ${tagsTableHead()}
       <tbody class="table__tbody">
         ${rows}
       </tbody>
@@ -149,6 +151,7 @@ function tagsTableHead() {
   return `
     <thead class="table__thead">
       <tr>
+        ${bulkSelectHead()}
         <th>Name</th>
         <th>Slug</th>
         <th>Description</th>
@@ -163,6 +166,7 @@ function tagsTableHead() {
 function renderTagRow(tag) {
   return `
     <tr class="table__tr cursor-pointer" data-href="/admin/tags/${tag.id}/edit">
+      ${bulkSelectCell(tag.id)}
       <td class="table__td">
         <span class="table__label">Name</span>
         <div class="table__title">

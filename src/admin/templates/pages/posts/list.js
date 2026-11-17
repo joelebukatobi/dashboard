@@ -1,18 +1,26 @@
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
+import {
+  bulkActionsBar,
+  bulkSelectCell,
+  bulkSelectHead,
+  bulkTableScript,
+} from '../../partials/bulk-table.js';
 import { escapeHtml, formatDate, POST_STATUS_LABELS, paginationHtml, toastQueryScript } from '../../utils/helpers.js';
 
 const POST_FILTER_KEYS = ['search', 'status', { filter: 'categoryId', param: 'category' }];
 
-
-
 /**
  * Posts list page inner content (layout applied via fastify-html addLayout).
  */
-export function postsListContent({ posts, total, page, totalPages, categories, filters, user, toast }) {
+export function postsListContent({ posts, total, page, totalPages, categories, tags = [], filters, user, toast }) {
   const toastScript = toastQueryScript(toast, {
     deleted: 'Post deleted successfully!',
   });
+
+  const tagOptionsHtml = tags
+    .map((t) => `<option value="${escapeHtml(t.id)}">${escapeHtml(t.name)}</option>`)
+    .join('');
 
   // Build filters array for toolbar
   const toolbarFilters = [
@@ -42,7 +50,6 @@ export function postsListContent({ posts, total, page, totalPages, categories, f
   const content = `
     <div class="posts">
       <div class="content">
-        <!-- Page Header -->
         <div class="page-header">
           <div class="page-header__left">
             <h1 class="page-header__title">Blog Posts</h1>
@@ -51,7 +58,6 @@ export function postsListContent({ posts, total, page, totalPages, categories, f
           <div class="page-header__toast-container"></div>
         </div>
 
-        <!-- Data Filter -->
         ${listToolbar({
           searchUrl: '/admin/posts',
           searchTarget: '#posts-table-container',
@@ -63,26 +69,51 @@ export function postsListContent({ posts, total, page, totalPages, categories, f
           addButtonText: 'New Post',
         })}
 
-        <div id="posts-table-container" class="posts__table-content">
-        ${
-          posts.length === 0
-            ? emptyState()
-            : `
-          <!-- Data List (Table) -->
-          <table class="table">
-            ${postsTableHead()}
-            <tbody class="table__tbody">
-              ${posts.map(renderPostRow).join('')}
-            </tbody>
-          </table>
-        `}
-        </div>
+        <form data-bulk-form method="post">
+          ${bulkActionsBar({
+            csrfToken: user?.csrfToken || '',
+            deleteAction: '/admin/posts/bulk-delete',
+            entityLabel: 'posts',
+            showTags: true,
+            tagAction: '/admin/posts/bulk-tags',
+            tagOptionsHtml,
+            statusActions: [
+              {
+                label: 'Publish',
+                action: '/admin/posts/bulk-publish',
+                title: 'Publish posts?',
+                message: 'Publish the selected posts?',
+              },
+              {
+                label: 'Unpublish',
+                action: '/admin/posts/bulk-unpublish',
+                title: 'Unpublish posts?',
+                message: 'Move the selected posts to drafts?',
+              },
+            ],
+          })}
+
+          <div id="posts-table-container" class="posts__table-content">
+          ${
+            posts.length === 0
+              ? emptyState()
+              : `
+            <table class="table">
+              ${postsTableHead()}
+              <tbody class="table__tbody">
+                ${posts.map(renderPostRow).join('')}
+              </tbody>
+            </table>
+          `}
+          </div>
+        </form>
 
         ${totalPages > 1 ? paginationHtml({ basePath: '/admin/posts', page, totalPages, filters, filterKeys: POST_FILTER_KEYS }) : ''}
       </div>
     </div>
 
     ${toastScript}
+    ${bulkTableScript()}
   `;
 
   return content;
@@ -151,6 +182,7 @@ function postsTableHead() {
   return `
     <thead class="table__thead">
       <tr>
+        ${bulkSelectHead()}
         <th>Title</th>
         <th>Category</th>
         <th>Status</th>
@@ -165,6 +197,7 @@ function postsTableHead() {
 function renderPostRow(post) {
   return `
     <tr class="table__tr cursor-pointer" data-href="/admin/posts/${post.id}/edit">
+      ${bulkSelectCell(post.id)}
       <td class="table__td">
         <span class="table__label">Title</span>
         <div class="table__title">

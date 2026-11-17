@@ -180,6 +180,21 @@ class AlbumsController {
       }));
     }
   }
+
+  async bulkDelete(request, reply) {
+    try {
+      const { ids } = request.body;
+      const deleted = await albumsService.bulkDelete(ids);
+      return htmxRedirect(
+        reply,
+        `/admin/media/albums?toast=${encodeURIComponent(`Deleted ${deleted} album${deleted === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk delete failed.' }));
+    }
+  }
 }
 
 export const albumsController = new AlbumsController();

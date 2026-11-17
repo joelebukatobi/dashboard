@@ -5,7 +5,12 @@ import { categoriesController } from '../controllers/categories.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { createCategorySchema, updateCategorySchema } from '../schemas/category.schema.js';
-import { listQuerySchema, resourceIdSchema, slugQuerySchema } from '../schemas/common.schema.js';
+import {
+  listQuerySchema,
+  bulkIdsSchema,
+  resourceIdSchema,
+  slugQuerySchema,
+} from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
@@ -23,6 +28,11 @@ export default async function categoryRoutes(fastify, opts) {
   fastify.post('/', {
     preHandler: [auth, validateBody(createCategorySchema)],
     handler: categoriesController.create.bind(categoriesController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: categoriesController.bulkDelete.bind(categoriesController),
   });
 
   fastify.get('/:id/edit', {

@@ -2,11 +2,13 @@
 // Videos service for managing video library with FFmpeg
 
 import { db, mediaItems, posts } from '../db/index.js';
-import { eq, like, desc, sql } from 'drizzle-orm';
+import { eq, like, desc, sql, and, inArray } from 'drizzle-orm';
 import { promises as fs } from 'fs';
 import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import crypto from 'crypto';
+import { resolveMediaFsPath } from '../lib/media-paths.js';
+import { buildStoreZip } from '../lib/zip-store.js';
 
 /**
  * Videos Service
@@ -365,6 +367,55 @@ class VideosService {
         updatedAt: new Date(),
       })
       .where(eq(posts.id, postId));
+  }
+
+  /**
+   * @param {string[]} ids
+   * @param {string} albumId
+   */
+  async bulkAssignAlbum(ids, albumId) {
+    if (!albumId) throw new Error('Album is required');
+    await db
+      .update(mediaItems)
+      .set({ albumId, updatedAt: new Date() })
+      .where(and(eq(mediaItems.type, 'VIDEO'), inArray(mediaItems.id, ids)));
+    return ids.length;
+  }
+
+  /** @param {string[]} ids */
+  async bulkDelete(ids) {
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await this.delete(id);
+        deleted += 1;
+      } catch {
+        // skip
+      }
+    }
+    return deleted;
+  }
+
+  /** @param {string[]} ids */
+  async bulkZip(ids) {
+    const rows = await db
+      .select()
+      .from(mediaItems)
+      .where(and(eq(mediaItems.type, 'VIDEO'), inArray(mediaItems.id, ids)));
+
+    const files = [];
+    for (const row of rows) {
+      const fsPath = resolveMediaFsPath(row.path);
+      if (!fsPath) continue;
+      try {
+        const data = await fs.readFile(fsPath);
+        files.push({ name: row.originalName || row.filename, data });
+      } catch {
+        // skip
+      }
+    }
+    if (files.length === 0) throw new Error('No files available to download');
+    return buildStoreZip(files);
   }
 
   /**

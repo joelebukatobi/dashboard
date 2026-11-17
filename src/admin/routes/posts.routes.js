@@ -2,7 +2,12 @@ import { postsController } from '../controllers/posts.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { postBodySchema, updatePostSchema } from '../schemas/post.schema.js';
-import { listQuerySchema, postsListQuerySchema, resourceIdSchema, slugQuerySchema } from '../schemas/common.schema.js';
+import {
+  bulkIdsSchema,
+  postsListQuerySchema,
+  resourceIdSchema,
+  slugQuerySchema,
+} from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
@@ -20,6 +25,26 @@ export default async function postsRoutes(fastify) {
   fastify.post('/', {
     preHandler: [auth, validateBody(postBodySchema)],
     handler: postsController.createPost.bind(postsController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: postsController.bulkDelete.bind(postsController),
+  });
+
+  fastify.post('/bulk-publish', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: postsController.bulkPublish.bind(postsController),
+  });
+
+  fastify.post('/bulk-unpublish', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: postsController.bulkUnpublish.bind(postsController),
+  });
+
+  fastify.post('/bulk-tags', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: postsController.bulkAddTags.bind(postsController),
   });
 
   fastify.get('/:id/edit', {

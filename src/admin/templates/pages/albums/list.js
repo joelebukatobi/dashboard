@@ -3,12 +3,18 @@
 
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
+import {
+  bulkActionsBar,
+  bulkSelectCell,
+  bulkSelectHead,
+  bulkTableScript,
+} from '../../partials/bulk-table.js';
 import { escapeHtml, formatDate, paginationHtml, toastQueryScript, toPublicMediaUrl } from '../../utils/helpers.js';
 
 /**
  * Albums list page inner content (layout applied via fastify-html addLayout).
  */
-export function albumsListContent({ albums, total, page, totalPages, filters, toast }) {
+export function albumsListContent({ albums, total, page, totalPages, filters, user, toast }) {
   const toastScript = toastQueryScript(toast, {
     deleted: 'Album deleted successfully!',
   });
@@ -35,25 +41,34 @@ export function albumsListContent({ albums, total, page, totalPages, filters, to
           addButtonText: albums.length === 0 ? 'Create First Album' : 'New Album',
         })}
 
-        <div id="albums-table-container" class="albums__table-content">
-        ${
-          albums.length === 0
-            ? emptyState()
-            : `
-          <table class="table">
-            ${albumsTableHead()}
-            <tbody class="table__tbody">
-              ${albums.map(renderAlbumRow).join('')}
-            </tbody>
-          </table>
-        `}
-        </div>
+        <form data-bulk-form method="post">
+          ${bulkActionsBar({
+            csrfToken: user?.csrfToken || '',
+            deleteAction: '/admin/media/albums/bulk-delete',
+            entityLabel: 'albums',
+          })}
+
+          <div id="albums-table-container" class="albums__table-content">
+          ${
+            albums.length === 0
+              ? emptyState()
+              : `
+            <table class="table">
+              ${albumsTableHead()}
+              <tbody class="table__tbody">
+                ${albums.map(renderAlbumRow).join('')}
+              </tbody>
+            </table>
+          `}
+          </div>
+        </form>
 
         ${totalPages > 1 ? paginationHtml({ basePath: '/admin/media/albums', page, totalPages, filters, filterKeys: ['search'] }) : ''}
       </div>
     </div>
 
     ${toastScript}
+    ${bulkTableScript()}
   `;
 }
 
@@ -97,15 +112,7 @@ export function albumsTableFragment({ albums, pagination }) {
 
   return `
     <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Album</th>
-          <th>Slug</th>
-          <th>Description</th>
-          <th>Created</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      ${albumsTableHead()}
       <tbody class="table__tbody">
         ${rows}
       </tbody>
@@ -135,6 +142,7 @@ function albumsTableHead() {
   return `
     <thead class="table__thead">
       <tr>
+        ${bulkSelectHead()}
         <th>Album</th>
         <th>Slug</th>
         <th>Description</th>
@@ -149,6 +157,7 @@ function renderAlbumRow(album) {
   const coverSrc = toPublicMediaUrl(album.coverImage?.thumbnailPath || album.coverImage?.path) || '/favicon.svg';
   return `
     <tr class="table__tr cursor-pointer" data-href="/admin/media/albums/${album.id}/edit">
+      ${bulkSelectCell(album.id)}
       <td class="table__td">
         <span class="table__label">Album</span>
         <div class="table__thumb-row">

@@ -5,7 +5,7 @@ import { albumsController } from '../controllers/albums.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { createAlbumSchema, updateAlbumSchema } from '../schemas/album.schema.js';
-import { listQuerySchema, resourceIdSchema } from '../schemas/common.schema.js';
+import { listQuerySchema, bulkIdsSchema, resourceIdSchema } from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
@@ -23,6 +23,11 @@ export default async function albumsRoutes(fastify, opts) {
   fastify.post('/', {
     preHandler: [auth, validateBody(createAlbumSchema)],
     handler: albumsController.create.bind(albumsController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: albumsController.bulkDelete.bind(albumsController),
   });
 
   fastify.get('/:id/edit', {

@@ -5,7 +5,12 @@ import { tagsController } from '../controllers/tags.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { createTagSchema, updateTagSchema } from '../schemas/tag.schema.js';
-import { listQuerySchema, resourceIdSchema, slugQuerySchema } from '../schemas/common.schema.js';
+import {
+  listQuerySchema,
+  bulkIdsSchema,
+  resourceIdSchema,
+  slugQuerySchema,
+} from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
@@ -23,6 +28,11 @@ export default async function tagsRoutes(fastify, opts) {
   fastify.post('/', {
     preHandler: [auth, validateBody(createTagSchema)],
     handler: tagsController.create.bind(tagsController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: tagsController.bulkDelete.bind(tagsController),
   });
 
   fastify.get('/:id/edit', {

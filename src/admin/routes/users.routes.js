@@ -5,7 +5,11 @@ import { usersController } from '../controllers/users.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { createUserSchema, updateUserSchema, totpVerifySchema } from '../schemas/user.schema.js';
-import { listQuerySchema, resourceIdSchema, usersListQuerySchema } from '../schemas/common.schema.js';
+import {
+  bulkIdsSchema,
+  resourceIdSchema,
+  usersListQuerySchema,
+} from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
@@ -23,6 +27,21 @@ export default async function userRoutes(fastify, opts) {
   fastify.post('/', {
     preHandler: [auth, validateBody(createUserSchema)],
     handler: usersController.create.bind(usersController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: usersController.bulkDelete.bind(usersController),
+  });
+
+  fastify.post('/bulk-suspend', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: usersController.bulkSuspend.bind(usersController),
+  });
+
+  fastify.post('/bulk-activate', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: usersController.bulkActivate.bind(usersController),
   });
 
   fastify.get('/:id/edit', {

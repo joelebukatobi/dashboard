@@ -210,6 +210,21 @@ class TagsController {
     }
   }
 
+  async bulkDelete(request, reply) {
+    try {
+      const { ids } = request.body;
+      const deleted = await tagsService.bulkDelete(ids, request.user.id);
+      return htmxRedirect(
+        reply,
+        `/admin/tags?toast=${encodeURIComponent(`Deleted ${deleted} tag${deleted === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk delete failed.' }));
+    }
+  }
+
   /**
    * GET /admin/tags/check-slug
    * Check if slug is available

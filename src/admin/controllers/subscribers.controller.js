@@ -7,6 +7,7 @@ import {
   renderFragment,
   renderEmpty,
   errorAlert,
+  htmxRedirect,
   setHtmxTrigger,
 } from '../render.js';
 
@@ -257,6 +258,21 @@ class SubscribersController {
       request.log.error(error);
       reply.code(500);
       return renderFragment(reply, errorAlert({ message: 'Failed to delete subscriber.' }));
+    }
+  }
+
+  async bulkDelete(request, reply) {
+    try {
+      const { ids } = request.body;
+      const deleted = await subscribersService.bulkDelete(ids);
+      return htmxRedirect(
+        reply,
+        `/admin/subscribers?toast=${encodeURIComponent(`Deleted ${deleted} subscriber${deleted === 1 ? '' : 's'}`)}`,
+      );
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({ message: error.message || 'Bulk delete failed.' }));
     }
   }
 }

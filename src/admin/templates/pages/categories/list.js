@@ -3,6 +3,12 @@
 
 import { DeleteModal } from '../../components/delete-modal.js';
 import { listToolbar } from '../../partials/list-toolbar.js';
+import {
+  bulkActionsBar,
+  bulkSelectCell,
+  bulkSelectHead,
+  bulkTableScript,
+} from '../../partials/bulk-table.js';
 import { escapeHtml, formatDate, paginationHtml, toastQueryScript } from '../../utils/helpers.js';
 
 
@@ -40,26 +46,34 @@ export function categoriesListContent({ categories, total, page, totalPages, fil
           addButtonText: categories.length === 0 ? 'Create First Category' : 'New Category',
         })}
 
-        <div id="categories-table-container" class="categories__table-content">
-        ${
-          categories.length === 0
-            ? emptyState()
-            : `
-          <!-- Data List (Table) -->
-          <table class="table">
-            ${categoriesTableHead()}
-            <tbody class="table__tbody">
-              ${categories.map(renderCategoryRow).join('')}
-            </tbody>
-          </table>
-        `}
-        </div>
+        <form data-bulk-form method="post">
+          ${bulkActionsBar({
+            csrfToken: user?.csrfToken || '',
+            deleteAction: '/admin/categories/bulk-delete',
+            entityLabel: 'categories',
+          })}
+
+          <div id="categories-table-container" class="categories__table-content">
+          ${
+            categories.length === 0
+              ? emptyState()
+              : `
+            <table class="table">
+              ${categoriesTableHead()}
+              <tbody class="table__tbody">
+                ${categories.map(renderCategoryRow).join('')}
+              </tbody>
+            </table>
+          `}
+          </div>
+        </form>
 
         ${totalPages > 1 ? paginationHtml({ basePath: '/admin/categories', page, totalPages, filters, filterKeys: ['search'] }) : ''}
       </div>
     </div>
 
     ${toastScript}
+    ${bulkTableScript()}
   `;
 
   return content;
@@ -122,15 +136,7 @@ export function categoriesTableFragment({ categories, pagination, counts }) {
 
   return `
     <table class="table">
-      <thead class="table__thead">
-        <tr>
-          <th>Title</th>
-          <th>Slug</th>
-          <th>Description</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      ${categoriesTableHead()}
       <tbody class="table__tbody">
         ${rows}
       </tbody>
@@ -148,6 +154,7 @@ function categoriesTableHead() {
   return `
     <thead class="table__thead">
       <tr>
+        ${bulkSelectHead()}
         <th>Title</th>
         <th>Slug</th>
         <th>Description</th>
@@ -161,6 +168,7 @@ function categoriesTableHead() {
 function renderCategoryRow(category) {
   return `
     <tr class="table__tr cursor-pointer" data-href="/admin/categories/${category.id}/edit">
+      ${bulkSelectCell(category.id)}
       <td class="table__td">
         <span class="table__label">Title</span>
         <div class="table__title">

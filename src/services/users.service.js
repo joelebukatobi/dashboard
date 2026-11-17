@@ -307,6 +307,58 @@ class UsersService {
   }
 
   /**
+   * Bulk delete users. Skips self and last-admin (caller should filter; we re-check).
+   */
+  async bulkDelete(ids, currentUserId) {
+    let deleted = 0;
+    for (const id of ids) {
+      if (id === currentUserId) continue;
+      try {
+        const user = await this.getUserById(id);
+        if (!user) continue;
+        if (user.role === 'ADMIN' && user.status === 'ACTIVE') {
+          if (await this.isLastAdmin(id)) continue;
+        }
+        await this.deleteUser(id, currentUserId);
+        deleted += 1;
+      } catch {
+        // skip
+      }
+    }
+    return deleted;
+  }
+
+  async bulkSuspend(ids, currentUserId) {
+    let updated = 0;
+    for (const id of ids) {
+      if (id === currentUserId) continue;
+      try {
+        const user = await this.getUserById(id);
+        if (!user) continue;
+        if (user.role === 'ADMIN' && (await this.isLastAdmin(id))) continue;
+        await this.suspendUser(id, currentUserId);
+        updated += 1;
+      } catch {
+        // skip
+      }
+    }
+    return updated;
+  }
+
+  async bulkActivate(ids, currentUserId) {
+    let updated = 0;
+    for (const id of ids) {
+      try {
+        await this.activateUser(id, currentUserId);
+        updated += 1;
+      } catch {
+        // skip
+      }
+    }
+    return updated;
+  }
+
+  /**
    * Suspend a user
    * @param {string} id - User ID
    * @param {string} [currentUserId] - ID of user suspending (for activity log)

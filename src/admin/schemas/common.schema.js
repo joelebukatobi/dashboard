@@ -38,6 +38,27 @@ export const listQuerySchema = z.object({
   toast: z.string().max(200).optional(),
 });
 
+/** Media library list: grid | table + optional page size */
+export const mediaListQuerySchema = listQuerySchema.extend({
+  view: z.enum(['grid', 'table']).optional().default('grid'),
+});
+
+const idList = z
+  .union([z.array(z.string().min(1).max(36)), z.string().min(1).max(36)])
+  .transform((v) => (Array.isArray(v) ? v : [v]))
+  .pipe(z.array(z.string().min(1).max(36)).min(1).max(100));
+
+/** Bulk table actions — ids from checkbox name="ids" */
+export const bulkIdsSchema = z.object({
+  ids: idList,
+  albumId: z.string().max(36).optional().or(z.literal('')),
+  tagIds: z
+    .union([z.array(z.string().min(1).max(36)), z.string().min(1).max(36)])
+    .transform((v) => (Array.isArray(v) ? v : [v]))
+    .pipe(z.array(z.string().min(1).max(36)).min(1).max(100))
+    .optional(),
+});
+
 export const postsListQuerySchema = listQuerySchema.extend({
   status: z.string().max(50).optional(),
   categoryId: z.string().max(36).optional(),

@@ -314,6 +314,19 @@ class AlbumsService {
     return { deleted: true };
   }
 
+  async bulkDelete(ids) {
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await this.delete(id);
+        deleted += 1;
+      } catch {
+        // skip
+      }
+    }
+    return deleted;
+  }
+
   /**
    * Generate a URL-friendly slug
    */

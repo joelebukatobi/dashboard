@@ -200,6 +200,19 @@ class SubscribersService {
     return true;
   }
 
+  async bulkDelete(ids) {
+    let deleted = 0;
+    for (const id of ids) {
+      try {
+        await this.deleteSubscriber(id);
+        deleted += 1;
+      } catch {
+        // skip
+      }
+    }
+    return deleted;
+  }
+
   /**
    * Get total subscriber count
    * @param {Object} options - Filter options

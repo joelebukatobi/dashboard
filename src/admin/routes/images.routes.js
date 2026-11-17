@@ -5,13 +5,17 @@ import { imagesController } from '../controllers/images.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { updateMediaSchema } from '../schemas/media.schema.js';
-import { listQuerySchema, resourceIdSchema } from '../schemas/common.schema.js';
+import {
+  mediaListQuerySchema,
+  bulkIdsSchema,
+  resourceIdSchema,
+} from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
 export default async function imagesRoutes(fastify, opts) {
   fastify.get('/', {
-    preHandler: [auth, validateQuery(listQuerySchema)],
+    preHandler: [auth, validateQuery(mediaListQuerySchema)],
     handler: imagesController.list.bind(imagesController),
   });
 
@@ -33,6 +37,21 @@ export default async function imagesRoutes(fastify, opts) {
   fastify.post('/batch', {
     preHandler: auth,
     handler: imagesController.batchUpload.bind(imagesController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: imagesController.bulkDelete.bind(imagesController),
+  });
+
+  fastify.post('/bulk-album', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: imagesController.bulkAlbum.bind(imagesController),
+  });
+
+  fastify.post('/bulk-download', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: imagesController.bulkDownload.bind(imagesController),
   });
 
   fastify.get('/:id/edit', {

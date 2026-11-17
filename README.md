@@ -78,7 +78,9 @@ npm run db:seed
 npm run dev
 ```
 
-Then open `http://localhost:7000` and visit `/admin`. On a fresh database the
+Then open `http://localhost:7100` and visit `/admin` (local `.env.development`
+uses `PORT=7100` so it does not collide with other apps; staging/production keep
+whatever `PORT` the host sets). On a fresh database the
 first-launch wizard creates the admin account:
 
 ```bash

@@ -5,13 +5,17 @@ import { videosController } from '../controllers/videos.controller.js';
 import { requireAuthRedirect } from '../../middleware/authenticate.js';
 import { validateBody, validateParams, validateQuery } from '../middleware/validate.js';
 import { updateMediaSchema } from '../schemas/media.schema.js';
-import { listQuerySchema, resourceIdSchema } from '../schemas/common.schema.js';
+import {
+  mediaListQuerySchema,
+  bulkIdsSchema,
+  resourceIdSchema,
+} from '../schemas/common.schema.js';
 
 const auth = requireAuthRedirect('/admin/auth/login');
 
 export default async function videosRoutes(fastify, opts) {
   fastify.get('/', {
-    preHandler: [auth, validateQuery(listQuerySchema)],
+    preHandler: [auth, validateQuery(mediaListQuerySchema)],
     handler: videosController.list.bind(videosController),
   });
 
@@ -23,6 +27,21 @@ export default async function videosRoutes(fastify, opts) {
   fastify.post('/', {
     preHandler: auth,
     handler: videosController.upload.bind(videosController),
+  });
+
+  fastify.post('/bulk-delete', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: videosController.bulkDelete.bind(videosController),
+  });
+
+  fastify.post('/bulk-album', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: videosController.bulkAlbum.bind(videosController),
+  });
+
+  fastify.post('/bulk-download', {
+    preHandler: [auth, validateBody(bulkIdsSchema)],
+    handler: videosController.bulkDownload.bind(videosController),
   });
 
   fastify.get('/:id/edit', {

@@ -14,6 +14,8 @@
  * @param {boolean} options.hasAddButton - Whether to show add new button
  * @param {string} options.addButtonUrl - URL for add button
  * @param {string} options.addButtonText - Text for add button
+ * @param {string} [options.leadingButtons] - HTML before the add button (e.g. view toggle)
+ * @param {string} [options.extraButtons] - HTML after the add button
  * @returns {string} HTML string
  */
 export function listToolbar({
@@ -25,6 +27,7 @@ export function listToolbar({
   hasAddButton = false,
   addButtonUrl = '#',
   addButtonText = 'Add New',
+  leadingButtons = '',
   extraButtons = '',
 }) {
   const filtersHtml = filters
@@ -77,6 +80,7 @@ export function listToolbar({
       </div>
       <div class="list-toolbar__filters">
         ${filtersHtml}
+        ${leadingButtons}
         ${addButtonHtml}
         ${extraButtons}
       </div>

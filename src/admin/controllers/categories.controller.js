@@ -181,6 +181,28 @@ class CategoriesController {
   }
 
   /**
+   * POST /admin/categories/bulk-delete
+   */
+  async bulkDelete(request, reply) {
+    try {
+      const user = request.user;
+      const { ids } = request.body;
+      const result = await categoriesService.bulkDelete(ids, user.id);
+      let message = `Deleted ${result.deleted} categor${result.deleted === 1 ? 'y' : 'ies'}`;
+      if (result.postsMoved > 0) {
+        message += `. ${result.postsMoved} post${result.postsMoved === 1 ? '' : 's'} moved to Uncategorized`;
+      }
+      return htmxRedirect(reply, `/admin/categories?toast=${encodeURIComponent(message)}`);
+    } catch (error) {
+      request.log.error(error);
+      reply.code(400);
+      return renderFragment(reply, errorAlert({
+        message: error.message || 'Bulk delete failed.',
+      }));
+    }
+  }
+
+  /**
    * DELETE /admin/categories/:id
    * Delete a category
    */
