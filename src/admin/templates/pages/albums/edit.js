@@ -25,7 +25,7 @@ export function albumEditContent({ user, album, albumImages = [], toast }) {
           <div class="page-header__toast-container"></div>
         </div>
 
-        <div class="card">
+        <div class="card card--viewport">
           <div class="card__header">
             <h2>Album Details</h2>
           </div>

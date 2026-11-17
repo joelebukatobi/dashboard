@@ -135,6 +135,26 @@
     }
   }
 
+  // A card whose body can grow without bound - an album's cover picker holds
+  // one tile per image - pushes its footer off screen, so Save and Cancel sit
+  // below every picture and the form cannot be submitted without scrolling
+  // past all of them. Here the card fills the viewport instead: the body takes
+  // the scroll, and the header and footer stay where they are.
+  &--viewport {
+    @media (min-width: 1024px) {
+      @apply flex-1 min-h-0 flex flex-col;
+
+      > .card__header,
+      > .card__footer {
+        @apply shrink-0;
+      }
+
+      > .card__body {
+        @apply flex-1 min-h-0 overflow-y-auto;
+      }
+    }
+  }
+
   &__panel {
     @apply p-[1.6rem]; // Compact padding for media sidebars
   }
