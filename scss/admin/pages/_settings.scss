@@ -95,18 +95,6 @@
 }
 
 .social-links-field {
-  &__header {
-    @apply mb-[1.6rem];
-  }
-
-  &--additional {
-    @apply mt-[2.4rem] pt-[2.4rem] border-t border-grey-200;
-
-    .dark & {
-      @apply border-grey-700;
-    }
-  }
-
   &__platform {
     @apply flex items-center h-[3.2rem] px-[1.2rem] m-0;
     @apply text-body-sm text-grey-900 bg-grey-50 border border-grey-100/50 rounded-md;
@@ -114,30 +102,6 @@
     .dark & {
       @apply text-grey-100 bg-grey-800 border-grey-700;
     }
-  }
-
-  &__restore {
-    @apply flex flex-wrap items-center gap-[0.8rem] mt-[1.2rem];
-
-    &.hidden {
-      @apply hidden;
-    }
-
-    .select {
-      @apply min-w-[18rem];
-    }
-  }
-
-  &__title {
-    @apply text-body-sm font-semibold text-grey-900 m-0;
-
-    .dark & {
-      @apply text-grey-100;
-    }
-  }
-
-  &__header .form-feedback {
-    @apply mt-[0.4rem] m-0;
   }
 
   &__list {

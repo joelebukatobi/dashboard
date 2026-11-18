@@ -127,7 +127,7 @@ class SettingsService {
       await db
         .update(settings)
         .set({
-          value: String(value),
+          value: this.serializeValue(value),
           type,
           updatedAt: new Date(),
         })
@@ -155,7 +155,7 @@ class SettingsService {
         .values({
           id: settingId,
           key,
-          value: String(value),
+          value: this.serializeValue(value),
           group,
           type,
         });
@@ -252,6 +252,25 @@ class SettingsService {
         await this.upsertSetting(def.key, def.value, def.group, def.type);
       }
     }
+  }
+
+  /**
+   * Serialize a value for storage.
+   *
+   * The counterpart to parseValue: inferType marks arrays and objects as JSON
+   * and parseValue JSON.parses them back, but the write side used String(),
+   * which stored an array of objects as the literal "[object Object]". Social
+   * links and the list of removed platforms were written that way, so neither
+   * survived a reload.
+   *
+   * @param {*} value
+   * @returns {string}
+   */
+  serializeValue(value) {
+    if (value !== null && typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+    return String(value);
   }
 
   /**

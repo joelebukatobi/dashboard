@@ -701,35 +701,11 @@ export function settingsContent({ user, settings, toast }) {
                 <div class="social-links-field">
                   <div id="socialBuiltinList" class="social-links-field__list">
                     ${builtinSocialHtml}
-                  </div>
-                  <div id="socialRestoreField" class="social-links-field__restore${hiddenSocialPlatforms.length ? '' : ' hidden'}">
-                    <select id="restoreSocialPlatform" class="select">
-                      <option value="">Restore platform…</option>
-                      ${hiddenSocialPlatforms.map((key) => {
-                        const platform = BUILTIN_SOCIAL_PLATFORMS.find((item) => item.key === key);
-                        return platform
-                          ? `<option value="${platform.key}">${escapeHtml(platform.label)}</option>`
-                          : '';
-                      }).join('')}
-                    </select>
-                    <button
-                      type="button"
-                      class="btn btn--outline"
-                      onclick="restoreBuiltinSocialLink(this)"
-                    >
-                      Restore platform
-                    </button>
-                  </div>
-                </div>
-
-                <div class="social-links-field social-links-field--additional">
-                  <div class="social-links-field__header">
-                    <h3 class="social-links-field__title">Additional links</h3>
-                    <p class="form-feedback form-feedback--hint">Add custom platforms like Instagram or TikTok.</p>
-                  </div>
-                  <div id="socialLinksList" class="social-links-field__list">
                     ${socialLinksHtml}
                   </div>
+                  <p class="form-feedback form-feedback--hint">
+                    Add any platform, such as Instagram or TikTok. Removing one deletes it.
+                  </p>
                   <button
                     type="button"
                     class="btn btn--outline"
@@ -742,12 +718,6 @@ export function settingsContent({ user, settings, toast }) {
                 <template id="socialLinkRowTemplate">
                   ${renderSocialLinkRow()}
                 </template>
-
-                ${BUILTIN_SOCIAL_PLATFORMS.map((platform) => `
-                  <template id="socialBuiltinTemplate-${platform.key}">
-                    ${renderBuiltinSocialRow(platform)}
-                  </template>
-                `).join('')}
 
                 <input
                   type="hidden"
@@ -795,34 +765,11 @@ export function settingsContent({ user, settings, toast }) {
         }
       }
 
+      // Still recorded, so a removed built-in platform stays removed across
+      // reloads - it just has no way back now beyond adding it again.
       function setSocialHiddenPlatforms(keys) {
         const hidden = document.getElementById('socialHiddenPlatforms');
         if (hidden) hidden.value = JSON.stringify(keys);
-        updateSocialRestoreField(keys);
-      }
-
-      function updateSocialRestoreField(keys) {
-        const restoreField = document.getElementById('socialRestoreField');
-        const select = document.getElementById('restoreSocialPlatform');
-        if (!restoreField || !select) return;
-
-        const labels = {
-          socialTwitter: 'Twitter/X',
-          socialFacebook: 'Facebook',
-          socialLinkedIn: 'LinkedIn',
-          socialGitHub: 'GitHub',
-        };
-
-        select.innerHTML = '<option value="">Restore platform…</option>';
-        keys.forEach(function(key) {
-          if (!labels[key]) return;
-          const option = document.createElement('option');
-          option.value = key;
-          option.textContent = labels[key];
-          select.appendChild(option);
-        });
-
-        restoreField.classList.toggle('hidden', keys.length === 0);
       }
 
       function clearBuiltinSocialInput(form, key) {
@@ -853,33 +800,8 @@ export function settingsContent({ user, settings, toast }) {
         if (button) button.blur();
       }
 
-      function restoreBuiltinSocialLink(button) {
-        const select = document.getElementById('restoreSocialPlatform');
-        const list = document.getElementById('socialBuiltinList');
-        const key = select ? select.value : '';
-        if (!key || !list) return;
-
-        const template = document.getElementById('socialBuiltinTemplate-' + key);
-        if (!template) return;
-
-        list.appendChild(template.content.firstElementChild.cloneNode(true));
-
-        const hiddenKeys = getSocialHiddenPlatforms().filter(function(item) {
-          return item !== key;
-        });
-        setSocialHiddenPlatforms(hiddenKeys);
-
-        const form = button.closest('form');
-        const clearedInput = form ? form.querySelector('input[data-cleared="' + key + '"]') : null;
-        if (clearedInput) clearedInput.remove();
-
-        if (select) select.value = '';
-        if (window.lucide) window.lucide.createIcons();
-        if (button) button.blur();
-      }
-
       function addSocialLinkRow(button) {
-        const list = document.getElementById('socialLinksList');
+        const list = document.getElementById('socialBuiltinList');
         const template = document.getElementById('socialLinkRowTemplate');
         if (!list || !template) return;
 
