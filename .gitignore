@@ -85,6 +85,10 @@ public/uploads/board-members/
 public/uploads/videos/thumbs/
 public/uploads/videos/video-*
 public/uploads/videos/*.mp4
+public/uploads/images/seedmore-*
+public/uploads/images/thumbs/seedmore-*
+public/uploads/videos/seedmore-*
+public/uploads/videos/thumbs/thumb-seedmore-*
 !public/uploads/videos/seeder-video.mp4
 
 # Built vendor bundles

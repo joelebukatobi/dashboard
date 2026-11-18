@@ -17,6 +17,7 @@
     "db:push": "drizzle-kit push",
     "db:seed": "node scripts/seed.js",
     "db:seed:fresh": "node scripts/seed.js --fresh",
+    "db:seed:media": "node scripts/seed-more-media.js",
     "db:reset": "npm run db:migrate && npm run db:seed:fresh",
     "db:studio": "drizzle-kit studio",
     "test": "vitest",
