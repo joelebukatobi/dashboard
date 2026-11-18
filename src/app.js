@@ -10,6 +10,7 @@ import fastifyMultipart from '@fastify/multipart';
 import fastifyHtml from 'fastify-html';
 import path from 'path';
 import { readFile } from 'fs/promises';
+import { createHash } from 'crypto';
 import { fileURLToPath } from 'url';
 import { checkSetupStatus } from './middleware/setup-check.js';
 import { ensureDatabaseUrl } from '../env.js';
@@ -146,6 +147,23 @@ export default async function app(fastify, opts) {
     return path.join(PUBLIC_DIR, rel);
   }
 
+  // Browsers cache favicons far more aggressively than ordinary images and
+  // will keep showing a stale one across reloads. Sending an ETag lets them
+  // revalidate cheaply, and must-revalidate stops them serving the old icon
+  // from cache without asking, so changing the icon in Settings takes effect.
+  function sendIcon(request, reply, data, type) {
+    const etag = `"${createHash('sha1').update(data).digest('hex').slice(0, 16)}"`;
+    reply.header('Cache-Control', 'public, max-age=0, must-revalidate').header('ETag', etag);
+
+    // Revalidation is only cheap if we answer it: otherwise must-revalidate
+    // means every page load re-sends the whole icon.
+    if (request.headers['if-none-match'] === etag) {
+      return reply.code(304).send();
+    }
+
+    return reply.type(type).send(data);
+  }
+
   async function sendFavicon(request, reply, fallbackFile) {
     const map = request.siteSettingsMap ?? await fastify.siteSettings.getMap();
     const customPath = resolveSiteIconFsPath(String(map.siteIcon || ''));
@@ -153,14 +171,14 @@ export default async function app(fastify, opts) {
       try {
         const data = await readFile(customPath);
         const ext = path.extname(customPath).toLowerCase();
-        return reply.type(MIME_BY_EXT[ext] || 'application/octet-stream').send(data);
+        return sendIcon(request, reply, data, MIME_BY_EXT[ext] || 'application/octet-stream');
       } catch {
         // fall through to default
       }
     }
     const data = await readFile(path.join(PUBLIC_DIR, fallbackFile));
     const type = fallbackFile.endsWith('.ico') ? 'image/x-icon' : 'image/svg+xml';
-    return reply.type(type).send(data);
+    return sendIcon(request, reply, data, type);
   }
 
   fastify.get('/favicon.svg', (request, reply) => sendFavicon(request, reply, 'favicon.svg'));

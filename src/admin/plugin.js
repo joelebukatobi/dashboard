@@ -1,6 +1,7 @@
 import fastifyHtml from 'fastify-html';
 import { buildDashboardShell } from './templates/layouts/main.js';
 import { resolvePageMeta, renderOgMetaTags } from '../lib/site-meta.js';
+import { faviconHref } from '../lib/favicon.js';
 import { buildPageManifest, buildProjectManifest } from './routes/manifest.js';
 import { projectPagePrefixes } from './routes/project/prefixes.js';
 
@@ -16,11 +17,9 @@ export default async function adminPlugin(fastify) {
     const siteMap = reply.request.siteSettingsMap ?? {};
     const siteName = String(siteMap.siteName || 'BlogCMS');
     const siteIcon = String(siteMap.siteIcon || '');
-    // Always point at the route, never at the stored path. /favicon.svg
-    // resolves the configured icon and falls back to the bundled one when
-    // that file is missing (src/app.js sendFavicon) — embedding the raw
-    // siteIcon here bypassed that, so a stale setting meant no favicon at all.
-    const favicon = '/favicon.svg';
+    // Route, not the stored path, and versioned by the setting so a newly
+    // uploaded icon replaces the one the browser already cached.
+    const favicon = faviconHref(siteIcon);
     const resolved = resolvePageMeta(siteMap, {
       title: pageMeta.title,
       description: pageMeta.description,

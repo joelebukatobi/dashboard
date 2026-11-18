@@ -6,6 +6,7 @@ import {
   buildAppErrorShell,
 } from './templates/layouts/app.js';
 import { resolvePageMeta, renderOgMetaTags } from '../lib/site-meta.js';
+import { faviconHref } from '../lib/favicon.js';
 
 /**
  * Encapsulated public app plugin.
@@ -19,7 +20,7 @@ export default async function appPlugin(fastify) {
     const siteMap = reply.request.siteSettingsMap ?? {};
     const siteName = String(siteMap.siteName || 'BlogCMS');
     const siteIcon = String(siteMap.siteIcon || '');
-    const favicon = siteIcon || '/favicon.svg';
+    const favicon = faviconHref(siteIcon);
     const resolved = resolvePageMeta(siteMap, {
       title: pageMeta.title,
       description: pageMeta.description,
