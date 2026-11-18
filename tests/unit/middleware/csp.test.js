@@ -22,7 +22,8 @@ const INLINE_HANDLER = /\son[a-z]+=["']/;
 const templatesWithInlineHandlers = () =>
   walk('src').filter((f) => f.includes('/templates/') && INLINE_HANDLER.test(readFileSync(f, 'utf8')));
 
-const cspConfig = readFileSync('src/app.js', 'utf8');
+// The directives live in src/lib/csp.js (src/app.js passes them to Helmet).
+const cspConfig = readFileSync('src/lib/csp.js', 'utf8');
 
 describe('content security policy', () => {
   it('allows inline event handlers while any template still uses them', () => {

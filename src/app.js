@@ -13,6 +13,7 @@ import { readFile } from 'fs/promises';
 import { createHash } from 'crypto';
 import { fileURLToPath } from 'url';
 import { checkSetupStatus } from './middleware/setup-check.js';
+import { cspDirectives } from './lib/csp.js';
 import { ensureDatabaseUrl } from '../env.js';
 import { getAppSecret } from './lib/app-secrets.js';
 import { buildApiManifest } from './admin/routes/manifest.js';
@@ -35,25 +36,8 @@ export default async function app(fastify, opts) {
   if (!isDevelopment) {
     await fastify.register(fastifyHelmet, {
       contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: [
-            "'self'",
-            "'unsafe-inline'",
-            'https://fonts.googleapis.com',
-          ],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          // Helmet defaults script-src-attr to 'none', which blocks inline
-          // event handler attributes. 'unsafe-inline' on script-src permits
-          // inline <script> blocks but not onclick= and friends — a separate
-          // directive governs those. The admin templates use ~94 inline
-          // handlers, so without this every one of them silently does
-          // nothing in production while working fine in development.
-          scriptSrcAttr: ["'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'blob:', 'https://images.unsplash.com'],
-          connectSrc: ["'self'"],
-          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        },
+        // Dashboard's sources plus any the fork adds in src/site/csp.js.
+        directives: await cspDirectives(),
       },
       strictTransportSecurity: {
         maxAge: 15552000,
