@@ -1,9 +1,19 @@
 import { describe, it, expect } from 'vitest';
+import { existsSync } from 'node:fs';
 import { BASE_CSP_DIRECTIVES, mergeCspDirectives, cspDirectives } from '../../../src/lib/csp.js';
 
 describe('CSP directives', () => {
-  it('ships no fork sources: dashboard has no src/site/csp.js', async () => {
+  // Only true in dashboard itself: a fork that adds src/site/csp.js gets more.
+  const forkHasCsp = existsSync(new URL('../../../src/site/csp.js', import.meta.url));
+  it.skipIf(forkHasCsp)('ships no fork sources: dashboard has no src/site/csp.js', async () => {
     expect(await cspDirectives()).toEqual(BASE_CSP_DIRECTIVES);
+  });
+
+  it("always contains dashboard's own sources", async () => {
+    const d = await cspDirectives();
+    for (const [key, sources] of Object.entries(BASE_CSP_DIRECTIVES)) {
+      expect(d[key]).toEqual(expect.arrayContaining(sources));
+    }
   });
 
   it('adds a fork directive on top of default-src', () => {
