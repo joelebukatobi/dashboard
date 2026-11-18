@@ -23,6 +23,7 @@ import { projectApiPrefixes } from './admin/routes/project/prefixes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PUBLIC_DIR = path.join(__dirname, '../public');
+const DEFAULT_FAVICON_DIR = path.join(__dirname, '../assets/favicon');
 
 // Load environment variables (process.env, .env.local, .env.development, .env, cPanel)
 ensureDatabaseUrl({ scriptName: 'server', exitOnError: false });
@@ -176,7 +177,11 @@ export default async function app(fastify, opts) {
         // fall through to default
       }
     }
-    const data = await readFile(path.join(PUBLIC_DIR, fallbackFile));
+    // The bundled icons live outside public/: on cPanel, Passenger serves
+    // public/ as the web root, so a public/favicon.svg would be answered by
+    // the web server before this route ever saw the request, and the icon set
+    // in Settings would never show.
+    const data = await readFile(path.join(DEFAULT_FAVICON_DIR, fallbackFile));
     const type = fallbackFile.endsWith('.ico') ? 'image/x-icon' : 'image/svg+xml';
     return sendIcon(request, reply, data, type);
   }
