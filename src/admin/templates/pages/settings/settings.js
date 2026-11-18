@@ -814,6 +814,46 @@ export function settingsContent({ user, settings, toast }) {
         const row = button.closest('[data-social-link-row]');
         if (row) row.remove();
       }
+
+      // The label is the link's name, so a row without one cannot be stored -
+      // the server drops it. It used to do that silently, so pasting a URL and
+      // leaving Label blank lost the link on save with nothing said. Ask for
+      // the name instead, and quietly discard only rows left completely empty.
+      document.addEventListener('submit', function (event) {
+        const form = event.target;
+        if (!form || !form.querySelector || !form.querySelector('#socialBuiltinList')) return;
+
+        const rows = form.querySelectorAll('[data-social-link-row]:not([data-builtin])');
+        for (const row of rows) {
+          const labelInput = row.querySelector('input[name="socialLinkLabel"]');
+          const urlInput = row.querySelector('input[name="socialLinkUrl"]');
+          if (!labelInput || !urlInput) continue;
+
+          const label = labelInput.value.trim();
+          const url = urlInput.value.trim();
+
+          labelInput.setCustomValidity('');
+          if (label || !url) continue;
+
+          labelInput.setCustomValidity('Give this link a name, for example Instagram.');
+          labelInput.reportValidity();
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+
+        rows.forEach(function (row) {
+          const label = row.querySelector('input[name="socialLinkLabel"]').value.trim();
+          const url = row.querySelector('input[name="socialLinkUrl"]').value.trim();
+          if (!label && !url) row.remove();
+        });
+      }, true);
+
+      document.addEventListener('input', function (event) {
+        if (event.target && event.target.name === 'socialLinkLabel') {
+          event.target.setCustomValidity('');
+        }
+      });
     </script>
 
     ${toastScript}
