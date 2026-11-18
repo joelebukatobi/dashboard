@@ -96,7 +96,7 @@ export function videosListContent({
 
     ${toastScript}
     ${isTable ? bulkTableScript() : ''}
-    ${mediaPageFitScript({ view })}
+    ${mediaPageFitScript({ view, limit: filters.limit })}
   `;
 }
 

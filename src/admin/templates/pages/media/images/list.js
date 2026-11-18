@@ -105,7 +105,7 @@ export function imagesListContent({
 
     ${toastScript}
     ${isTable ? bulkTableScript() : ''}
-    ${mediaPageFitScript({ view })}
+    ${mediaPageFitScript({ view, limit: filters.limit })}
   `;
 }
 

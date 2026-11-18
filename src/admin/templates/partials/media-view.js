@@ -65,13 +65,16 @@ export function mediaViewToggle({ basePath, view = 'grid', filters = {} }) {
  * first visit at a given window size costs a correction; every later navigation
  * is one correctly sized request.
  */
-export function mediaPageFitScript({ view = 'grid' } = {}) {
+export function mediaPageFitScript({ view = 'grid', limit = 0 } = {}) {
   const isTable = view === 'table';
 
   return `
     <script>
       (function () {
         var IS_TABLE = ${isTable ? 'true' : 'false'};
+        // What the server already rendered (from ?limit= or the cookie); an
+        // address without ?limit= is not a reason to reload.
+        var RENDERED = ${Number(limit) || 0};
         var COOKIE = 'media_page_size_' + (IS_TABLE ? 'table' : 'grid');
 
         function writeCookie(value) {
@@ -130,7 +133,7 @@ export function mediaPageFitScript({ view = 'grid' } = {}) {
           if (!want) return;
 
           var params = new URLSearchParams(window.location.search);
-          var current = parseInt(params.get('limit') || '0', 10);
+          var current = parseInt(params.get('limit') || String(RENDERED), 10);
           writeCookie(String(want));
 
           if (current === want) return;
